@@ -39,6 +39,12 @@ To remove the installed copy:
 sh ./scripts/uninstall.sh
 ```
 
+To remove the installed copy and all persisted extension settings data:
+
+```sh
+sh ./scripts/uninstall.sh --remove-data
+```
+
 ## Development Notes
 
 - `sh ./scripts/nested-shell-smoke.sh` runs a nested GNOME Shell smoke workflow (requires `dbus-run-session`, `gnome-shell`, `gsettings`, `rg`).
