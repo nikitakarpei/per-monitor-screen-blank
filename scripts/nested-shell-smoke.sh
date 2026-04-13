@@ -23,7 +23,8 @@ nested_log=$(mktemp)
 extension_context_log=$(mktemp)
 trap 'rm -f "$nested_log" "$extension_context_log"' EXIT
 src_extension_dir="$repo_root/per-monitor-screen-blank@nikitakarpei.github.io"
-error_pattern='JS ERROR|TypeError|SyntaxError|ReferenceError|No signal|GType|Argument string may not be null|Unhandled promise rejection|CRITICAL|GLib-CRITICAL|Gjs-CRITICAL|ERROR:'
+# Avoid bare "ERROR:" — it matches notifyError body text ("error: Per-Monitor ...") in nested logs.
+error_pattern='JS ERROR|TypeError|SyntaxError|ReferenceError|No signal|GType|Argument string may not be null|Unhandled promise rejection|CRITICAL|GLib-CRITICAL|Gjs-CRITICAL|\[per-monitor-screen-blank\] ERROR:'
 
 printf '%s\n' "== Running nested GNOME Shell check =="
 dbus-run-session sh -eu -c '

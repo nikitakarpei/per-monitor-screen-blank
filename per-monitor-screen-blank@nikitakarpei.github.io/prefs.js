@@ -1,6 +1,6 @@
 import Adw from 'gi://Adw';
 import Gdk from 'gi://Gdk';
-import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import { buildMonitorLabel, monitorIdFromIndex } from './src/util/monitorIdentity.js';
@@ -287,31 +287,37 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     }
 
     _openExtensionLogs(window) {
-        const command = "bash -lc 'journalctl --user -f --no-pager | rg -i \"per-monitor-screen-blank|\\[per-monitor-screen-blank\\]\"'";
-        const launchers = [
-            `kgx ${command}`,
-            `gnome-terminal -- ${command}`,
-            `x-terminal-emulator -e ${command}`,
+        /* journalctl --grep matches MESSAGE text; covers log tag and bracket prefix without bash/rg. */
+        const journalArgv = [
+            'journalctl', '--user', '-f', '--no-pager',
+            '-g', 'per-monitor-screen-blank',
+        ];
+        const terminalArgvs = [
+            ['gnome-terminal', '--', ...journalArgv],
+            ['kgx', '--', ...journalArgv],
+            ['ptyxis', '--', ...journalArgv],
         ];
 
-        for (const launcher of launchers) {
+        for (const argv of terminalArgvs) {
             try {
-                const appInfo = Gio.AppInfo.create_from_commandline(
-                    launcher,
+                GLib.spawn_async(
                     null,
-                    Gio.AppInfoCreateFlags.SUPPORTS_STARTUP_NOTIFICATION
+                    argv,
+                    null,
+                    GLib.SpawnFlags.SEARCH_PATH,
+                    null,
                 );
-                appInfo.launch([], null);
                 return;
-            } catch (_) {
-                // Try next launcher command.
+            } catch (err) {
+                console.warn('[per-monitor-screen-blank] prefs: terminal launch failed', argv[0], err);
             }
         }
 
+        const manual = 'journalctl --user -f --no-pager -g per-monitor-screen-blank';
         const dialog = new Adw.MessageDialog({
             transient_for: window,
             heading: 'Unable to open terminal',
-            body: 'Run this command manually:\n\njournalctl --user -f --no-pager | rg -i "per-monitor-screen-blank|\\[per-monitor-screen-blank\\]"',
+            body: `Run this command manually:\n\n${manual}`,
         });
         dialog.add_response('ok', 'OK');
         dialog.set_default_response('ok');

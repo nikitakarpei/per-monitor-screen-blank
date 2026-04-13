@@ -34,4 +34,6 @@ sh ./scripts/uninstall.sh
 ## Development Notes
 
 - `sh ./scripts/nested-shell-smoke.sh` runs a nested GNOME Shell smoke workflow (requires `dbus-run-session`, `gnome-shell`, `gsettings`, `rg`).
-- Runtime logs are prefixed with `[per-monitor-screen-blank]` in `journalctl`.
+- `sh ./scripts/package-ego-zip.sh` writes `dist/per-monitor-screen-blank@nikitakarpei.github.io.zip` for [extensions.gnome.org](https://extensions.gnome.org/) (extension files at zip root; requires `zip` and `glib-compile-schemas`).
+- Runtime logs are prefixed with `[per-monitor-screen-blank]` in `journalctl` (Preferences can open a filtered follow stream via `journalctl --user -f --no-pager -g per-monitor-screen-blank`).
+- Declare only GNOME Shell versions you have tested in `metadata.json` `shell-version` (currently aimed at **49**).

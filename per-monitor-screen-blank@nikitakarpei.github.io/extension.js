@@ -47,7 +47,3 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         }
     }
 }
-
-export function init() {
-    return new PerMonitorScreenBlankExtension();
-}
