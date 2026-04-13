@@ -16,8 +16,6 @@ AI assistance was used during development. All generated code was reviewed and t
 
 Tested on **Ubuntu 25.10**, **GNOME 49**, **Wayland**.
 
-Declare only GNOME Shell versions you have actually tested in `metadata.json` `shell-version`.
-
 ## Monitor modes
 
 Each display has its own mode in the active profile. You can change it from Preferences, Quick Settings, or the pointer shortcut menu.
