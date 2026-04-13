@@ -6,7 +6,6 @@ import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/
 import { buildMonitorLabel, monitorIdFromIndex } from './src/util/monitorIdentity.js';
 import { normalizeMode, parseMonitorModes, stringifyMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
-import { normalizeRuntimeMode } from './src/util/runtimeMode.js';
 
 export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     fillPreferencesWindow(window) {
@@ -15,7 +14,6 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         const page = new Adw.PreferencesPage({ title: 'General' });
         const monitorGroup = new Adw.PreferencesGroup({ title: 'Per-monitor mode' });
         const globalGroup = new Adw.PreferencesGroup({ title: 'Global behavior' });
-        const advancedGroup = new Adw.PreferencesGroup({ title: 'Advanced' });
         const diagnosticsGroup = new Adw.PreferencesGroup({ title: 'Diagnostics' });
         const profilesGroup = new Adw.PreferencesGroup({ title: 'Profiles' });
         const monitorRows = [];
@@ -27,7 +25,6 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         globalGroup.add(this._makeSwitchRow(settings, 'Wake on pointer entry', 'wake-on-pointer-entry'));
         globalGroup.add(this._makeSpinRow(settings, 'Fade duration', 'fade-duration-ms', 10, 0, 5000, 'ms'));
         globalGroup.add(this._makePointerShortcutRow(window, settings));
-        advancedGroup.add(this._makeRuntimeModeRow(settings));
         diagnosticsGroup.add(this._makeButtonRow(
             'Open Extension Logs',
             'Open a terminal with live extension logs.',
@@ -46,7 +43,6 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
 
         page.add(monitorGroup);
         page.add(globalGroup);
-        page.add(advancedGroup);
         page.add(diagnosticsGroup);
         page.add(profilesGroup);
         window.add(page);
@@ -177,28 +173,6 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         if (label)
             row.add_suffix(label);
         row.activatable_widget = spin;
-        return row;
-    }
-
-    _makeRuntimeModeRow(settings) {
-        const modes = ['event-driven', 'polling'];
-        const labels = ['Event-driven', 'Polling (compatibility mode)'];
-        const subtitles = [
-            'Battery-first runtime with no steady-state polling.',
-            'Uses periodic pointer polling for systems where event-driven detection does not behave correctly.',
-        ];
-        const row = new Adw.ComboRow({
-            title: 'Runtime engine',
-            subtitle: subtitles[0],
-        });
-        row.model = Gtk.StringList.new(labels);
-        row.selected = Math.max(0, modes.indexOf(normalizeRuntimeMode(settings.get_string('runtime-mode'))));
-        row.subtitle = subtitles[row.selected] ?? subtitles[0];
-        row.connect('notify::selected', () => {
-            const selected = modes[row.selected] ?? 'event-driven';
-            row.subtitle = subtitles[row.selected] ?? subtitles[0];
-            settings.set_string('runtime-mode', selected);
-        });
         return row;
     }
 

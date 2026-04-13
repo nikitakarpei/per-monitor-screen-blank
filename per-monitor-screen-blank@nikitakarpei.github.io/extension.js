@@ -27,7 +27,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             openSettings: () => this._openSettingsSafely(),
         });
         const deadlineScheduler = new MonitorDeadlineScheduler({
-            onDeadline: deadline => this._controller?._handleScheduledDeadline?.(deadline),
+            onDeadline: deadline => this._controller.handleScheduledDeadline(deadline),
         });
 
         this._controller = new AppController({

@@ -82,7 +82,6 @@ export class ShellOverlayManager {
         this.#unbindGeometrySignals();
         const layoutManager = Main.layoutManager;
         this.#tryConnect(layoutManager, 'monitors-changed');
-        this.#tryConnect(global.display, 'primary-monitor-changed');
     }
 
     #unbindGeometrySignals() {

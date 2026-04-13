@@ -1,38 +1,39 @@
-import Clutter from 'gi://Clutter';
+import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { logWarn, logErrorWithContext } from '../util/logger.js';
 
 export class ShellPointerActivitySource {
     constructor() {
-        this._stageSignalId = 0;
-        this._callbacks = null;
+        this._pointerWatcher = PointerWatcher.getPointerWatcher();
+        this._watch = null;
+        this.onPointerActivity = null;
         this._lastMonitorIndex = null;
         this._lastPointer = { x: null, y: null };
     }
 
     start(callbacks = {}) {
         this.stop();
-        this._callbacks = callbacks;
+        this.onPointerActivity = callbacks.onPointerActivity ?? null;
         try {
-            this._stageSignalId = global.stage.connect('captured-event', (_actor, event) => this._handleCapturedEvent(event));
-        } catch (error) {
-            logErrorWithContext(error, 'failed to connect stage captured-event');
-            this._callbacks?.onDegraded?.({
-                reason: 'stage-captured-event-unavailable',
+            this._watch = this._pointerWatcher.addWatch(100, (x, y) => {
+                this._handlePointerSample({ x, y, eventType: 'pointer-watch' });
             });
+        } catch (error) {
+            logErrorWithContext(error, 'failed to start shell pointer watcher');
+            throw error;
         }
     }
 
     stop() {
-        if (this._stageSignalId) {
+        if (this._watch) {
             try {
-                global.stage.disconnect(this._stageSignalId);
+                this._pointerWatcher._removeWatch(this._watch);
             } catch (error) {
-                logErrorWithContext(error, 'failed to disconnect stage captured-event', { signalId: this._stageSignalId });
+                logErrorWithContext(error, 'failed to stop shell pointer watcher');
             }
         }
-        this._stageSignalId = 0;
-        this._callbacks = null;
+        this._watch = null;
+        this.onPointerActivity = null;
         this._lastMonitorIndex = null;
         this._lastPointer = { x: null, y: null };
     }
@@ -46,28 +47,11 @@ export class ShellPointerActivitySource {
         };
     }
 
-    _handleCapturedEvent(event) {
-        const eventType = event?.type?.() ?? null;
-        if (![
-            Clutter.EventType.MOTION,
-            Clutter.EventType.ENTER,
-            Clutter.EventType.LEAVE,
-        ].includes(eventType))
-            return Clutter.EVENT_PROPAGATE;
-
-        let x = null;
-        let y = null;
-        try {
-            [x, y] = event?.get_coords?.() ?? [];
-        } catch (error) {
-            logWarn('failed to read pointer event coordinates; falling back to global pointer', {
-                eventType,
-                error: String(error),
-            });
-        }
-
-        if (!Number.isFinite(x) || !Number.isFinite(y))
+    _handlePointerSample({ x, y, eventType = 'pointer-watch' }) {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) {
+            logWarn('pointer watcher returned invalid coordinates; falling back to global pointer', { x, y, eventType });
             [x, y] = global.get_pointer();
+        }
 
         const previousMonitorIndex = this._lastMonitorIndex;
         const monitorIndex = this._resolveMonitorIndex(x, y);
@@ -76,17 +60,16 @@ export class ShellPointerActivitySource {
         this._lastPointer = { x, y };
         this._lastMonitorIndex = monitorIndex;
 
-        if (!pointerMoved && !monitorChanged && eventType !== Clutter.EventType.ENTER)
-            return Clutter.EVENT_PROPAGATE;
+        if (!pointerMoved && !monitorChanged)
+            return;
 
-        this._callbacks?.onPointerActivity?.({
+        this.onPointerActivity?.({
             eventType,
             x,
             y,
             monitorIndex,
             previousMonitorIndex,
         });
-        return Clutter.EVENT_PROPAGATE;
     }
 
     _resolveMonitorIndex(x, y) {

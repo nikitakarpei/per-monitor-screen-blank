@@ -1,4 +1,3 @@
-import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -11,8 +10,6 @@ import { listRuntimeMonitors } from '../util/monitorSelection.js';
 import { normalizeMode } from '../util/monitorModes.js';
 import { logInfo, logWarn, logErrorWithContext } from '../util/logger.js';
 
-const DEGRADED_POLL_INTERVAL_MS = 250;
-
 export class AppController {
     constructor({ settingsGateway, pointerActivitySource, deadlineScheduler, signalRegistrar, overlay, quickSettings, pointerContextMenu }) {
         this._settingsGateway = settingsGateway;
@@ -24,8 +21,6 @@ export class AppController {
         this._pointerContextMenu = pointerContextMenu;
         this._stateMachines = new Map();
         this._uiListeners = new Set();
-        this._degradedPollId = 0;
-        this._isDegraded = false;
         this._monitorContexts = [];
         this._profiles = [];
         this._activeProfileId = '';
@@ -35,7 +30,6 @@ export class AppController {
         this._autoDeadlineTokens = new Map();
         this._keepAwakeDeadlineTokens = new Map();
         this._lastPointerMonitorIndex = null;
-        this._activeRuntimeMode = null;
         this._lastIssueNotification = '';
         const controller = this;
         this._uiStateSource = {
@@ -57,15 +51,16 @@ export class AppController {
 
         this._signalRegistrar.addDisconnector(this._settingsGateway.connectChanged(() => this._syncFromSettings()));
         this._signalRegistrar.connect(Main.layoutManager, 'monitors-changed', () => this._syncFromSettings());
-        this._signalRegistrar.connect(global.display, 'primary-monitor-changed', () => this._syncFromSettings());
         this._signalRegistrar.addDisconnector(this._settingsGateway.connectPointerShortcutChanged(() => this._reregisterPointerMenuShortcut()));
         this._reregisterPointerMenuShortcut();
+        this._pointerActivitySource.start({
+            onPointerActivity: activity => this._handlePointerActivity(activity),
+        });
 
         this._syncFromSettings();
     }
 
     disable() {
-        this._stopDegradedPolling();
         this._deadlineScheduler.cancelAll();
         this._pointerActivitySource.stop();
         this._signalRegistrar.disconnectAll();
@@ -103,11 +98,14 @@ export class AppController {
         });
     }
 
+    handleScheduledDeadline(deadline) {
+        this._handleScheduledDeadline(deadline);
+    }
+
     _syncFromSettings() {
         const snapshot = this._settingsGateway.getSnapshot();
         this._profiles = snapshot.profiles;
         this._activeProfileId = snapshot.activeProfileId;
-        this._applyRuntimeMode(snapshot.runtimeMode);
         const runtimeMonitors = listRuntimeMonitors(global.display);
         const monitorModes = snapshot.monitorModes;
         const runtimeIds = new Set(runtimeMonitors.map(monitor => monitor.id));
@@ -402,57 +400,6 @@ export class AppController {
             return;
         }
         this._rescheduleMonitor(snapshot, monitor, machine);
-    }
-
-    _enterDegradedMode(details = null) {
-        if (this._activeRuntimeMode === 'polling') return;
-        if (this._isDegraded) return;
-        this._isDegraded = true;
-        logWarn('pointer activity source degraded; enabling fallback polling', details);
-        this._startDegradedPolling();
-    }
-
-    _startDegradedPolling() {
-        if (this._degradedPollId) return;
-        this._degradedPollId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, DEGRADED_POLL_INTERVAL_MS, () => {
-            const snapshot = this._pointerActivitySource.getPointerSnapshot();
-            this._handlePointerActivity({
-                ...snapshot,
-                eventType: 'degraded-poll',
-                previousMonitorIndex: this._lastPointerMonitorIndex,
-            });
-            return GLib.SOURCE_CONTINUE;
-        });
-    }
-
-    _stopDegradedPolling() {
-        if (!this._degradedPollId) return;
-        GLib.Source.remove(this._degradedPollId);
-        this._degradedPollId = 0;
-    }
-
-    _applyRuntimeMode(runtimeMode) {
-        if (this._activeRuntimeMode === runtimeMode) return;
-        const snapshot = this._pointerActivitySource.getPointerSnapshot();
-        if (Number.isInteger(snapshot?.monitorIndex))
-            this._lastPointerMonitorIndex = snapshot.monitorIndex;
-
-        this._activeRuntimeMode = runtimeMode;
-        this._isDegraded = false;
-        this._pointerActivitySource.stop();
-        this._stopDegradedPolling();
-
-        if (runtimeMode === 'polling') {
-            logInfo('runtime mode set to polling', { runtimeMode });
-            this._startDegradedPolling();
-            return;
-        }
-
-        logInfo('runtime mode set to event-driven', { runtimeMode });
-        this._pointerActivitySource.start({
-            onPointerActivity: activity => this._handlePointerActivity(activity),
-            onDegraded: details => this._enterDegradedMode(details),
-        });
     }
 
     _reregisterPointerMenuShortcut() {
