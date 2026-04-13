@@ -405,53 +405,17 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }
     }
 
-    _resolveTerminalCommand(argv) {
-        if (!GLib.find_program_in_path('xdg-terminal-exec'))
-            return null;
-        try {
-            const [, stdoutBytes, stderrBytes, status] = GLib.spawn_sync(
-                null,
-                ['xdg-terminal-exec', '--print-cmd', '--', ...argv],
-                null,
-                GLib.SpawnFlags.SEARCH_PATH,
-                null,
-            );
-            if (status !== 0) {
-                console.warn('[per-monitor-screen-blank] prefs: xdg-terminal-exec resolution failed', {
-                    status,
-                    stderr: new TextDecoder().decode(stderrBytes ?? new Uint8Array()),
-                });
-                return null;
-            }
-            const resolved = new TextDecoder()
-                .decode(stdoutBytes ?? new Uint8Array())
-                .split('\n')
-                .map(part => part.trim())
-                .filter(Boolean);
-            if (resolved.length === 0) {
-                console.warn('[per-monitor-screen-blank] prefs: xdg-terminal-exec returned empty command');
-                return null;
-            }
-            return resolved;
-        } catch (err) {
-            console.warn('[per-monitor-screen-blank] prefs: xdg-terminal-exec resolution threw', err);
-            return null;
-        }
-    }
-
     _openExtensionLogs(window) {
         /* journalctl --grep matches MESSAGE text; covers log tag and bracket prefix without bash/rg. */
         const journalArgv = [
             'journalctl', '--user', '-f', '--no-pager',
             '-g', 'per-monitor-screen-blank',
         ];
-        const resolvedDefaultTerminalArgv = this._resolveTerminalCommand(journalArgv);
-        if (resolvedDefaultTerminalArgv && this._spawnTerminalForCommand(resolvedDefaultTerminalArgv))
-            return;
         /* Prefer xdg-terminal-exec (Default Terminal Execution spec): honors desktop/session
          * default terminal and each emulator's X-TerminalArgExec= from its .desktop entry.
-         * Shorter hardcoded fallbacks only when resolution or spawn fails. */
+         * Shorter hardcoded fallbacks only when that helper is missing or spawn fails. */
         const terminalArgvs = [
+            ['xdg-terminal-exec', '--', ...journalArgv],
             ['ptyxis', '--', ...journalArgv],
             ['gnome-terminal', '--', ...journalArgv],
             ['kgx', '--', ...journalArgv],
