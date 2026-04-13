@@ -2,6 +2,7 @@
 
 set -eu
 
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
 dest="$HOME/.local/share/gnome-shell/extensions/$uuid"
 settings_schema="org.gnome.shell.extensions.per-monitor-screen-blank"
@@ -29,8 +30,36 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
+reset_settings_data() {
+  if ! command -v gsettings >/dev/null 2>&1; then
+    printf '%s\n' "Skipped settings removal: gsettings not found" >&2
+    return
+  fi
+
+  if gsettings writable "$settings_schema" active-profile-id >/dev/null 2>&1; then
+    gsettings reset-recursively "$settings_schema"
+    printf '%s\n' "Removed settings data: $settings_schema"
+    return
+  fi
+
+  for schema_dir in "$dest/schemas" "$repo_root/per-monitor-screen-blank@nikitakarpei.github.io/schemas"; do
+    if [ -f "$schema_dir/gschemas.compiled" ] &&
+      gsettings --schemadir "$schema_dir" writable "$settings_schema" active-profile-id >/dev/null 2>&1; then
+      gsettings --schemadir "$schema_dir" reset-recursively "$settings_schema"
+      printf '%s\n' "Removed settings data: $settings_schema"
+      return
+    fi
+  done
+
+  printf '%s\n' "Skipped settings removal: schema not available for $settings_schema" >&2
+}
+
 if command -v gnome-extensions >/dev/null 2>&1; then
   gnome-extensions disable "$uuid" >/dev/null 2>&1 || true
+fi
+
+if [ "$remove_data" -eq 1 ]; then
+  reset_settings_data
 fi
 
 if [ -d "$dest" ]; then
@@ -38,15 +67,6 @@ if [ -d "$dest" ]; then
   printf '%s\n' "Removed: $dest"
 else
   printf '%s\n' "Nothing to remove at: $dest"
-fi
-
-if [ "$remove_data" -eq 1 ]; then
-  if command -v gsettings >/dev/null 2>&1; then
-    gsettings reset-recursively "$settings_schema"
-    printf '%s\n' "Removed settings data: $settings_schema"
-  else
-    printf '%s\n' "Skipped settings removal: gsettings not found" >&2
-  fi
 fi
 
 printf '%s\n' "Uninstall completed."
