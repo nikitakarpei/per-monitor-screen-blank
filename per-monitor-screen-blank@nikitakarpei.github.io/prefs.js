@@ -386,11 +386,33 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }
     }
 
+    _findExtensionStartCursor() {
+        try {
+            const [ok, stdout] = GLib.spawn_sync(
+                null,
+                ['journalctl', '--user', '-g', 'per-monitor-screen-blank.*extension enabled',
+                    '-n', '1', '--output=json', '--no-pager'],
+                null,
+                GLib.SpawnFlags.SEARCH_PATH,
+                null,
+            );
+            if (!ok || !stdout?.length)
+                return null;
+            const entry = JSON.parse(new TextDecoder().decode(stdout).trim());
+            return entry['__CURSOR'] ?? null;
+        } catch (_) {
+            return null;
+        }
+    }
+
     _openExtensionLogs(window) {
-        /* journalctl --grep matches MESSAGE text; covers log tag and bracket prefix without bash/rg. */
+        /* journalctl --grep matches MESSAGE text; covers log tag and bracket prefix without bash/rg.
+         * --cursor positions the stream at the last extension enable so all session logs are visible. */
+        const startCursor = this._findExtensionStartCursor();
         const journalArgv = [
             'journalctl', '--user', '-f', '--no-pager',
             '-g', 'per-monitor-screen-blank',
+            ...(startCursor ? [`--cursor=${startCursor}`] : []),
         ];
         if (GLib.find_program_in_path('xdg-terminal-exec')) {
             try {

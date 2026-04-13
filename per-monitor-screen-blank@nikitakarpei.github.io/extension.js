@@ -10,12 +10,13 @@ import { ShellPointerActivitySource } from './src/platform/ShellPointerActivityS
 import { MonitorDeadlineScheduler } from './src/platform/MonitorDeadlineScheduler.js';
 import { ShellSignalRegistrar } from './src/platform/ShellSignalRegistrar.js';
 import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
-import { logWarn, logErrorWithContext, setIssueReporter } from './src/util/logger.js';
+import { logInfo, logWarn, logErrorWithContext, setIssueReporter } from './src/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     _lastIssueSignature = '';
 
     enable() {
+        logInfo('extension enabled');
         const settings = this.getSettings();
         const settingsGateway = new GSettingsGateway(settings);
         settingsGateway.ensureStorage();
