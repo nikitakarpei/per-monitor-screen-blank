@@ -4,6 +4,7 @@ import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import { buildMonitorLabel, monitorIdFromIndex } from './src/util/monitorIdentity.js';
+import { logWarn } from './src/util/logger.js';
 import { normalizeMode, parseMonitorModes, stringifyMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
 
@@ -386,45 +387,32 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }
     }
 
-    _spawnTerminalForCommand(argv) {
-        const program = argv[0];
-        if (!GLib.find_program_in_path(program))
-            return false;
-        try {
-            GLib.spawn_async(
-                null,
-                argv,
-                null,
-                GLib.SpawnFlags.SEARCH_PATH,
-                null,
-            );
-            return true;
-        } catch (err) {
-            console.warn('[per-monitor-screen-blank] prefs: terminal launch failed', program, err);
-            return false;
-        }
-    }
-
     _openExtensionLogs(window) {
         /* journalctl --grep matches MESSAGE text; covers log tag and bracket prefix without bash/rg. */
         const journalArgv = [
             'journalctl', '--user', '-f', '--no-pager',
             '-g', 'per-monitor-screen-blank',
         ];
-        /* Prefer xdg-terminal-exec (Default Terminal Execution spec): honors desktop/session
-         * default terminal and each emulator's X-TerminalArgExec= from its .desktop entry.
-         * Shorter hardcoded fallbacks only when that helper is missing or spawn fails. */
-        const terminalArgvs = [
-            ['xdg-terminal-exec', '--', ...journalArgv],
-            ['ptyxis', '--', ...journalArgv],
-            ['gnome-terminal', '--', ...journalArgv],
-            ['kgx', '--', ...journalArgv],
-            ['x-terminal-emulator', '-e', ...journalArgv],
-        ];
-
-        for (const argv of terminalArgvs) {
-            if (this._spawnTerminalForCommand(argv))
+        if (GLib.find_program_in_path('xdg-terminal-exec')) {
+            try {
+                GLib.spawn_async(
+                    null,
+                    ['xdg-terminal-exec', '--', ...journalArgv],
+                    null,
+                    GLib.SpawnFlags.SEARCH_PATH,
+                    null,
+                );
                 return;
+            } catch (err) {
+                logWarn('failed to launch default terminal for extension logs', {
+                    launcher: 'xdg-terminal-exec',
+                    error: String(err),
+                });
+            }
+        } else {
+            logWarn('default terminal launcher unavailable for extension logs', {
+                launcher: 'xdg-terminal-exec',
+            });
         }
 
         const manual = 'journalctl --user -f --no-pager -g per-monitor-screen-blank';
