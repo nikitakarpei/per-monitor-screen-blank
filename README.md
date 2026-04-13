@@ -1,8 +1,10 @@
 # Per-Monitor Screen Blank
 
-## Brief Description / Introduction
+## Overview
 
-**Per-Monitor Screen Blank** is a GNOME Shell extension for Ubuntu/GNOME that applies a black shell overlay to monitors that are idle, while keeping the display layout and connected monitor state unchanged.
+**Per-Monitor Screen Blank** is a GNOME Shell extension that applies a black shell overlay to idle monitors while keeping the display layout and connected monitor state unchanged.
+
+It is meant for setups where a secondary monitor may sit on static content for long periods and should be blanked without triggering monitor disconnect behavior. The extension uses shell-level control because regular app windows are not reliable for this on Wayland.
 
 ![Preferences window](images/screenshot.png)
 
@@ -10,9 +12,11 @@
 
 AI assistance was used during development. All generated code was reviewed and tested by the author.
 
-## Motivation / Original Problem
+## Compatibility
 
-The extension is designed to reduce OLED burn-in risk on a secondary monitor by blanking it when it is idle and likely showing static content. It does this without triggering monitor disconnect behavior, and it uses shell-level control because regular app windows are not reliable for this on Wayland.
+Tested on **Ubuntu 25.10**, **GNOME 49**, **Wayland**.
+
+Declare only GNOME Shell versions you have actually tested in `metadata.json` `shell-version`.
 
 ## Monitor modes
 
@@ -56,10 +60,3 @@ sh ./scripts/uninstall.sh --remove-data
 - `sh ./scripts/nested-shell-smoke.sh` runs a nested GNOME Shell smoke workflow (requires `dbus-run-session`, `gnome-shell`, `gsettings`, `rg`).
 - `sh ./scripts/package-ego-zip.sh` writes `dist/per-monitor-screen-blank@nikitakarpei.github.io.zip` for [extensions.gnome.org](https://extensions.gnome.org/) (extension files at zip root; requires `zip` and `glib-compile-schemas`).
 - Runtime logs are prefixed with `[per-monitor-screen-blank]` in `journalctl` (Preferences can open a filtered follow stream via `journalctl --user -f --no-pager -g per-monitor-screen-blank`).
-- Declare only GNOME Shell versions you have tested in `metadata.json` `shell-version` (currently aimed at **49**).
-
-## Known Issues
-
-- Opening **Open Extension Logs** in Preferences depends on the desktop's configured default terminal via `xdg-terminal-exec`.
-- On some Ubuntu/GNOME setups with Ptyxis 49.x, launching a command through that stack may open an extra empty terminal window before the real logs window. This is an upstream terminal integration bug, not extension-managed terminal spawning.
-- The extension intentionally does not maintain terminal-specific workarounds or hardcoded terminal lists. If this issue appears, update the terminal stack or run `journalctl --user -f --no-pager -g per-monitor-screen-blank` manually.
