@@ -9,6 +9,7 @@ import { GSettingsGateway } from './src/platform/GSettingsGateway.js';
 import { ShellPointerActivitySource } from './src/platform/ShellPointerActivitySource.js';
 import { MonitorDeadlineScheduler } from './src/platform/MonitorDeadlineScheduler.js';
 import { ShellSignalRegistrar } from './src/platform/ShellSignalRegistrar.js';
+import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
 import { logWarn, logErrorWithContext, setIssueReporter } from './src/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
@@ -88,19 +89,11 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             return;
         this._lastIssueSignature = signature;
 
-        const title = issue.level === 'error'
-            ? 'Per-Monitor Screen Blank: Error'
-            : 'Per-Monitor Screen Blank: Warning';
-        const detailParts = [
-            issue.message,
-            issue.detailText,
-            issue.level === 'error' ? issue.errorText : '',
-        ].filter(Boolean);
-        const body = detailParts.join('\n');
+        const notification = buildIssueNotificationText(issue);
 
         if (issue.level === 'error')
-            Main.notifyError(title, body);
+            Main.notifyError(notification.title, notification.body);
         else
-            Main.notify(title, body);
+            Main.notify(notification.title, notification.body);
     }
 }

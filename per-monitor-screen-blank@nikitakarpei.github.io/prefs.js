@@ -3,6 +3,7 @@ import Gdk from 'gi://Gdk';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
 import { assignMonitorMode, buildMonitorIdentity, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
 import { logWarn, setIssueReporter } from './src/util/logger.js';
 import { sanitizeMonitorModes } from './src/util/monitorModes.js';
@@ -452,14 +453,9 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             return;
         this._lastIssueSignature = signature;
 
-        const detailParts = [
-            issue.level === 'error' ? 'Error' : 'Warning',
-            issue.message,
-            issue.detailText,
-            issue.level === 'error' ? issue.errorText : '',
-        ].filter(Boolean);
+        const notification = buildIssueNotificationText(issue);
         const toast = new Adw.Toast({
-            title: detailParts.join(': '),
+            title: notification.toastTitle,
             timeout: issue.level === 'error' ? 6 : 4,
         });
         if (typeof window?.add_toast === 'function') {
