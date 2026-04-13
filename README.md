@@ -4,6 +4,8 @@
 
 **Per-Monitor Screen Blank** is a GNOME Shell extension for Ubuntu/GNOME that applies a black shell overlay to monitors that are idle, while keeping the display layout and connected monitor state unchanged.
 
+![Preferences window](images/screenshot.png)
+
 ## Motivation / Original Problem
 
 The extension is designed to reduce OLED burn-in risk on a secondary monitor by blanking it when it is idle and likely showing static content. It does this without triggering monitor disconnect behavior, and it uses shell-level control because regular app windows are not reliable for this on Wayland.
