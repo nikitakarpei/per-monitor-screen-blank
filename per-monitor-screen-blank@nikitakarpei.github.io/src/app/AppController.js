@@ -9,7 +9,7 @@ import { buildStateViewModel } from '../presentation/stateViewModel.js';
 import { resolveMonitorMode } from '../util/monitorIdentity.js';
 import { listRuntimeMonitors } from '../util/monitorSelection.js';
 import { normalizeMode } from '../util/monitorModes.js';
-import { logInfo, logWarn, logErrorWithContext } from '../util/logger.js';
+import { logInfo, logErrorWithContext } from '../util/logger.js';
 
 export class AppController {
     constructor({ settingsGateway, pointerActivitySource, deadlineScheduler, signalRegistrar, overlay, quickSettings, pointerContextMenu }) {
@@ -111,13 +111,13 @@ export class AppController {
         const unmatchedKeys = Object.keys(monitorModes).filter(key => !runtimeIds.has(key));
         const unmatchedActiveKeys = unmatchedKeys.filter(key => normalizeMode(monitorModes[key], 'disabled') !== 'disabled');
         if (unmatchedKeys.length > 0) {
-            logWarn('monitor mode keys not present in runtime monitors', {
+            logInfo('monitor mode keys not present in runtime monitors', {
                 unmatchedKeys,
                 unmatchedActiveKeys,
             });
         }
         if (unmatchedActiveKeys.length > 0) {
-            logWarn('monitor mapping mismatch', {
+            logInfo('monitor mapping mismatch', {
                 activeProfileId: this._activeProfileId,
                 unmatchedActiveKeys,
             });
@@ -127,7 +127,7 @@ export class AppController {
             mode: resolveMonitorMode(monitorModes, monitor, 'disabled'),
         }));
         if (this._monitorContexts.length === 0) {
-            logWarn('no runtime monitors detected', {
+            logInfo('no runtime monitors detected', {
                 reason: 'GNOME runtime returned no monitors for Per-Monitor Screen Blank',
             });
         } else if (this._monitorContexts.every(monitor => monitor.mode === 'disabled')) {
@@ -213,7 +213,7 @@ export class AppController {
     _setFocusedMonitorMode(mode, action) {
         const target = this._getFocusedMonitor();
         if (!target) {
-            logWarn('focused monitor mode update skipped: no focused monitor', {
+            logInfo('focused monitor mode update skipped: no focused monitor', {
                 action,
                 mode,
                 guidance: 'Move pointer to a monitor and try again',
@@ -259,7 +259,7 @@ export class AppController {
     _seedCurrentPointerActivity() {
         const snapshot = this._pointerActivitySource.getPointerSnapshot();
         if (!snapshot || !Number.isInteger(snapshot.monitorIndex)) {
-            logWarn('pointer snapshot unavailable during state sync');
+            logInfo('pointer snapshot unavailable during state sync');
             return;
         }
         this._handlePointerActivity({
@@ -276,7 +276,7 @@ export class AppController {
 
         if (!monitor) {
             if (this._monitorContexts.length === 0) return;
-            logWarn('pointer activity ignored: monitor not found', { monitorIndex: activity?.monitorIndex });
+            logInfo('pointer activity ignored: monitor not found', { monitorIndex: activity?.monitorIndex });
             return;
         }
 
@@ -350,13 +350,13 @@ export class AppController {
         const snapshot = this._settingsGateway.getSnapshot();
         const monitor = this._monitorContexts.find(item => item.id === monitorId);
         if (!monitor) {
-            logWarn('scheduled deadline skipped: monitor missing', { kind, monitorId, token, deadlineMs });
+            logInfo('scheduled deadline skipped: monitor missing', { kind, monitorId, token, deadlineMs });
             return;
         }
         const tokenMap = kind === 'keep-awake-expiry' ? this._keepAwakeDeadlineTokens : this._autoDeadlineTokens;
         const expectedToken = tokenMap.get(monitorId);
         if (expectedToken !== token) {
-            logWarn('scheduled deadline skipped: stale token', { kind, monitorId, token, expectedToken, deadlineMs });
+            logInfo('scheduled deadline skipped: stale token', { kind, monitorId, token, expectedToken, deadlineMs });
             return;
         }
 
@@ -364,7 +364,7 @@ export class AppController {
             tokenMap.delete(monitorId);
             const machine = this._getOrCreateMachine(monitorId);
             if (monitor.mode !== 'keep-awake' || machine.state !== State.KeepAwake) {
-                logWarn('keep-awake expiry skipped: invalid state', {
+                logInfo('keep-awake expiry skipped: invalid state', {
                     monitorId,
                     mode: monitor.mode,
                     state: machine.state,
@@ -381,7 +381,7 @@ export class AppController {
         tokenMap.delete(monitorId);
         const machine = this._getOrCreateMachine(monitorId);
         if (monitor.mode !== 'auto') {
-            logWarn('auto-black deadline skipped: monitor no longer auto', { monitorId, mode: monitor.mode, token });
+            logInfo('auto-black deadline skipped: monitor no longer auto', { monitorId, mode: monitor.mode, token });
             return;
         }
         this._rescheduleMonitor(snapshot, monitor, machine);
@@ -410,8 +410,9 @@ export class AppController {
     _unregisterPointerMenuShortcut() {
         try {
             Main.wm.removeKeybinding('pointer-menu-shortcut');
-        } catch (error) {
-            logErrorWithContext(error, 'failed to unregister pointer-menu shortcut');
+        } catch (_) {
+            // removeKeybinding throws when the binding is not registered; this is expected on
+            // first run and whenever the shortcut is cleared, so the failure is intentionally silent.
         }
     }
 }

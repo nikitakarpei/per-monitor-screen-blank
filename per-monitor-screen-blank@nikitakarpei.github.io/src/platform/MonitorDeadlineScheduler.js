@@ -63,10 +63,11 @@ export class MonitorDeadlineScheduler {
         try {
             GLib.Source.remove(entry.sourceId);
         } catch (error) {
-            logErrorWithContext(error, 'failed to remove monitor deadline source', {
+            logWarn('failed to remove monitor deadline source', {
                 kind: entry.kind,
                 token: entry.token,
                 sourceId: entry.sourceId,
+                error: error?.message ?? String(error),
             });
         }
     }

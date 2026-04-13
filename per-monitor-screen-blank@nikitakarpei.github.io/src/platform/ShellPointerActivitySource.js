@@ -1,6 +1,6 @@
 import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { logWarn, logErrorWithContext } from '../util/logger.js';
+import { logInfo, logWarn, logErrorWithContext } from '../util/logger.js';
 
 export class ShellPointerActivitySource {
     constructor() {
@@ -29,7 +29,7 @@ export class ShellPointerActivitySource {
             try {
                 this._pointerWatcher._removeWatch(this._watch);
             } catch (error) {
-                logErrorWithContext(error, 'failed to stop shell pointer watcher');
+                logWarn('failed to stop shell pointer watcher', { error: error?.message ?? String(error) });
             }
         }
         this._watch = null;
@@ -49,7 +49,7 @@ export class ShellPointerActivitySource {
 
     _handlePointerSample({ x, y, eventType = 'pointer-watch' }) {
         if (!Number.isFinite(x) || !Number.isFinite(y)) {
-            logWarn('pointer watcher returned invalid coordinates; falling back to global pointer', { x, y, eventType });
+            logInfo('pointer watcher returned invalid coordinates; falling back to global pointer', { x, y, eventType });
             [x, y] = global.get_pointer();
         }
 
@@ -84,7 +84,7 @@ export class ShellPointerActivitySource {
         if (typeof global.display?.get_primary_monitor === 'function')
             return global.display.get_primary_monitor();
 
-        logWarn('failed to resolve pointer monitor; defaulting to monitor 0', { x, y });
+        logInfo('failed to resolve pointer monitor; defaulting to monitor 0', { x, y });
         return 0;
     }
 }

@@ -1,7 +1,7 @@
 import Meta from 'gi://Meta';
 
 import { buildMonitorIdentity, normalizeConnector } from './monitorIdentity.js';
-import { logWarn } from './logger.js';
+import { logInfo } from './logger.js';
 
 export function listRuntimeMonitors(display) {
     const count = typeof display?.get_n_monitors === 'function' ? display.get_n_monitors() : 0;
@@ -13,7 +13,7 @@ export function listRuntimeMonitors(display) {
         const connector = String(display?.get_monitor_plug_name?.(index) ?? '').trim();
         const runtimeSpec = runtimeSpecsByConnector.get(normalizeConnector(connector));
         if (!runtimeSpec) {
-            logWarn('runtime monitor missing stable hardware identity; monitor skipped', {
+            logInfo('runtime monitor missing stable hardware identity; monitor skipped', {
                 index,
                 connector,
             });
@@ -49,7 +49,7 @@ function _listRuntimeMonitorSpecs() {
             connector,
         };
         if (!runtimeSpec.isStable) {
-            logWarn('runtime monitor missing stable hardware identity; monitor skipped', {
+            logInfo('runtime monitor missing stable hardware identity; monitor skipped', {
                 connector,
                 vendor: String(monitor?.get_vendor?.() ?? '').trim(),
                 product: String(monitor?.get_product?.() ?? '').trim(),

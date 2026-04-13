@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 
 import { buildMonitorIdentity, normalizeConnector } from '../util/monitorIdentity.js';
-import { logWarn } from '../util/logger.js';
+import { logInfo, logWarn } from '../util/logger.js';
 
 const BUS_NAME = 'org.gnome.Mutter.DisplayConfig';
 const OBJECT_PATH = '/org/gnome/Mutter/DisplayConfig';
@@ -67,7 +67,7 @@ function _buildMonitor(entry, primaryConnectors) {
         isPrimary: primaryConnectors.has(normalizeConnector(connectorName)),
     };
     if (!monitor.isStable) {
-        logWarn('display config monitor missing stable hardware identity; monitor skipped', {
+        logInfo('display config monitor missing stable hardware identity; monitor skipped', {
             connector: monitor.connector,
             vendor: monitor.vendor,
             product: monitor.product,

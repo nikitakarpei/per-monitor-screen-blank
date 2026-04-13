@@ -1,4 +1,4 @@
-import { logWarn, logErrorWithContext } from '../util/logger.js';
+import { logWarn } from '../util/logger.js';
 
 export class ShellSignalRegistrar {
     constructor() {
@@ -18,7 +18,7 @@ export class ShellSignalRegistrar {
             try {
                 target.disconnect(id);
             } catch (error) {
-                logErrorWithContext(error, 'failed to disconnect signal', { signalName });
+                logWarn('failed to disconnect signal', { signalName, error: error?.message ?? String(error) });
             }
         });
         return true;
@@ -33,7 +33,7 @@ export class ShellSignalRegistrar {
             try {
                 disconnect?.();
             } catch (error) {
-                logErrorWithContext(error, 'disconnectAll failed');
+                logWarn('disconnectAll failed', { error: error?.message ?? String(error) });
             }
         }
     }

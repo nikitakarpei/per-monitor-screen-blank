@@ -3,7 +3,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { DEFAULTS } from '../core/defaults.js';
 import { normalizeFadeDurationMs } from '../core/fadeDuration.js';
-import { logWarn, logErrorWithContext } from '../util/logger.js';
+import { logInfo, logWarn } from '../util/logger.js';
 
 const FADE_DURATION_MS = DEFAULTS.fadeDurationMs;
 
@@ -27,7 +27,7 @@ export class ShellOverlayManager {
     setBlackMonitors(monitorIndexes = []) {
         const nextIndexes = new Set(monitorIndexes);
         if (nextIndexes.size === 0 && this.#actors.size > 0)
-            logWarn('clearing all black monitors');
+            logInfo('clearing all black monitors');
         if (nextIndexes.size > 0 && this.#signalIds.length === 0)
             this.#bindGeometrySignals();
 
@@ -89,7 +89,7 @@ export class ShellOverlayManager {
             try {
                 target.disconnect(id);
             } catch (error) {
-                logErrorWithContext(error, 'overlay signal disconnect failed', { id });
+                logWarn('overlay signal disconnect failed', { id, error: error?.message ?? String(error) });
             }
         }
         this.#signalIds = [];

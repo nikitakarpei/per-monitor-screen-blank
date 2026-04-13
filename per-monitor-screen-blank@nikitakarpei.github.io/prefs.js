@@ -5,7 +5,7 @@ import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/
 import { listDisplayConfigMonitors } from './src/platform/MutterDisplayConfig.js';
 import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
 import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
-import { logWarn, setIssueReporter } from './src/util/logger.js';
+import { logInfo, logWarn, setIssueReporter } from './src/util/logger.js';
 import { sanitizeMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
 
@@ -431,7 +431,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
                 });
             }
         } else {
-            logWarn('default terminal launcher unavailable for extension logs', {
+            logInfo('default terminal launcher unavailable for extension logs', {
                 launcher: 'xdg-terminal-exec',
             });
         }
