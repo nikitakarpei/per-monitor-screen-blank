@@ -24,7 +24,7 @@
         <![CDATA[['<Super><Shift>o']]]>
       </default>
       <summary>Pointer menu shortcut</summary>
-      <description>Keyboard shortcut to open the monitor menu under pointer.</description>
+      <description>Keyboard shortcut to open the per-monitor mode menu at the pointer. Use an empty list in dconf or Clear in preferences to disable the shortcut.</description>
     </key>
     <key name="idle-timeout-seconds" type="i">
       <default>90</default>

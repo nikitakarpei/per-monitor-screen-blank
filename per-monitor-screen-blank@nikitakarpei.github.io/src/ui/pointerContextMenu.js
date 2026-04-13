@@ -21,12 +21,16 @@ export class PointerContextMenu {
         this._menu = new PopupMenu.PopupMenu(this._anchor, 0.0, St.Side.TOP);
         this._menu.actor.hide();
         Main.uiGroup.add_child(this._menu.actor);
+
+        /* Without PopupMenuManager the menu never grabs a modal; clicks elsewhere do not close it. */
+        this._menuManager = new PopupMenu.PopupMenuManager(this._anchor);
+        this._menuManager.addMenu(this._menu);
     }
 
     destroy() {
-        this._menu?.close();
-        this._menu?.actor?.destroy();
+        this._menu?.destroy();
         this._menu = null;
+        this._menuManager = null;
         this._anchor?.destroy();
         this._anchor = null;
     }
@@ -41,8 +45,7 @@ export class PointerContextMenu {
 
     _rebuild(context) {
         this._menu.removeAll();
-        const title = context.monitorLabel ? `Monitor: ${context.monitorLabel}` : 'Monitor under pointer';
-        const header = new PopupMenu.PopupMenuItem(title, { reactive: false, can_focus: false });
+        const header = new PopupMenu.PopupMenuItem('Per-monitor mode', { reactive: false, can_focus: false });
         this._menu.addMenuItem(header);
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 

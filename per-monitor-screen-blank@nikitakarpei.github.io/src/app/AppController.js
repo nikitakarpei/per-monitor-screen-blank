@@ -10,6 +10,12 @@ import { listRuntimeMonitors } from '../util/monitorSelection.js';
 import { normalizeMode } from '../util/monitorModes.js';
 import { logInfo, logWarn, logErrorWithContext } from '../util/logger.js';
 
+function _pointerShortcutAccelFromSettings(settings) {
+    const strv = settings.get_strv('pointer-menu-shortcut');
+    const raw = strv.length ? String(strv[0] ?? '') : '';
+    return raw.trim();
+}
+
 const POLL_INTERVAL_MS = 250;
 
 export class AppController {
@@ -51,7 +57,10 @@ export class AppController {
         this._signalRegistrar.addDisconnector(this._settingsGateway.connectChanged(() => this._syncFromSettings()));
         this._signalRegistrar.connect(Main.layoutManager, 'monitors-changed', () => this._syncFromSettings());
         this._signalRegistrar.connect(global.display, 'primary-monitor-changed', () => this._syncFromSettings());
-        this._registerPointerMenuShortcut();
+        this._signalRegistrar.addDisconnector(
+            this._settingsGateway.settings.connect('changed::pointer-menu-shortcut', () => this._reregisterPointerMenuShortcut())
+        );
+        this._reregisterPointerMenuShortcut();
 
         this._syncFromSettings();
         this._pollId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, POLL_INTERVAL_MS, () => this._tick());
@@ -122,7 +131,6 @@ export class AppController {
     openPointerMenu() {
         const target = this._getFocusedMonitor();
         this._pointerContextMenu?.open({
-            monitorLabel: target ? this._describeMonitor(target) : 'Unknown monitor',
             currentMode: target?.mode ?? 'disabled',
         });
     }
@@ -264,15 +272,13 @@ export class AppController {
             listener();
     }
 
-    _describeMonitor(monitor) {
-        const connector = monitor?.connector?.trim?.() ?? '';
-        const size = monitor?.width > 0 && monitor?.height > 0 ? `${monitor.width}x${monitor.height}` : '';
-        if (connector && size) return `${connector} (${size})`;
-        if (connector) return connector;
-        return size || `Monitor ${monitor?.index ?? '?'}`;
-    }
-
-    _registerPointerMenuShortcut() {
+    _reregisterPointerMenuShortcut() {
+        this._unregisterPointerMenuShortcut();
+        const accel = _pointerShortcutAccelFromSettings(this._settingsGateway.settings);
+        if (!accel) {
+            logInfo('pointer menu shortcut is unset; keybinding not registered');
+            return;
+        }
         try {
             Main.wm.addKeybinding(
                 'pointer-menu-shortcut',
@@ -282,7 +288,7 @@ export class AppController {
                 () => this.openPointerMenu()
             );
         } catch (error) {
-            logErrorWithContext(error, 'failed to register pointer-menu shortcut');
+            logErrorWithContext(error, 'failed to register pointer-menu shortcut', { accel });
             this._notifyIssue('Shortcut registration failed', 'Could not register pointer menu shortcut.');
         }
     }

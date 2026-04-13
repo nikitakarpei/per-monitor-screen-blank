@@ -123,7 +123,6 @@ export class ShellOverlayManager {
 
         actor.set_position(monitor.x, monitor.y);
         actor.set_size(monitor.width, monitor.height);
-        this.#raiseActorToTop(actor);
     }
 
     #ensureActor(monitorIndex) {
@@ -146,18 +145,6 @@ export class ShellOverlayManager {
         Main.layoutManager.addChrome(actor, { affectsInputRegion: false, trackFullscreen: true });
         this.#actors.set(monitorIndex, actor);
         return actor;
-    }
-
-    #raiseActorToTop(actor) {
-        if (!actor) return;
-        if (typeof actor.raise_top === 'function') {
-            actor.raise_top();
-            return;
-        }
-
-        const parent = actor.get_parent?.();
-        if (parent && typeof parent.set_child_above_sibling === 'function')
-            parent.set_child_above_sibling(actor, null);
     }
 }
 

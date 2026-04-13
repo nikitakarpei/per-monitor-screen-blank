@@ -24,6 +24,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         globalGroup.add(this._makeSwitchRow(settings, 'Show indicator', 'show-indicator'));
         globalGroup.add(this._makeSwitchRow(settings, 'Wake on pointer entry', 'wake-on-pointer-entry'));
         globalGroup.add(this._makeSpinRow(settings, 'Fade duration', 'fade-duration-ms', 10, 0, 5000, 'ms'));
+        globalGroup.add(this._makePointerShortcutRow(window, settings));
         diagnosticsGroup.add(this._makeButtonRow(
             'Open Extension Logs',
             'Open a terminal with live extension logs.',
@@ -173,6 +174,105 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             row.add_suffix(label);
         row.activatable_widget = spin;
         return row;
+    }
+
+    _readPointerShortcutAccel(settings) {
+        const strv = settings.get_strv('pointer-menu-shortcut');
+        return (strv[0] ?? '').trim();
+    }
+
+    _makePointerShortcutRow(window, settings) {
+        const row = new Adw.ActionRow({
+            title: 'Pointer menu shortcut',
+            subtitle: 'Opens the mode menu at the cursor. Clear to disable.',
+        });
+        const accel = this._readPointerShortcutAccel(settings);
+        const shortcutLabel = new Adw.ShortcutLabel({
+            accelerator: accel,
+            disabled_text: 'Disabled',
+            valign: Gtk.Align.CENTER,
+        });
+        const refresh = () => {
+            shortcutLabel.accelerator = this._readPointerShortcutAccel(settings);
+        };
+        const shortcutChangedId = settings.connect('changed::pointer-menu-shortcut', refresh);
+        window.connect('destroy', () => {
+            try {
+                settings.disconnect(shortcutChangedId);
+            } catch (_) {
+                console.warn('[per-monitor-screen-blank] prefs: disconnect pointer-menu-shortcut failed');
+            }
+        });
+
+        const setButton = new Gtk.Button({ label: 'Set…', valign: Gtk.Align.CENTER });
+        setButton.connect('clicked', () => this._promptPointerShortcutCapture(window, settings, refresh));
+
+        const clearButton = new Gtk.Button({ label: 'Clear', valign: Gtk.Align.CENTER });
+        clearButton.connect('clicked', () => {
+            settings.set_strv('pointer-menu-shortcut', []);
+            refresh();
+        });
+
+        const box = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 8, valign: Gtk.Align.CENTER });
+        box.append(shortcutLabel);
+        box.append(setButton);
+        box.append(clearButton);
+        row.add_suffix(box);
+        return row;
+    }
+
+    _promptPointerShortcutCapture(window, settings, onApplied) {
+        const dialog = new Adw.MessageDialog({
+            transient_for: window,
+            heading: 'Set pointer menu shortcut',
+            body: 'Press the new key combination. Press Escape to cancel.',
+        });
+        dialog.add_response('cancel', 'Cancel');
+        dialog.set_close_response('cancel');
+        dialog.set_default_response('cancel');
+
+        const sink = new Gtk.DrawingArea({
+            height_request: 56,
+            hexpand: true,
+            focusable: true,
+        });
+        dialog.set_extra_child(sink);
+
+        const keyController = new Gtk.EventControllerKey();
+        sink.add_controller(keyController);
+        keyController.connect('key-pressed', (_c, keyval, _keycode, state) => {
+            if (keyval === Gdk.KEY_Escape) {
+                dialog.destroy();
+                return Gdk.EVENT_STOP;
+            }
+            const mods = state & Gtk.accelerator_get_default_mod_mask();
+            if (!Gtk.accelerator_valid(keyval, mods))
+                return Gdk.EVENT_STOP;
+
+            const accel = Gtk.accelerator_name(keyval, mods);
+            const parsed = Gtk.accelerator_parse(accel);
+            const ok = parsed?.length === 3 ? parsed[0] : false;
+            if (!ok) {
+                console.warn('[per-monitor-screen-blank] prefs: accelerator_parse rejected captured shortcut', { accel });
+                return Gdk.EVENT_STOP;
+            }
+
+            settings.set_strv('pointer-menu-shortcut', [accel]);
+            onApplied?.();
+            dialog.destroy();
+            return Gdk.EVENT_STOP;
+        });
+
+        dialog.connect('response', () => dialog.destroy());
+        dialog.present();
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            try {
+                sink.grab_focus();
+            } catch (err) {
+                console.warn('[per-monitor-screen-blank] prefs: shortcut capture focus failed', err);
+            }
+            return GLib.SOURCE_REMOVE;
+        });
     }
 
     _makeButtonRow(title, subtitle, buttonLabel, onClicked, disabled = false) {
