@@ -1,8 +1,7 @@
 import { createSettingsSnapshot } from '../domain/SettingsSnapshot.js';
-import { normalizeMode, parseMonitorModes, stringifyMonitorModes } from '../util/monitorModes.js';
+import { normalizeMode } from '../util/monitorModes.js';
 import { logWarn } from '../util/logger.js';
 import {
-    createProfileId,
     defaultProfiles,
     ensureActiveProfileId,
     parseProfiles,
@@ -19,7 +18,18 @@ export class GSettingsGateway {
         return () => this._settings.disconnect(id);
     }
 
-    get settings() {
+    connectPointerShortcutChanged(handler) {
+        const id = this._settings.connect('changed::pointer-menu-shortcut', handler);
+        return () => this._settings.disconnect(id);
+    }
+
+    getPointerShortcutAccel() {
+        const strv = this._settings.get_strv('pointer-menu-shortcut');
+        const raw = strv.length ? String(strv[0] ?? '') : '';
+        return raw.trim();
+    }
+
+    getKeybindingSettings() {
         return this._settings;
     }
 
@@ -52,31 +62,12 @@ export class GSettingsGateway {
         this._settings.set_string('profiles-json', stringifyProfiles(nextProfiles));
     }
 
-    setMonitorModes(monitorModes) {
-        const { profiles, activeProfileId } = this._ensureProfiles();
-        const normalizedModes = parseMonitorModes(stringifyMonitorModes(monitorModes));
-        const nextProfiles = profiles.map(profile => profile.id === activeProfileId
-            ? { ...profile, monitorModes: normalizedModes }
-            : profile);
-        this._settings.set_string('profiles-json', stringifyProfiles(nextProfiles));
-    }
-
     setActiveProfile(profileId) {
         const { profiles } = this._ensureProfiles();
         const activeProfileId = ensureActiveProfileId(profiles, profileId);
         if (activeProfileId !== profileId)
             logWarn('requested profile not found, falling back', { requested: profileId, activeProfileId });
         this._settings.set_string('active-profile-id', activeProfileId);
-    }
-
-    createProfile(name) {
-        const { profiles } = this._ensureProfiles();
-        const trimmedName = String(name ?? '').trim() || `Profile ${profiles.length + 1}`;
-        const id = createProfileId(trimmedName, profiles);
-        const nextProfiles = [...profiles, { id, name: trimmedName, monitorModes: {} }];
-        this._settings.set_string('profiles-json', stringifyProfiles(nextProfiles));
-        this._settings.set_string('active-profile-id', id);
-        return id;
     }
 
     _ensureProfiles() {

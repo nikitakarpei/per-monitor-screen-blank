@@ -8,7 +8,7 @@ import { PointerContextMenu } from './src/ui/pointerContextMenu.js';
 import { GSettingsGateway } from './src/platform/GSettingsGateway.js';
 import { ShellRuntimeProbe } from './src/platform/ShellRuntimeProbe.js';
 import { ShellSignalRegistrar } from './src/platform/ShellSignalRegistrar.js';
-import { logWarn } from './src/util/logger.js';
+import { logWarn, logErrorWithContext } from './src/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     enable() {
@@ -58,7 +58,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
 
             await this.openPreferences();
         } catch (error) {
-            logError(error, 'Per-Monitor Screen Blank: failed to open preferences');
+            logErrorWithContext(error, 'failed to open preferences');
         }
     }
 }

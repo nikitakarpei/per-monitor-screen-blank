@@ -13,12 +13,6 @@ export class ShellRuntimeProbe {
             this.#lastActivityByMonitor.set(index, now);
     }
 
-    sample(targetMonitorIndex) {
-        const snapshot = this.sampleMonitors([targetMonitorIndex])[targetMonitorIndex];
-        if (snapshot) return snapshot;
-        return { isPointerOnTargetMonitor: false, targetIdleTimeMs: Number.POSITIVE_INFINITY };
-    }
-
     sampleMonitors(targetMonitorIndexes) {
         const indexes = Array.isArray(targetMonitorIndexes) ? targetMonitorIndexes : [];
         const [x, y] = global.get_pointer();

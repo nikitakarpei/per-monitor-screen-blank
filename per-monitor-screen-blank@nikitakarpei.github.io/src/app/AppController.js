@@ -4,27 +4,21 @@ import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { State, StateMachine } from '../domain/StateMachine.js';
-import { resolveAutoState, resolveModeSync } from '../domain/DomainEngine.js';
+import { shouldAutoBlack } from '../core/autoBlackPolicy.js';
+import { resolveSettingsModeEffect } from '../core/modeLogic.js';
 import { buildStateViewModel } from '../presentation/stateViewModel.js';
 import { listRuntimeMonitors } from '../util/monitorSelection.js';
 import { normalizeMode } from '../util/monitorModes.js';
 import { logInfo, logWarn, logErrorWithContext } from '../util/logger.js';
 
-function _pointerShortcutAccelFromSettings(settings) {
-    const strv = settings.get_strv('pointer-menu-shortcut');
-    const raw = strv.length ? String(strv[0] ?? '') : '';
-    return raw.trim();
-}
-
 const POLL_INTERVAL_MS = 250;
 
 export class AppController {
-    constructor({ settingsGateway, runtimeProbe, signalRegistrar, overlay, indicator, quickSettings, pointerContextMenu }) {
+    constructor({ settingsGateway, runtimeProbe, signalRegistrar, overlay, quickSettings, pointerContextMenu }) {
         this._settingsGateway = settingsGateway;
         this._runtimeProbe = runtimeProbe;
         this._signalRegistrar = signalRegistrar;
         this._overlay = overlay;
-        this._indicator = indicator;
         this._quickSettings = quickSettings;
         this._pointerContextMenu = pointerContextMenu;
         this._stateMachines = new Map();
@@ -57,9 +51,7 @@ export class AppController {
         this._signalRegistrar.addDisconnector(this._settingsGateway.connectChanged(() => this._syncFromSettings()));
         this._signalRegistrar.connect(Main.layoutManager, 'monitors-changed', () => this._syncFromSettings());
         this._signalRegistrar.connect(global.display, 'primary-monitor-changed', () => this._syncFromSettings());
-        this._signalRegistrar.addDisconnector(
-            this._settingsGateway.settings.connect('changed::pointer-menu-shortcut', () => this._reregisterPointerMenuShortcut())
-        );
+        this._signalRegistrar.addDisconnector(this._settingsGateway.connectPointerShortcutChanged(() => this._reregisterPointerMenuShortcut()));
         this._reregisterPointerMenuShortcut();
 
         this._syncFromSettings();
@@ -75,19 +67,11 @@ export class AppController {
         this._overlay.disable();
         this._quickSettings.destroy();
         this._pointerContextMenu?.destroy?.();
-        this._indicator?.destroy?.();
         this._unregisterPointerMenuShortcut();
     }
 
     setMode(mode) {
-        const target = this._getFocusedMonitor();
-        if (!target) {
-            logWarn('setMode skipped: no focused monitor', { mode });
-            this._notifyIssue('No monitor under pointer', 'Move pointer to a monitor and try again.');
-            return;
-        }
-        this._settingsGateway.setMonitorMode(target.id, mode);
-        this._syncFromSettings();
+        this._setFocusedMonitorMode(mode, 'setMode');
     }
 
     switchProfile(profileId) {
@@ -96,36 +80,15 @@ export class AppController {
     }
 
     setKeepAwake() {
-        const target = this._getFocusedMonitor();
-        if (!target) {
-            logWarn('setKeepAwake skipped: no focused monitor');
-            this._notifyIssue('No monitor under pointer', 'Move pointer to a monitor and try again.');
-            return;
-        }
-        this._settingsGateway.setMonitorMode(target.id, 'keep-awake');
-        this._syncFromSettings();
+        this._setFocusedMonitorMode('keep-awake', 'setKeepAwake');
     }
 
     setDisabled() {
-        const target = this._getFocusedMonitor();
-        if (!target) {
-            logWarn('setDisabled skipped: no focused monitor');
-            this._notifyIssue('No monitor under pointer', 'Move pointer to a monitor and try again.');
-            return;
-        }
-        this._settingsGateway.setMonitorMode(target.id, 'disabled');
-        this._syncFromSettings();
+        this._setFocusedMonitorMode('disabled', 'setDisabled');
     }
 
     setBlackNow() {
-        const target = this._getFocusedMonitor();
-        if (!target) {
-            logWarn('setBlackNow skipped: no focused monitor');
-            this._notifyIssue('No monitor under pointer', 'Move pointer to a monitor and try again.');
-            return;
-        }
-        this._settingsGateway.setMonitorMode(target.id, 'manual-black');
-        this._syncFromSettings();
+        this._setFocusedMonitorMode('manual-black', 'setBlackNow');
     }
 
     openPointerMenu() {
@@ -201,7 +164,13 @@ export class AppController {
                 logWarn('missing runtime sample for monitor', { monitorId: monitor.id, index: monitor.index });
                 continue;
             }
-            const nextState = resolveAutoState(snapshot, { ...runtime, currentState: machine.state });
+            const nextState = shouldAutoBlack({
+                targetIdleTimeMs: runtime.targetIdleTimeMs,
+                idleTimeoutSeconds: snapshot.idleTimeoutSeconds,
+                wakeOnPointerEntry: snapshot.wakeOnPointerEntry,
+                isCurrentlyAutoBlack: machine.state === State.AutoBlack,
+                isPointerOnTargetMonitor: runtime.isPointerOnTargetMonitor,
+            }) ? State.AutoBlack : State.AutoAwake;
             machine.transition(nextState, 'pointer-poll');
         }
         this._syncOverlay();
@@ -211,13 +180,12 @@ export class AppController {
 
     _applyModeSyncForMonitor(snapshot, monitor) {
         const machine = this._getOrCreateMachine(monitor.id);
-        const modeEffect = resolveModeSync({
-            ...snapshot,
-            mode: monitor.mode,
-        }, {
-            lastMode: this._lastModes.get(monitor.id) ?? null,
-            lastKeepAwakeMinutes: this._lastKeepAwakeMinutes.get(monitor.id) ?? null,
-        });
+        const modeEffect = resolveSettingsModeEffect(
+            monitor.mode,
+            snapshot.keepAwakeMinutes,
+            this._lastModes.get(monitor.id) ?? null,
+            this._lastKeepAwakeMinutes.get(monitor.id) ?? null
+        );
 
         if (modeEffect.transitionState)
             machine.transition(modeEffect.transitionState, 'settings');
@@ -262,6 +230,19 @@ export class AppController {
         return this._stateMachines.get(focused.id)?.state ?? State.Disabled;
     }
 
+    _setFocusedMonitorMode(mode, action) {
+        const target = this._getFocusedMonitor();
+        if (!target) {
+            logWarn('focused monitor mode update skipped: no focused monitor', { action, mode });
+            this._notifyIssue('No monitor under pointer', 'Move pointer to a monitor and try again.');
+            return false;
+        }
+
+        this._settingsGateway.setMonitorMode(target.id, mode);
+        this._syncFromSettings();
+        return true;
+    }
+
     _subscribeUi(handler) {
         this._uiListeners.add(handler);
         return () => this._uiListeners.delete(handler);
@@ -274,7 +255,7 @@ export class AppController {
 
     _reregisterPointerMenuShortcut() {
         this._unregisterPointerMenuShortcut();
-        const accel = _pointerShortcutAccelFromSettings(this._settingsGateway.settings);
+        const accel = this._settingsGateway.getPointerShortcutAccel();
         if (!accel) {
             logInfo('pointer menu shortcut is unset; keybinding not registered');
             return;
@@ -282,7 +263,7 @@ export class AppController {
         try {
             Main.wm.addKeybinding(
                 'pointer-menu-shortcut',
-                this._settingsGateway.settings,
+                this._settingsGateway.getKeybindingSettings(),
                 Meta.KeyBindingFlags.NONE,
                 Shell.ActionMode.ALL,
                 () => this.openPointerMenu()

@@ -13,10 +13,6 @@ export class ShellOverlayManager {
     #signalIds = [];
     #fadeDurationMs = FADE_DURATION_MS;
 
-    enable(monitorIndexes = [0]) {
-        this.setBlackMonitors(monitorIndexes);
-    }
-
     disable() {
         this.setBlackMonitors([]);
         this.#unbindGeometrySignals();
@@ -147,5 +143,3 @@ export class ShellOverlayManager {
         return actor;
     }
 }
-
-export default ShellOverlayManager;

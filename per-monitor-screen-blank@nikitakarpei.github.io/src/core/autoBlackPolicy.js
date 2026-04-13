@@ -1,5 +1,3 @@
-import { shouldReactToPointerActivity } from '../domain/activityPolicy.js';
-
 export function shouldAutoBlack({
     targetIdleTimeMs,
     idleTimeoutSeconds,
@@ -7,13 +5,9 @@ export function shouldAutoBlack({
     isCurrentlyAutoBlack,
     isPointerOnTargetMonitor,
 }) {
-    return shouldReactToPointerActivity(
-        targetIdleTimeMs,
-        Math.max(0, idleTimeoutSeconds) * 1000,
-        {
-            wakeOnPointerEntry,
-            isCurrentlyAutoBlack,
-            isPointerOnTargetMonitor,
-        }
-    );
+    const idleThresholdMs = Math.max(0, idleTimeoutSeconds) * 1000;
+    if (targetIdleTimeMs >= idleThresholdMs)
+        return true;
+
+    return isCurrentlyAutoBlack && isPointerOnTargetMonitor && !wakeOnPointerEntry;
 }

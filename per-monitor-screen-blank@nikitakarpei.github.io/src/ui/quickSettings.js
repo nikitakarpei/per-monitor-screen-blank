@@ -1,6 +1,7 @@
 import GObject from 'gi://GObject';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import { logWarn } from '../util/logger.js';
 
 export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class PerMonitorScreenBlankQuickSettings extends QuickSettings.SystemIndicator {
     constructor(actions = {}) {
@@ -38,8 +39,10 @@ export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class Pe
                 const view = mapStateToViewModel?.(stateSource.state) ?? { icon: 'display-symbolic' };
                 if (this._indicator) this._indicator.icon_name = view.icon;
                 this._item.iconName = view.icon;
-            } catch {
-                /* Nested shell / compositor teardown can dispose chrome before listeners unwind. */
+            } catch (error) {
+                logWarn('quick settings state sync skipped during teardown', {
+                    message: error?.message ?? String(error),
+                });
             }
         };
         sync();
