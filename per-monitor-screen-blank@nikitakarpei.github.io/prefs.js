@@ -386,31 +386,45 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }
     }
 
+    _spawnTerminalForCommand(argv) {
+        const program = argv[0];
+        if (!GLib.find_program_in_path(program))
+            return false;
+        try {
+            GLib.spawn_async(
+                null,
+                argv,
+                null,
+                GLib.SpawnFlags.SEARCH_PATH,
+                null,
+            );
+            return true;
+        } catch (err) {
+            console.warn('[per-monitor-screen-blank] prefs: terminal launch failed', program, err);
+            return false;
+        }
+    }
+
     _openExtensionLogs(window) {
         /* journalctl --grep matches MESSAGE text; covers log tag and bracket prefix without bash/rg. */
         const journalArgv = [
             'journalctl', '--user', '-f', '--no-pager',
             '-g', 'per-monitor-screen-blank',
         ];
+        /* Prefer xdg-terminal-exec (Default Terminal Execution spec): honors desktop/session
+         * default terminal and each emulator's X-TerminalArgExec= from its .desktop entry.
+         * Shorter hardcoded fallbacks only when that helper is missing or spawn fails. */
         const terminalArgvs = [
+            ['xdg-terminal-exec', '--', ...journalArgv],
+            ['ptyxis', '--', ...journalArgv],
             ['gnome-terminal', '--', ...journalArgv],
             ['kgx', '--', ...journalArgv],
-            ['ptyxis', '--', ...journalArgv],
+            ['x-terminal-emulator', '-e', ...journalArgv],
         ];
 
         for (const argv of terminalArgvs) {
-            try {
-                GLib.spawn_async(
-                    null,
-                    argv,
-                    null,
-                    GLib.SpawnFlags.SEARCH_PATH,
-                    null,
-                );
+            if (this._spawnTerminalForCommand(argv))
                 return;
-            } catch (err) {
-                console.warn('[per-monitor-screen-blank] prefs: terminal launch failed', argv[0], err);
-            }
         }
 
         const manual = 'journalctl --user -f --no-pager -g per-monitor-screen-blank';
