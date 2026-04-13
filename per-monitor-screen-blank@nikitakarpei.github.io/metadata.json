@@ -2,6 +2,7 @@
   "uuid": "per-monitor-screen-blank@nikitakarpei.github.io",
   "name": "Per-Monitor Screen Blank",
   "description": "Blank individual monitors after pointer idle time.",
+  "version": 1,
   "url": "https://github.com/nikitakarpei/per-monitor-screen-blank",
   "settings-schema": "org.gnome.shell.extensions.per-monitor-screen-blank",
   "shell-version": ["49"]

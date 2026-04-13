@@ -6,6 +6,10 @@
 
 ![Preferences window](images/screenshot.png)
 
+## AI Disclosure
+
+AI assistance was used during development. All generated code was reviewed and tested by the author.
+
 ## Motivation / Original Problem
 
 The extension is designed to reduce OLED burn-in risk on a secondary monitor by blanking it when it is idle and likely showing static content. It does this without triggering monitor disconnect behavior, and it uses shell-level control because regular app windows are not reliable for this on Wayland.

@@ -1,4 +1,6 @@
 import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
@@ -8,6 +10,8 @@ import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from './src/
 import { logInfo, logWarn, setIssueReporter } from './src/util/logger.js';
 import { sanitizeMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
+
+Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async', 'communicate_utf8_finish');
 
 export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     _lastIssueSignature = '';
@@ -33,7 +37,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             'Open Extension Logs',
             'Open a terminal with live extension logs.',
             'Open',
-            () => this._openExtensionLogs(window)
+            () => this._openExtensionLogs(window).catch(err => logWarn('failed to open extension logs', { error: String(err) }))
         ));
 
         const profileState = this._makeProfilesState(settings);
@@ -384,29 +388,28 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }
     }
 
-    _findExtensionStartCursor() {
+    async _findExtensionStartCursor() {
         try {
-            const [ok, stdout] = GLib.spawn_sync(
-                null,
-                ['journalctl', '--user', '-g', 'per-monitor-screen-blank.*extension enabled',
+            const proc = new Gio.Subprocess({
+                argv: ['journalctl', '--user', '-g', 'per-monitor-screen-blank.*extension enabled',
                     '-n', '1', '--output=json', '--no-pager'],
-                null,
-                GLib.SpawnFlags.SEARCH_PATH,
-                null,
-            );
-            if (!ok || !stdout?.length)
+                flags: Gio.SubprocessFlags.STDOUT_PIPE,
+            });
+            proc.init(null);
+            const [, stdout] = await proc.communicate_utf8_async(null, null);
+            if (!stdout?.trim())
                 return null;
-            const entry = JSON.parse(new TextDecoder().decode(stdout).trim());
+            const entry = JSON.parse(stdout.trim());
             return entry['__CURSOR'] ?? null;
         } catch (_) {
             return null;
         }
     }
 
-    _openExtensionLogs(window) {
+    async _openExtensionLogs(window) {
         /* journalctl --grep matches MESSAGE text; covers log tag and bracket prefix without bash/rg.
          * --cursor positions the stream at the last extension enable so all session logs are visible. */
-        const startCursor = this._findExtensionStartCursor();
+        const startCursor = await this._findExtensionStartCursor();
         const journalArgv = [
             'journalctl', '--user', '-f', '--no-pager',
             '-g', 'per-monitor-screen-blank',
