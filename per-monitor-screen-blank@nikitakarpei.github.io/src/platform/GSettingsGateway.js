@@ -53,7 +53,6 @@ export class GSettingsGateway {
             idleTimeoutSeconds: this._settings.get_int('idle-timeout-seconds'),
             keepAwakeMinutes: this._settings.get_int('keep-awake-minutes'),
             showIndicator: this._settings.get_boolean('show-indicator'),
-            wakeOnPointerEntry: this._settings.get_boolean('wake-on-pointer-entry'),
             fadeDurationMs: this._settings.get_int('fade-duration-ms'),
         });
     }

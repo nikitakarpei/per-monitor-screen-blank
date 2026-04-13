@@ -14,7 +14,6 @@ export function createSettingsSnapshot(raw) {
         idleTimeoutSeconds: Number.isFinite(raw.idleTimeoutSeconds) ? raw.idleTimeoutSeconds : DEFAULTS.idleTimeoutSeconds,
         keepAwakeMinutes: normalizeKeepAwakeMinutes(raw.keepAwakeMinutes ?? DEFAULTS.keepAwakeMinutes),
         showIndicator: raw.showIndicator ?? true,
-        wakeOnPointerEntry: raw.wakeOnPointerEntry ?? true,
         fadeDurationMs: Number.isFinite(raw.fadeDurationMs) ? raw.fadeDurationMs : DEFAULTS.fadeDurationMs,
     });
 }

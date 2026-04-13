@@ -46,11 +46,6 @@
       <summary>Show issue notifications</summary>
       <description>Show user-facing notifications when the extension logs warnings or errors.</description>
     </key>
-    <key name="wake-on-pointer-entry" type="b">
-      <default>true</default>
-      <summary>Wake on pointer entry</summary>
-      <description>Wake the target monitor when the pointer enters it.</description>
-    </key>
     <key name="fade-duration-ms" type="i">
       <default>180</default>
       <summary>Fade duration in milliseconds</summary>

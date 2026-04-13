@@ -27,7 +27,6 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         globalGroup.add(this._makeSpinRow(settings, 'Keep awake', 'keep-awake-minutes', 1, 1, 1440, 'minutes'));
         globalGroup.add(this._makeSwitchRow(settings, 'Show indicator', 'show-indicator'));
         globalGroup.add(this._makeSwitchRow(settings, 'Show issue notifications', 'show-issue-notifications'));
-        globalGroup.add(this._makeSwitchRow(settings, 'Wake on pointer entry', 'wake-on-pointer-entry'));
         globalGroup.add(this._makeSpinRow(settings, 'Fade duration', 'fade-duration-ms', 10, 0, 5000, 'ms'));
         globalGroup.add(this._makePointerShortcutRow(window, settings));
         diagnosticsGroup.add(this._makeButtonRow(

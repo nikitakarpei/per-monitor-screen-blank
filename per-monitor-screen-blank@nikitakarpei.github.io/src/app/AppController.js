@@ -272,10 +272,7 @@ export class AppController {
     _handlePointerActivity(activity) {
         const snapshot = this._settingsGateway.getSnapshot();
         const monitor = this._findMonitorByIndex(activity?.monitorIndex);
-        const previousMonitor = this._findMonitorByIndex(activity?.previousMonitorIndex);
         const now = Date.now();
-        if (previousMonitor && previousMonitor.id !== monitor?.id)
-            this._handlePointerExit(previousMonitor, snapshot);
 
         if (!monitor) {
             if (this._monitorContexts.length === 0) return;
@@ -286,18 +283,8 @@ export class AppController {
         if (monitor.mode !== 'auto') return;
         this._lastActivityByMonitorId.set(monitor.id, now);
         const machine = this._getOrCreateMachine(monitor.id);
-        if (machine.state === State.AutoBlack && snapshot.wakeOnPointerEntry)
+        if (machine.state !== State.AutoBlack || activity?.previousMonitorIndex !== activity?.monitorIndex)
             machine.transition(State.AutoAwake, 'pointer-activity');
-        else if (machine.state !== State.AutoBlack)
-            machine.transition(State.AutoAwake, 'pointer-activity');
-        this._rescheduleMonitor(snapshot, monitor, machine);
-    }
-
-    _handlePointerExit(monitor, snapshot) {
-        if (!monitor || monitor.mode !== 'auto' || snapshot.wakeOnPointerEntry) return;
-        const machine = this._getOrCreateMachine(monitor.id);
-        if (machine.state !== State.AutoBlack) return;
-        machine.transition(State.AutoAwake, 'pointer-exit');
         this._rescheduleMonitor(snapshot, monitor, machine);
     }
 
@@ -322,7 +309,6 @@ export class AppController {
         const shouldBlack = shouldAutoBlack({
             targetIdleTimeMs,
             idleTimeoutSeconds: snapshot.idleTimeoutSeconds,
-            wakeOnPointerEntry: snapshot.wakeOnPointerEntry,
             isCurrentlyAutoBlack: machine.state === State.AutoBlack,
             isPointerOnTargetMonitor,
         });

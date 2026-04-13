@@ -1,7 +1,6 @@
 export function shouldAutoBlack({
     targetIdleTimeMs,
     idleTimeoutSeconds,
-    wakeOnPointerEntry,
     isCurrentlyAutoBlack,
     isPointerOnTargetMonitor,
 }) {
@@ -9,5 +8,5 @@ export function shouldAutoBlack({
     if (targetIdleTimeMs >= idleThresholdMs)
         return true;
 
-    return isCurrentlyAutoBlack && isPointerOnTargetMonitor && !wakeOnPointerEntry;
+    return isCurrentlyAutoBlack && isPointerOnTargetMonitor;
 }

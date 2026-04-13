@@ -12,7 +12,7 @@ The extension is designed to reduce OLED burn-in risk on a secondary monitor by 
 
 Each display has its own mode in the active profile. You can change it from Preferences, Quick Settings, or the pointer shortcut menu.
 
-- **Auto** — The extension may blank that monitor after the pointer has been idle on it for the configured **Idle timeout**. Idle detection and wake behavior follow **Wake on pointer entry** and the other global timing options.
+- **Auto** — The extension may blank that monitor after the pointer has been idle on it for the configured **Idle timeout**. Moving the pointer onto that monitor wakes it again.
 - **Disabled** — That monitor is left alone by the extension (no automatic blanking) until you choose another mode.
 - **Keep awake** — No automatic blanking on that monitor for the configured **Keep awake** duration (minutes); when the timer ends, that monitor returns to **Auto** so protection resumes without a manual step.
 - **Manual black** — The black overlay stays on that monitor until you switch modes. In the pointer menu this action is labeled **Black Now**.
