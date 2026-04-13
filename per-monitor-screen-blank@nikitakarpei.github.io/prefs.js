@@ -13,7 +13,6 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
 
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
-        const overlay = new Adw.ToastOverlay();
 
         const page = new Adw.PreferencesPage({ title: 'General' });
         const monitorGroup = new Adw.PreferencesGroup({ title: 'Per-monitor mode' });
@@ -49,9 +48,8 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         page.add(globalGroup);
         page.add(diagnosticsGroup);
         page.add(profilesGroup);
-        overlay.set_child(page);
-        window.add(overlay);
-        setIssueReporter(issue => this._reportIssue(settings, overlay, issue));
+        window.add(page);
+        setIssueReporter(issue => this._reportIssue(window, settings, issue));
         window.connect('destroy', () => {
             setIssueReporter(null);
             this._lastIssueSignature = '';
@@ -440,7 +438,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         dialog.present();
     }
 
-    _reportIssue(settings, overlay, issue) {
+    _reportIssue(window, settings, issue) {
         if (!settings.get_boolean('show-issue-notifications'))
             return;
 
@@ -464,7 +462,16 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             title: detailParts.join(': '),
             timeout: issue.level === 'error' ? 6 : 4,
         });
-        overlay.add_toast(toast);
+        if (typeof window?.add_toast === 'function') {
+            window.add_toast(toast);
+            return;
+        }
+
+        log(`[per-monitor-screen-blank] WARN: preferences issue notification unavailable | ${JSON.stringify({
+            issueLevel: issue.level,
+            issueMessage: issue.message,
+            windowType: window?.constructor?.name ?? typeof window,
+        })}`);
     }
 
 }
