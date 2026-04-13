@@ -1,0 +1,80 @@
+import Gio from 'gi://Gio';
+
+import { buildMonitorIdentity, normalizeConnector } from '../util/monitorIdentity.js';
+import { logWarn } from '../util/logger.js';
+
+const BUS_NAME = 'org.gnome.Mutter.DisplayConfig';
+const OBJECT_PATH = '/org/gnome/Mutter/DisplayConfig';
+const INTERFACE = 'org.gnome.Mutter.DisplayConfig';
+
+export function listDisplayConfigMonitors() {
+    try {
+        const result = Gio.DBus.session.call_sync(
+            BUS_NAME,
+            OBJECT_PATH,
+            INTERFACE,
+            'GetCurrentState',
+            null,
+            null,
+            Gio.DBusCallFlags.NONE,
+            -1,
+            null
+        );
+        const [, monitors, logicalMonitors] = result.deep_unpack();
+        const primaryConnectors = _collectPrimaryConnectors(logicalMonitors);
+        return monitors.map(entry => _buildMonitor(entry, primaryConnectors)).filter(Boolean);
+    } catch (error) {
+        logWarn('failed to query Mutter display config for monitor identities', {
+            busName: BUS_NAME,
+            error: error?.message ?? String(error),
+        });
+        return [];
+    }
+}
+
+function _collectPrimaryConnectors(logicalMonitors) {
+    const primaryConnectors = new Set();
+    for (const logicalMonitor of logicalMonitors ?? []) {
+        const [, , , , isPrimary, linkedMonitors] = logicalMonitor;
+        if (!isPrimary)
+            continue;
+
+        for (const linkedMonitor of linkedMonitors ?? []) {
+            const [connector] = linkedMonitor;
+            const normalizedConnector = normalizeConnector(connector);
+            if (normalizedConnector)
+                primaryConnectors.add(normalizedConnector);
+        }
+    }
+    return primaryConnectors;
+}
+
+function _buildMonitor(entry, primaryConnectors) {
+    const [spec, , properties] = entry ?? [];
+    const [connector, vendor, product, serial] = spec ?? [];
+    const connectorName = String(connector ?? '').trim();
+    if (!connectorName)
+        return null;
+
+    const monitor = {
+        ...buildMonitorIdentity({ vendor, product, serial }),
+        connector: connectorName,
+        vendor: String(vendor ?? '').trim(),
+        product: String(product ?? '').trim(),
+        serial: String(serial ?? '').trim(),
+        displayName: String(properties?.['display-name'] ?? '').trim(),
+        isBuiltin: properties?.['is-builtin'] === true,
+        isPrimary: primaryConnectors.has(normalizeConnector(connectorName)),
+    };
+    if (!monitor.isStable) {
+        logWarn('display config monitor missing stable hardware identity; monitor skipped', {
+            connector: monitor.connector,
+            vendor: monitor.vendor,
+            product: monitor.product,
+            serial: monitor.serial,
+        });
+        return null;
+    }
+
+    return monitor;
+}

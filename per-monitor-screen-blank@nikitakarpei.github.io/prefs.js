@@ -1,10 +1,10 @@
 import Adw from 'gi://Adw';
-import Gdk from 'gi://Gdk';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import { listDisplayConfigMonitors } from './src/platform/MutterDisplayConfig.js';
 import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
-import { assignMonitorMode, buildMonitorIdentity, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
+import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
 import { logWarn, setIssueReporter } from './src/util/logger.js';
 import { sanitizeMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
@@ -140,29 +140,16 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     }
 
     _getMonitors() {
-        const monitors = [];
-        const display = Gdk.Display.get_default();
-        const list = display?.get_monitors?.();
-        const count = list?.get_n_items?.() ?? 0;
-
-        for (let i = 0; i < count; i += 1) {
-            const monitor = list.get_item(i);
-            const manufacturer = monitor?.get_manufacturer?.()?.trim?.() ?? '';
-            const model = monitor?.get_model?.()?.trim?.() ?? '';
-            const connector = monitor?.get_connector?.()?.trim?.() ?? '';
-            monitors.push({
-                ...buildMonitorIdentity({ index: i, connector }),
-                label: buildMonitorLabel({
-                    ordinal: i + 1,
-                    manufacturer,
-                    model,
-                    connector,
-                    isPrimary: monitor?.is_primary?.() ?? false,
-                }),
-            });
-        }
-
-        return monitors;
+        return listDisplayConfigMonitors().map((monitor, index) => ({
+            ...monitor,
+            label: buildMonitorLabel({
+                ordinal: index + 1,
+                manufacturer: monitor.vendor,
+                model: monitor.product || monitor.displayName,
+                connector: monitor.connector,
+                isPrimary: monitor.isPrimary,
+            }),
+        }));
     }
 
     _makeSwitchRow(settings, title, key) {

@@ -1,13 +1,25 @@
 import { normalizeMode } from './monitorModes.js';
 
-export function buildMonitorIdentity({ index = 0, connector = '' } = {}) {
-    const normalizedConnector = String(connector ?? '').trim().toLowerCase();
-    if (!normalizedConnector)
-        return { id: `monitor:${Math.max(0, Number.parseInt(index, 10) || 0)}` };
-
+export function buildMonitorIdentity({
+    vendor = '',
+    product = '',
+    serial = '',
+} = {}) {
+    const id = buildStableMonitorId({ vendor, product, serial });
     return {
-        id: `connector:${normalizedConnector}`,
+        id,
+        isStable: Boolean(id),
     };
+}
+
+export function buildStableMonitorId({ vendor = '', product = '', serial = '' } = {}) {
+    const vendorKey = _normalizeIdentityPart(vendor);
+    const productKey = _normalizeIdentityPart(product);
+    const serialKey = _normalizeIdentityPart(serial);
+    if (!serialKey)
+        return '';
+
+    return `monitor:${_encodeIdentityPart(vendorKey)}:${_encodeIdentityPart(productKey)}:${_encodeIdentityPart(serialKey)}`;
 }
 
 export function resolveMonitorMode(monitorModes, monitorIdentity, fallback = 'disabled') {
@@ -35,6 +47,18 @@ function _getMonitorId(monitorIdentity) {
         return monitorIdentity.trim();
 
     return String(monitorIdentity.id ?? '').trim();
+}
+
+function _normalizeIdentityPart(value) {
+    return String(value ?? '').trim().toLowerCase();
+}
+
+function _encodeIdentityPart(value) {
+    return encodeURIComponent(String(value ?? ''));
+}
+
+export function normalizeConnector(connector) {
+    return String(connector ?? '').trim().toLowerCase();
 }
 
 export function buildMonitorLabel({
