@@ -30,7 +30,6 @@ export class AppController {
         this._lastActivityByMonitorId = new Map();
         this._autoDeadlineTokens = new Map();
         this._keepAwakeDeadlineTokens = new Map();
-        this._lastIssueNotification = '';
         const controller = this;
         this._uiStateSource = {
             get state() {
@@ -118,18 +117,19 @@ export class AppController {
             });
         }
         if (unmatchedActiveKeys.length > 0) {
-            this._notifyIssue(
-                'Monitor mapping mismatch',
-                `Profile "${this._activeProfileId}" has stale active monitor keys: ${unmatchedActiveKeys.join(', ')}. Re-select monitor modes in Preferences.`
-            );
+            logWarn('monitor mapping mismatch', {
+                activeProfileId: this._activeProfileId,
+                unmatchedActiveKeys,
+            });
         }
         this._monitorContexts = runtimeMonitors.map(monitor => ({
             ...monitor,
             mode: resolveMonitorMode(monitorModes, monitor, 'disabled'),
         }));
         if (this._monitorContexts.length === 0) {
-            logWarn('no runtime monitors detected');
-            this._notifyIssue('No monitors detected', 'GNOME runtime returned no monitors for Per-Monitor Screen Blank.');
+            logWarn('no runtime monitors detected', {
+                reason: 'GNOME runtime returned no monitors for Per-Monitor Screen Blank',
+            });
         } else if (this._monitorContexts.every(monitor => monitor.mode === 'disabled')) {
             logInfo('all monitors are disabled in active profile', { activeProfileId: this._activeProfileId });
         }
@@ -213,8 +213,11 @@ export class AppController {
     _setFocusedMonitorMode(mode, action) {
         const target = this._getFocusedMonitor();
         if (!target) {
-            logWarn('focused monitor mode update skipped: no focused monitor', { action, mode });
-            this._notifyIssue('No monitor under pointer', 'Move pointer to a monitor and try again.');
+            logWarn('focused monitor mode update skipped: no focused monitor', {
+                action,
+                mode,
+                guidance: 'Move pointer to a monitor and try again',
+            });
             return false;
         }
 
@@ -415,7 +418,6 @@ export class AppController {
             );
         } catch (error) {
             logErrorWithContext(error, 'failed to register pointer-menu shortcut', { accel });
-            this._notifyIssue('Shortcut registration failed', 'Could not register pointer menu shortcut.');
         }
     }
 
@@ -424,17 +426,6 @@ export class AppController {
             Main.wm.removeKeybinding('pointer-menu-shortcut');
         } catch (error) {
             logErrorWithContext(error, 'failed to unregister pointer-menu shortcut');
-        }
-    }
-
-    _notifyIssue(title, details) {
-        const signature = `${title}|${details}`;
-        if (this._lastIssueNotification === signature) return;
-        this._lastIssueNotification = signature;
-        try {
-            Main.notifyError(`Per-Monitor Screen Blank: ${title}`, details);
-        } catch (error) {
-            logErrorWithContext(error, 'failed to show error notification', { title, details });
         }
     }
 }

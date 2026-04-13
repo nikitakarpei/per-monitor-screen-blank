@@ -4,13 +4,16 @@ import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import { assignMonitorMode, buildMonitorIdentity, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
-import { logWarn } from './src/util/logger.js';
+import { logWarn, setIssueReporter } from './src/util/logger.js';
 import { sanitizeMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
 
 export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
+    _lastIssueSignature = '';
+
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
+        const overlay = new Adw.ToastOverlay();
 
         const page = new Adw.PreferencesPage({ title: 'General' });
         const monitorGroup = new Adw.PreferencesGroup({ title: 'Per-monitor mode' });
@@ -23,6 +26,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         globalGroup.add(this._makeSpinRow(settings, 'Idle timeout', 'idle-timeout-seconds', 1, 1, 3600, 'seconds'));
         globalGroup.add(this._makeSpinRow(settings, 'Keep awake', 'keep-awake-minutes', 1, 1, 1440, 'minutes'));
         globalGroup.add(this._makeSwitchRow(settings, 'Show indicator', 'show-indicator'));
+        globalGroup.add(this._makeSwitchRow(settings, 'Show issue notifications', 'show-issue-notifications'));
         globalGroup.add(this._makeSwitchRow(settings, 'Wake on pointer entry', 'wake-on-pointer-entry'));
         globalGroup.add(this._makeSpinRow(settings, 'Fade duration', 'fade-duration-ms', 10, 0, 5000, 'ms'));
         globalGroup.add(this._makePointerShortcutRow(window, settings));
@@ -46,7 +50,13 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         page.add(globalGroup);
         page.add(diagnosticsGroup);
         page.add(profilesGroup);
-        window.add(page);
+        overlay.set_child(page);
+        window.add(overlay);
+        setIssueReporter(issue => this._reportIssue(settings, overlay, issue));
+        window.connect('destroy', () => {
+            setIssueReporter(null);
+            this._lastIssueSignature = '';
+        });
     }
 
     _makeProfilesState(settings) {
@@ -429,6 +439,33 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         dialog.set_default_response('ok');
         dialog.connect('response', () => dialog.destroy());
         dialog.present();
+    }
+
+    _reportIssue(settings, overlay, issue) {
+        if (!settings.get_boolean('show-issue-notifications'))
+            return;
+
+        const signature = [
+            issue.level,
+            issue.message,
+            issue.detailText,
+            issue.level === 'error' ? issue.errorText : '',
+        ].join('|');
+        if (signature === this._lastIssueSignature)
+            return;
+        this._lastIssueSignature = signature;
+
+        const detailParts = [
+            issue.level === 'error' ? 'Error' : 'Warning',
+            issue.message,
+            issue.detailText,
+            issue.level === 'error' ? issue.errorText : '',
+        ].filter(Boolean);
+        const toast = new Adw.Toast({
+            title: detailParts.join(': '),
+            timeout: issue.level === 'error' ? 6 : 4,
+        });
+        overlay.add_toast(toast);
     }
 
 }

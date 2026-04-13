@@ -45,3 +45,9 @@ sh ./scripts/uninstall.sh
 - `sh ./scripts/package-ego-zip.sh` writes `dist/per-monitor-screen-blank@nikitakarpei.github.io.zip` for [extensions.gnome.org](https://extensions.gnome.org/) (extension files at zip root; requires `zip` and `glib-compile-schemas`).
 - Runtime logs are prefixed with `[per-monitor-screen-blank]` in `journalctl` (Preferences can open a filtered follow stream via `journalctl --user -f --no-pager -g per-monitor-screen-blank`).
 - Declare only GNOME Shell versions you have tested in `metadata.json` `shell-version` (currently aimed at **49**).
+
+## Known Issues
+
+- Opening **Open Extension Logs** in Preferences depends on the desktop's configured default terminal via `xdg-terminal-exec`.
+- On some Ubuntu/GNOME setups with Ptyxis 49.x, launching a command through that stack may open an extra empty terminal window before the real logs window. This is an upstream terminal integration bug, not extension-managed terminal spawning.
+- The extension intentionally does not maintain terminal-specific workarounds or hardcoded terminal lists. If this issue appears, update the terminal stack or run `journalctl --user -f --no-pager -g per-monitor-screen-blank` manually.

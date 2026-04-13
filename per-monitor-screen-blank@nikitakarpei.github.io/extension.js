@@ -9,12 +9,16 @@ import { GSettingsGateway } from './src/platform/GSettingsGateway.js';
 import { ShellPointerActivitySource } from './src/platform/ShellPointerActivitySource.js';
 import { MonitorDeadlineScheduler } from './src/platform/MonitorDeadlineScheduler.js';
 import { ShellSignalRegistrar } from './src/platform/ShellSignalRegistrar.js';
-import { logWarn, logErrorWithContext } from './src/util/logger.js';
+import { logWarn, logErrorWithContext, setIssueReporter } from './src/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
+    _lastIssueSignature = '';
+
     enable() {
-        const settingsGateway = new GSettingsGateway(this.getSettings());
+        const settings = this.getSettings();
+        const settingsGateway = new GSettingsGateway(settings);
         settingsGateway.ensureStorage();
+        setIssueReporter(issue => this._reportIssue(settings, issue));
         const signalRegistrar = new ShellSignalRegistrar();
         const pointerActivitySource = new ShellPointerActivitySource();
         const overlay = new ShellOverlayManager();
@@ -44,6 +48,8 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     }
 
     disable() {
+        setIssueReporter(null);
+        this._lastIssueSignature = '';
         this._controller?.disable();
         this._controller = null;
     }
@@ -66,5 +72,35 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         } catch (error) {
             logErrorWithContext(error, 'failed to open preferences');
         }
+    }
+
+    _reportIssue(settings, issue) {
+        if (!settings.get_boolean('show-issue-notifications'))
+            return;
+
+        const signature = [
+            issue.level,
+            issue.message,
+            issue.detailText,
+            issue.level === 'error' ? issue.errorText : '',
+        ].join('|');
+        if (signature === this._lastIssueSignature)
+            return;
+        this._lastIssueSignature = signature;
+
+        const title = issue.level === 'error'
+            ? 'Per-Monitor Screen Blank: Error'
+            : 'Per-Monitor Screen Blank: Warning';
+        const detailParts = [
+            issue.message,
+            issue.detailText,
+            issue.level === 'error' ? issue.errorText : '',
+        ].filter(Boolean);
+        const body = detailParts.join('\n');
+
+        if (issue.level === 'error')
+            Main.notifyError(title, body);
+        else
+            Main.notify(title, body);
     }
 }

@@ -41,6 +41,11 @@
       <summary>Show indicator</summary>
       <description>Show the persistent top-bar indicator.</description>
     </key>
+    <key name="show-issue-notifications" type="b">
+      <default>true</default>
+      <summary>Show issue notifications</summary>
+      <description>Show user-facing notifications when the extension logs warnings or errors.</description>
+    </key>
     <key name="wake-on-pointer-entry" type="b">
       <default>true</default>
       <summary>Wake on pointer entry</summary>
