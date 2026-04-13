@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema
+    id="org.gnome.shell.extensions.per-monitor-screen-blank"
+    path="/org/gnome/shell/extensions/per-monitor-screen-blank/"
+  >
+    <key name="monitor-modes-json" type="s">
+      <default>'{}'</default>
+      <summary>Per-monitor mode map</summary>
+      <description>JSON object that maps monitor identifiers to mode values.</description>
+    </key>
+    <key name="profiles-json" type="s">
+      <default>'[]'</default>
+      <summary>Profiles configuration</summary>
+      <description>JSON array of profile objects containing monitor modes.</description>
+    </key>
+    <key name="active-profile-id" type="s">
+      <default>''</default>
+      <summary>Active profile ID</summary>
+      <description>The profile currently used by runtime and quick settings.</description>
+    </key>
+    <key name="pointer-menu-shortcut" type="as">
+      <default>
+        <![CDATA[['<Super><Shift>o']]]>
+      </default>
+      <summary>Pointer menu shortcut</summary>
+      <description>Keyboard shortcut to open the monitor menu under pointer.</description>
+    </key>
+    <key name="idle-timeout-seconds" type="i">
+      <default>90</default>
+      <summary>Idle timeout in seconds</summary>
+      <description>Time without pointer activity on the target monitor before blacking it.</description>
+    </key>
+    <key name="keep-awake-minutes" type="i">
+      <default>30</default>
+      <summary>Keep awake duration in minutes</summary>
+      <description>How long Keep Awake remains active.</description>
+    </key>
+    <key name="show-indicator" type="b">
+      <default>true</default>
+      <summary>Show indicator</summary>
+      <description>Show the persistent top-bar indicator.</description>
+    </key>
+    <key name="wake-on-pointer-entry" type="b">
+      <default>true</default>
+      <summary>Wake on pointer entry</summary>
+      <description>Wake the target monitor when the pointer enters it.</description>
+    </key>
+    <key name="fade-duration-ms" type="i">
+      <default>180</default>
+      <summary>Fade duration in milliseconds</summary>
+      <description>Duration of blackout fade transitions.</description>
+    </key>
+  </schema>
+</schemalist>
