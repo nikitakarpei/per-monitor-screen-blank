@@ -1,4 +1,5 @@
 import { createSettingsSnapshot } from '../domain/SettingsSnapshot.js';
+import { assignMonitorMode } from '../util/monitorIdentity.js';
 import { normalizeMode } from '../util/monitorModes.js';
 import { logWarn } from '../util/logger.js';
 import {
@@ -33,8 +34,19 @@ export class GSettingsGateway {
         return this._settings;
     }
 
+    ensureStorage() {
+        const profilesRaw = this._settings.get_string('profiles-json');
+        if (!profilesRaw || profilesRaw === '[]')
+            this._settings.set_string('profiles-json', stringifyProfiles(defaultProfiles()));
+
+        const { profiles, activeProfileId } = this._readProfilesState();
+        if (this._settings.get_string('active-profile-id') !== activeProfileId)
+            this._settings.set_string('active-profile-id', activeProfileId);
+        return { profiles, activeProfileId };
+    }
+
     getSnapshot() {
-        const normalized = this._ensureProfiles();
+        const normalized = this._readProfilesState();
         return createSettingsSnapshot({
             profiles: normalized.profiles,
             activeProfileId: normalized.activeProfileId,
@@ -46,40 +58,36 @@ export class GSettingsGateway {
         });
     }
 
-    setMonitorMode(monitorId, mode) {
-        const key = String(monitorId ?? '').trim();
+    setMonitorMode(monitorIdentity, mode) {
+        const key = typeof monitorIdentity === 'string'
+            ? monitorIdentity.trim()
+            : String(monitorIdentity?.id ?? '').trim();
         if (!key) {
             logWarn('setMonitorMode called with empty monitorId');
             return;
         }
-        const { profiles, activeProfileId } = this._ensureProfiles();
+        const { profiles, activeProfileId } = this.ensureStorage();
         const nextProfiles = profiles.map(profile => {
             if (profile.id !== activeProfileId) return profile;
-            const nextModes = { ...profile.monitorModes };
-            nextModes[key] = normalizeMode(mode);
-            return { ...profile, monitorModes: nextModes };
+            return {
+                ...profile,
+                monitorModes: assignMonitorMode(profile.monitorModes, monitorIdentity, normalizeMode(mode)),
+            };
         });
         this._settings.set_string('profiles-json', stringifyProfiles(nextProfiles));
     }
 
     setActiveProfile(profileId) {
-        const { profiles } = this._ensureProfiles();
+        const { profiles } = this.ensureStorage();
         const activeProfileId = ensureActiveProfileId(profiles, profileId);
         if (activeProfileId !== profileId)
             logWarn('requested profile not found, falling back', { requested: profileId, activeProfileId });
         this._settings.set_string('active-profile-id', activeProfileId);
     }
 
-    _ensureProfiles() {
-        const profilesRaw = this._settings.get_string('profiles-json');
-        let profiles = parseProfiles(profilesRaw);
-        if (!profilesRaw || profilesRaw === '[]') {
-            profiles = defaultProfiles();
-            this._settings.set_string('profiles-json', stringifyProfiles(profiles));
-        }
+    _readProfilesState() {
+        const profiles = parseProfiles(this._settings.get_string('profiles-json'));
         const activeProfileId = ensureActiveProfileId(profiles, this._settings.get_string('active-profile-id'));
-        if (this._settings.get_string('active-profile-id') !== activeProfileId)
-            this._settings.set_string('active-profile-id', activeProfileId);
         return { profiles, activeProfileId };
     }
 }

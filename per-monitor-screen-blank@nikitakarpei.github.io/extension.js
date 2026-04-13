@@ -14,6 +14,7 @@ import { logWarn, logErrorWithContext } from './src/util/logger.js';
 export default class PerMonitorScreenBlankExtension extends Extension {
     enable() {
         const settingsGateway = new GSettingsGateway(this.getSettings());
+        settingsGateway.ensureStorage();
         const signalRegistrar = new ShellSignalRegistrar();
         const pointerActivitySource = new ShellPointerActivitySource();
         const overlay = new ShellOverlayManager();

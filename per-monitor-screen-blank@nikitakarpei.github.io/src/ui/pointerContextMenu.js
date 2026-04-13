@@ -63,5 +63,3 @@ export class PointerContextMenu {
         });
     }
 }
-
-export default PointerContextMenu;

@@ -3,9 +3,9 @@ import Gdk from 'gi://Gdk';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import { buildMonitorLabel, monitorIdFromIndex } from './src/util/monitorIdentity.js';
+import { assignMonitorMode, buildMonitorIdentity, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
 import { logWarn } from './src/util/logger.js';
-import { normalizeMode, parseMonitorModes, stringifyMonitorModes } from './src/util/monitorModes.js';
+import { sanitizeMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
 
 export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
@@ -100,18 +100,18 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         const modes = ['auto', 'disabled', 'keep-awake', 'manual-black'];
         const modeLabels = ['Auto', 'Disabled', 'Keep Awake', 'Manual Black'];
         const activeProfile = state.profiles.find(profile => profile.id === state.activeProfileId) ?? state.profiles[0];
-        const monitorModes = parseMonitorModes(stringifyMonitorModes(activeProfile?.monitorModes ?? {}));
+        let monitorModes = sanitizeMonitorModes(activeProfile?.monitorModes);
         const monitors = this._getMonitors();
 
         for (const monitor of monitors) {
             const row = new Adw.ComboRow({ title: monitor.label });
             row.model = Gtk.StringList.new(modeLabels);
-            row.selected = Math.max(0, modes.indexOf(normalizeMode(monitorModes[monitor.id], 'disabled')));
+            row.selected = Math.max(0, modes.indexOf(resolveMonitorMode(monitorModes, monitor, 'disabled')));
             row.connect('notify::selected', () => {
-                monitorModes[monitor.id] = modes[row.selected] ?? 'disabled';
+                monitorModes = assignMonitorMode(monitorModes, monitor, modes[row.selected] ?? 'disabled');
                 const nextProfiles = state.profiles.map(profile => {
                     if (profile.id !== state.activeProfileId) return profile;
-                    return { ...profile, monitorModes: parseMonitorModes(stringifyMonitorModes(monitorModes)) };
+                    return { ...profile, monitorModes: sanitizeMonitorModes(monitorModes) };
                 });
                 state.profiles = nextProfiles;
                 settings.set_string('profiles-json', stringifyProfiles(nextProfiles));
@@ -143,7 +143,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             const model = monitor?.get_model?.()?.trim?.() ?? '';
             const connector = monitor?.get_connector?.()?.trim?.() ?? '';
             monitors.push({
-                id: monitorIdFromIndex(i),
+                ...buildMonitorIdentity({ index: i, connector }),
                 label: buildMonitorLabel({
                     ordinal: i + 1,
                     manufacturer,
@@ -200,8 +200,10 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         window.connect('destroy', () => {
             try {
                 settings.disconnect(shortcutChangedId);
-            } catch (_) {
-                console.warn('[per-monitor-screen-blank] prefs: disconnect pointer-menu-shortcut failed');
+            } catch (error) {
+                logWarn('failed to disconnect pointer-menu-shortcut watcher', {
+                    error: String(error),
+                });
             }
         });
 
@@ -254,7 +256,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             const parsed = Gtk.accelerator_parse(accel);
             const ok = parsed?.length === 3 ? parsed[0] : false;
             if (!ok) {
-                console.warn('[per-monitor-screen-blank] prefs: accelerator_parse rejected captured shortcut', { accel });
+                logWarn('accelerator_parse rejected captured shortcut', { accel });
                 return Gdk.EVENT_STOP;
             }
 
@@ -270,7 +272,9 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             try {
                 sink.grab_focus();
             } catch (err) {
-                console.warn('[per-monitor-screen-blank] prefs: shortcut capture focus failed', err);
+                logWarn('shortcut capture focus failed', {
+                    error: String(err),
+                });
             }
             return GLib.SOURCE_REMOVE;
         });

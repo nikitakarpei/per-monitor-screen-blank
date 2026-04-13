@@ -6,6 +6,7 @@ import { State, StateMachine } from '../domain/StateMachine.js';
 import { shouldAutoBlack } from '../core/autoBlackPolicy.js';
 import { resolveSettingsModeEffect } from '../core/modeLogic.js';
 import { buildStateViewModel } from '../presentation/stateViewModel.js';
+import { resolveMonitorMode } from '../util/monitorIdentity.js';
 import { listRuntimeMonitors } from '../util/monitorSelection.js';
 import { normalizeMode } from '../util/monitorModes.js';
 import { logInfo, logWarn, logErrorWithContext } from '../util/logger.js';
@@ -29,7 +30,6 @@ export class AppController {
         this._lastActivityByMonitorId = new Map();
         this._autoDeadlineTokens = new Map();
         this._keepAwakeDeadlineTokens = new Map();
-        this._lastPointerMonitorIndex = null;
         this._lastIssueNotification = '';
         const controller = this;
         this._uiStateSource = {
@@ -125,7 +125,7 @@ export class AppController {
         }
         this._monitorContexts = runtimeMonitors.map(monitor => ({
             ...monitor,
-            mode: normalizeMode(monitorModes[monitor.id], 'disabled'),
+            mode: resolveMonitorMode(monitorModes, monitor, 'disabled'),
         }));
         if (this._monitorContexts.length === 0) {
             logWarn('no runtime monitors detected');
@@ -218,7 +218,7 @@ export class AppController {
             return false;
         }
 
-        this._settingsGateway.setMonitorMode(target.id, mode);
+        this._settingsGateway.setMonitorMode(target, mode);
         this._syncFromSettings();
         return true;
     }
@@ -259,7 +259,6 @@ export class AppController {
             logWarn('pointer snapshot unavailable during state sync');
             return;
         }
-        this._lastPointerMonitorIndex = snapshot.monitorIndex;
         this._handlePointerActivity({
             ...snapshot,
             eventType: 'seed',
@@ -272,9 +271,6 @@ export class AppController {
         const monitor = this._findMonitorByIndex(activity?.monitorIndex);
         const previousMonitor = this._findMonitorByIndex(activity?.previousMonitorIndex);
         const now = Date.now();
-        if (Number.isInteger(activity?.monitorIndex))
-            this._lastPointerMonitorIndex = activity.monitorIndex;
-
         if (previousMonitor && previousMonitor.id !== monitor?.id)
             this._handlePointerExit(previousMonitor, snapshot);
 
