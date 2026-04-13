@@ -1,4 +1,6 @@
+import GLib from 'gi://GLib';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { AppController } from './src/app/AppController.js';
 import { ShellOverlayManager } from './src/platform/ShellOverlayManager.js';
 import { PerMonitorScreenBlankQuickSettings } from './src/ui/quickSettings.js';
@@ -6,6 +8,7 @@ import { PointerContextMenu } from './src/ui/pointerContextMenu.js';
 import { GSettingsGateway } from './src/platform/GSettingsGateway.js';
 import { ShellRuntimeProbe } from './src/platform/ShellRuntimeProbe.js';
 import { ShellSignalRegistrar } from './src/platform/ShellSignalRegistrar.js';
+import { logWarn } from './src/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     enable() {
@@ -41,6 +44,18 @@ export default class PerMonitorScreenBlankExtension extends Extension {
 
     async _openSettingsSafely() {
         try {
+            if (typeof Main.panel?.closeQuickSettings === 'function')
+                Main.panel.closeQuickSettings();
+            else
+                logWarn('Main.panel.closeQuickSettings missing; prefs opened from Quick Settings may not receive focus until clicked');
+
+            await new Promise(resolve => {
+                GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                    resolve();
+                    return GLib.SOURCE_REMOVE;
+                });
+            });
+
             await this.openPreferences();
         } catch (error) {
             logError(error, 'Per-Monitor Screen Blank: failed to open preferences');
