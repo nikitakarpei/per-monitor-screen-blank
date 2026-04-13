@@ -11,13 +11,13 @@ export function shouldRearmKeepAwake(mode, keepAwakeMinutes, lastMode, lastKeepA
 
 export function resolveSettingsModeEffect(mode, keepAwakeMinutes, lastMode, lastKeepAwakeMinutes) {
     if (mode === 'disabled')
-        return { transitionState: State.Disabled, keepAwakeMs: null, shouldTick: false };
+        return { transitionState: State.Disabled, keepAwakeMs: null };
 
     if (shouldRearmKeepAwake(mode, keepAwakeMinutes, lastMode, lastKeepAwakeMinutes))
-        return { transitionState: null, keepAwakeMs: keepAwakeMinutes * 60 * 1000, shouldTick: false };
+        return { transitionState: null, keepAwakeMs: keepAwakeMinutes * 60 * 1000 };
 
     if (mode === 'manual-black')
-        return { transitionState: State.ManualBlack, keepAwakeMs: null, shouldTick: false };
+        return { transitionState: State.ManualBlack, keepAwakeMs: null };
 
-    return { transitionState: null, keepAwakeMs: null, shouldTick: mode === 'auto' };
+    return { transitionState: null, keepAwakeMs: null };
 }

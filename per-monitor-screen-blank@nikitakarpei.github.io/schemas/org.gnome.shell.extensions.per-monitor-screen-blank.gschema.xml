@@ -51,5 +51,10 @@
       <summary>Fade duration in milliseconds</summary>
       <description>Duration of blackout fade transitions.</description>
     </key>
+    <key name="runtime-mode" type="s">
+      <default>'event-driven'</default>
+      <summary>Runtime engine mode</summary>
+      <description>Select the battery-first event-driven runtime or the polling compatibility mode for systems where event delivery is unreliable.</description>
+    </key>
   </schema>
 </schemalist>

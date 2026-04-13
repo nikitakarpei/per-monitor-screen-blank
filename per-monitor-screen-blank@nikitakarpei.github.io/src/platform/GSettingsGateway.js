@@ -43,6 +43,7 @@ export class GSettingsGateway {
             showIndicator: this._settings.get_boolean('show-indicator'),
             wakeOnPointerEntry: this._settings.get_boolean('wake-on-pointer-entry'),
             fadeDurationMs: this._settings.get_int('fade-duration-ms'),
+            runtimeMode: this._settings.get_string('runtime-mode'),
         });
     }
 

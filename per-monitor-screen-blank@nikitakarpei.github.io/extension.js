@@ -6,7 +6,8 @@ import { ShellOverlayManager } from './src/platform/ShellOverlayManager.js';
 import { PerMonitorScreenBlankQuickSettings } from './src/ui/quickSettings.js';
 import { PointerContextMenu } from './src/ui/pointerContextMenu.js';
 import { GSettingsGateway } from './src/platform/GSettingsGateway.js';
-import { ShellRuntimeProbe } from './src/platform/ShellRuntimeProbe.js';
+import { ShellPointerActivitySource } from './src/platform/ShellPointerActivitySource.js';
+import { MonitorDeadlineScheduler } from './src/platform/MonitorDeadlineScheduler.js';
 import { ShellSignalRegistrar } from './src/platform/ShellSignalRegistrar.js';
 import { logWarn, logErrorWithContext } from './src/util/logger.js';
 
@@ -14,7 +15,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     enable() {
         const settingsGateway = new GSettingsGateway(this.getSettings());
         const signalRegistrar = new ShellSignalRegistrar();
-        const runtimeProbe = new ShellRuntimeProbe();
+        const pointerActivitySource = new ShellPointerActivitySource();
         const overlay = new ShellOverlayManager();
         const pointerContextMenu = new PointerContextMenu({
             auto: () => this._controller?.setMode('auto'),
@@ -25,10 +26,14 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         const quickSettings = new PerMonitorScreenBlankQuickSettings({
             openSettings: () => this._openSettingsSafely(),
         });
+        const deadlineScheduler = new MonitorDeadlineScheduler({
+            onDeadline: deadline => this._controller?._handleScheduledDeadline?.(deadline),
+        });
 
         this._controller = new AppController({
             settingsGateway,
-            runtimeProbe,
+            pointerActivitySource,
+            deadlineScheduler,
             signalRegistrar,
             overlay,
             pointerContextMenu,

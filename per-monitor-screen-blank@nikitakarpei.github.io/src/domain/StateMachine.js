@@ -49,15 +49,4 @@ export class StateMachine extends SignalEmitter {
         this.keepAwakeUntil = null;
         return this.transition(State.AutoAwake, reason);
     }
-
-    update(now = Date.now()) {
-        if (this.state === State.KeepAwake && this.keepAwakeUntil !== null && now >= this.keepAwakeUntil) {
-            const expiredAt = this.keepAwakeUntil;
-            this.keepAwakeUntil = null;
-            this.transition(State.AutoAwake, 'keep-awake-expired');
-            this.emit('keep-awake-expired', { expiredAt });
-            return true;
-        }
-        return false;
-    }
 }

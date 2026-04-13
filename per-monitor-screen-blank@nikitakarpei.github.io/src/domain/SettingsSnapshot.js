@@ -2,6 +2,7 @@ import { DEFAULTS } from '../core/defaults.js';
 import { normalizeKeepAwakeMinutes } from '../core/modeLogic.js';
 import { sanitizeMonitorModes } from '../util/monitorModes.js';
 import { ensureActiveProfileId, sanitizeProfiles } from '../util/profileConfig.js';
+import { normalizeRuntimeMode } from '../util/runtimeMode.js';
 
 export function createSettingsSnapshot(raw) {
     const profiles = sanitizeProfiles(raw.profiles);
@@ -16,5 +17,6 @@ export function createSettingsSnapshot(raw) {
         showIndicator: raw.showIndicator ?? true,
         wakeOnPointerEntry: raw.wakeOnPointerEntry ?? true,
         fadeDurationMs: Number.isFinite(raw.fadeDurationMs) ? raw.fadeDurationMs : DEFAULTS.fadeDurationMs,
+        runtimeMode: normalizeRuntimeMode(raw.runtimeMode),
     });
 }
