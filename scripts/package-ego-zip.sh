@@ -1,6 +1,6 @@
 #!/bin/sh
-# Build a extensions.gnome.org–ready zip: extension files at archive root,
-# schemas compiled in a temp tree (does not modify the repo copy).
+# Build an extensions.gnome.org–ready zip with extension files at archive root.
+# Compiled schemas are intentionally excluded because EGO rejects them.
 
 set -eu
 
@@ -33,14 +33,10 @@ stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
 
 cp -a "$src/." "$stage/"
-
-if command -v glib-compile-schemas >/dev/null 2>&1; then
-  glib-compile-schemas "$stage/schemas"
-else
-  printf 'WARN: glib-compile-schemas not found; zip may lack gschemas.compiled\n' >&2
-fi
+rm -f "$stage/schemas/gschemas.compiled"
 
 mkdir -p "$out_dir"
+rm -f "$zip_path"
 ( cd "$stage" && zip -r -q "$zip_path" . )
 
 printf '%s\n' "Wrote: $zip_path" "Check layout: unzip -l \"$zip_path\" | head"

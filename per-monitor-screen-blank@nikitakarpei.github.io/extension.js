@@ -14,6 +14,8 @@ import { logInfo, logWarn, logErrorWithContext, setIssueReporter } from './src/u
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     _lastIssueSignature = '';
+    _openPreferencesIdleSourceId = null;
+    _openPreferencesInFlight = false;
 
     enable() {
         logInfo('extension enabled');
@@ -52,27 +54,69 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     disable() {
         setIssueReporter(null);
         this._lastIssueSignature = '';
+        this._removeOpenPreferencesIdleSource();
+        this._openPreferencesInFlight = false;
         this._controller?.disable();
         this._controller = null;
     }
 
     async _openSettingsSafely() {
         try {
+            if (this._openPreferencesInFlight) {
+                logWarn('preferences open request skipped: existing request still pending');
+                return;
+            }
+            this._openPreferencesInFlight = true;
             if (typeof Main.panel?.closeQuickSettings === 'function')
                 Main.panel.closeQuickSettings();
             else
                 logWarn('Main.panel.closeQuickSettings missing; prefs opened from Quick Settings may not receive focus until clicked');
 
-            await new Promise(resolve => {
-                GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                    resolve();
-                    return GLib.SOURCE_REMOVE;
-                });
-            });
+            await this._waitForNextIdle();
+
+            if (!this._controller) {
+                logWarn('preferences open request skipped: extension disabled before idle callback completed');
+                return;
+            }
 
             await this.openPreferences();
         } catch (error) {
             logErrorWithContext(error, 'failed to open preferences');
+        } finally {
+            this._openPreferencesInFlight = false;
+        }
+    }
+
+    _waitForNextIdle() {
+        return new Promise(resolve => {
+            const sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                if (this._openPreferencesIdleSourceId === sourceId)
+                    this._openPreferencesIdleSourceId = null;
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
+            if (!sourceId) {
+                logWarn('idle wait skipped: failed to allocate GLib idle source for preferences open');
+                resolve();
+                return;
+            }
+            this._openPreferencesIdleSourceId = sourceId;
+        });
+    }
+
+    _removeOpenPreferencesIdleSource() {
+        if (!this._openPreferencesIdleSourceId)
+            return;
+
+        try {
+            GLib.Source.remove(this._openPreferencesIdleSourceId);
+        } catch (error) {
+            logWarn('failed to remove pending preferences idle source during disable', {
+                sourceId: this._openPreferencesIdleSourceId,
+                error: String(error),
+            });
+        } finally {
+            this._openPreferencesIdleSourceId = null;
         }
     }
 
