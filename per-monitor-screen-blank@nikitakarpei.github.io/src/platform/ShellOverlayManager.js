@@ -2,16 +2,19 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { DEFAULTS } from '../core/defaults.js';
+import { dimIntensityPercentToOpacity, normalizeDimIntensityPercent } from '../core/dimIntensity.js';
 import { normalizeFadeDurationMs } from '../core/fadeDuration.js';
 import { logInfo, logWarn } from '../util/logger.js';
 
 const FADE_DURATION_MS = DEFAULTS.fadeDurationMs;
+const DIM_INTENSITY_PERCENT = DEFAULTS.dimIntensityPercent;
 
 export class ShellOverlayManager {
     #actors = new Map();
     #visibleMonitors = new Set();
     #signalIds = [];
     #fadeDurationMs = FADE_DURATION_MS;
+    #targetOpacity = dimIntensityPercentToOpacity(DIM_INTENSITY_PERCENT);
 
     disable() {
         this.setBlackMonitors([]);
@@ -47,12 +50,27 @@ export class ShellOverlayManager {
         this.#fadeDurationMs = normalizeFadeDurationMs(durationMs, FADE_DURATION_MS);
     }
 
+    setDimIntensityPercent(percent = DIM_INTENSITY_PERCENT) {
+        this.#targetOpacity = dimIntensityPercentToOpacity(
+            normalizeDimIntensityPercent(percent, DIM_INTENSITY_PERCENT)
+        );
+        for (const monitorIndex of this.#visibleMonitors) {
+            const actor = this.#actors.get(monitorIndex);
+            if (!actor) continue;
+            actor.ease({
+                opacity: this.#targetOpacity,
+                duration: this.#fadeDurationMs,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            });
+        }
+    }
+
     #showMonitor(monitorIndex, actor) {
         if (this.#visibleMonitors.has(monitorIndex)) return;
         this.#visibleMonitors.add(monitorIndex);
         actor.show();
         actor.ease({
-            opacity: 255,
+            opacity: this.#targetOpacity,
             duration: this.#fadeDurationMs,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
         });

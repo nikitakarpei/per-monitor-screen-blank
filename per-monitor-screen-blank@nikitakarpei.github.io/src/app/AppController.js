@@ -135,6 +135,7 @@ export class AppController {
         }
         this._reconcileMonitorRuntimeState();
         this._overlay.setFadeDuration(snapshot.fadeDurationMs);
+        this._overlay.setDimIntensityPercent(snapshot.dimIntensityPercent);
         this._quickSettings.visible = snapshot.showIndicator;
         for (const monitor of this._monitorContexts)
             this._applyModeSyncForMonitor(snapshot, monitor);

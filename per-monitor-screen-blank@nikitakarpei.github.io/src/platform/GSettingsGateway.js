@@ -54,6 +54,7 @@ export class GSettingsGateway {
             keepAwakeMinutes: this._settings.get_int('keep-awake-minutes'),
             showIndicator: this._settings.get_boolean('show-indicator'),
             fadeDurationMs: this._settings.get_int('fade-duration-ms'),
+            dimIntensityPercent: this._settings.get_int('dim-intensity-percent'),
         });
     }
 

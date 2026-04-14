@@ -1,4 +1,5 @@
 import { DEFAULTS } from '../core/defaults.js';
+import { normalizeDimIntensityPercent } from '../core/dimIntensity.js';
 import { normalizeKeepAwakeMinutes } from '../core/modeLogic.js';
 import { sanitizeMonitorModes } from '../util/monitorModes.js';
 import { ensureActiveProfileId, sanitizeProfiles } from '../util/profileConfig.js';
@@ -15,5 +16,6 @@ export function createSettingsSnapshot(raw) {
         keepAwakeMinutes: normalizeKeepAwakeMinutes(raw.keepAwakeMinutes ?? DEFAULTS.keepAwakeMinutes),
         showIndicator: raw.showIndicator ?? true,
         fadeDurationMs: Number.isFinite(raw.fadeDurationMs) ? raw.fadeDurationMs : DEFAULTS.fadeDurationMs,
+        dimIntensityPercent: normalizeDimIntensityPercent(raw.dimIntensityPercent ?? DEFAULTS.dimIntensityPercent),
     });
 }

@@ -27,11 +27,58 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         const monitorRows = [];
         const profileRows = [];
 
-        globalGroup.add(this._makeSpinRow(settings, 'Idle timeout', 'idle-timeout-seconds', 1, 1, 3600, 'seconds'));
-        globalGroup.add(this._makeSpinRow(settings, 'Keep awake', 'keep-awake-minutes', 1, 1, 1440, 'minutes'));
-        globalGroup.add(this._makeSwitchRow(settings, 'Show indicator', 'show-indicator'));
-        globalGroup.add(this._makeSwitchRow(settings, 'Show issue notifications', 'show-issue-notifications'));
-        globalGroup.add(this._makeSpinRow(settings, 'Fade duration', 'fade-duration-ms', 10, 0, 5000, 'ms'));
+        globalGroup.add(this._makeSpinRow(
+            settings,
+            'Idle timeout',
+            'idle-timeout-seconds',
+            1,
+            1,
+            3600,
+            'seconds',
+            'How long the pointer must stay inactive on a monitor before Auto can blank it.'
+        ));
+        globalGroup.add(this._makeSpinRow(
+            settings,
+            'Keep awake',
+            'keep-awake-minutes',
+            1,
+            1,
+            1440,
+            'minutes',
+            'How long Keep Awake stays active before that monitor returns to Auto.'
+        ));
+        globalGroup.add(this._makeSwitchRow(
+            settings,
+            'Show indicator',
+            'show-indicator',
+            'Show the persistent top-bar indicator and Quick Settings entry.'
+        ));
+        globalGroup.add(this._makeSwitchRow(
+            settings,
+            'Show issue notifications',
+            'show-issue-notifications',
+            'Show a notification if something is not working as expected. Sorry about that &gt;_&lt;'
+        ));
+        globalGroup.add(this._makeSpinRow(
+            settings,
+            'Fade duration',
+            'fade-duration-ms',
+            10,
+            0,
+            5000,
+            'ms',
+            'Animation time for overlay fade in and fade out.'
+        ));
+        globalGroup.add(this._makeSpinRow(
+            settings,
+            'Dim intensity',
+            'dim-intensity-percent',
+            1,
+            0,
+            100,
+            '%',
+            'Target overlay darkness from transparent to full black.'
+        ));
         globalGroup.add(this._makePointerShortcutRow(window, settings));
         diagnosticsGroup.add(this._makeButtonRow(
             'Open Extension Logs',
@@ -154,15 +201,15 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }));
     }
 
-    _makeSwitchRow(settings, title, key) {
-        const row = new Adw.SwitchRow({ title });
+    _makeSwitchRow(settings, title, key, subtitle = null) {
+        const row = new Adw.SwitchRow({ title, subtitle });
         row.active = settings.get_boolean(key);
         row.connect('notify::active', () => settings.set_boolean(key, row.active));
         return row;
     }
 
-    _makeSpinRow(settings, title, key, step, lower, upper, suffix) {
-        const row = new Adw.ActionRow({ title });
+    _makeSpinRow(settings, title, key, step, lower, upper, suffix, subtitle = null) {
+        const row = new Adw.ActionRow({ title, subtitle });
         const adj = new Gtk.Adjustment({ lower, upper, step_increment: step, page_increment: step * 10, value: settings.get_int(key) });
         const spin = new Gtk.SpinButton({ adjustment: adj, numeric: true, valign: Gtk.Align.CENTER });
         const label = suffix ? new Gtk.Label({ label: suffix, valign: Gtk.Align.CENTER }) : null;

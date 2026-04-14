@@ -51,5 +51,10 @@
       <summary>Fade duration in milliseconds</summary>
       <description>Duration of blackout fade transitions.</description>
     </key>
+    <key name="dim-intensity-percent" type="i">
+      <default>100</default>
+      <summary>Dim intensity percentage</summary>
+      <description>Target black overlay intensity from 0 to 100 percent.</description>
+    </key>
   </schema>
 </schemalist>
