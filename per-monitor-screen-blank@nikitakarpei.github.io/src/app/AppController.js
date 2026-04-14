@@ -278,6 +278,12 @@ export class AppController {
         const lastActivityAt = this._lastActivityByMonitorId.get(monitor.id) ?? Date.now();
         const targetIdleTimeMs = Date.now() - lastActivityAt;
         const isPointerOnTargetMonitor = this._pointerActivitySource.getPointerSnapshot().monitorIndex === monitor.index;
+        if (snapshot.disableAutoTimerOnPointerMonitor && isPointerOnTargetMonitor) {
+            if (machine.state === State.AutoBlack)
+                machine.transition(State.AutoAwake, 'auto-reschedule');
+            this._cancelAutoDeadline(monitor.id);
+            return;
+        }
         const shouldBlack = shouldAutoBlack({
             targetIdleTimeMs,
             idleTimeoutSeconds: snapshot.idleTimeoutSeconds,

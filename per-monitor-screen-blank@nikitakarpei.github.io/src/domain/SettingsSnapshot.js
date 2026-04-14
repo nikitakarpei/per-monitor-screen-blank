@@ -15,6 +15,7 @@ export function createSettingsSnapshot(raw) {
         idleTimeoutSeconds: Number.isFinite(raw.idleTimeoutSeconds) ? raw.idleTimeoutSeconds : DEFAULTS.idleTimeoutSeconds,
         keepAwakeMinutes: normalizeKeepAwakeMinutes(raw.keepAwakeMinutes ?? DEFAULTS.keepAwakeMinutes),
         showIndicator: raw.showIndicator ?? true,
+        disableAutoTimerOnPointerMonitor: raw.disableAutoTimerOnPointerMonitor ?? false,
         fadeDurationMs: Number.isFinite(raw.fadeDurationMs) ? raw.fadeDurationMs : DEFAULTS.fadeDurationMs,
         dimIntensityPercent: normalizeDimIntensityPercent(raw.dimIntensityPercent ?? DEFAULTS.dimIntensityPercent),
     });

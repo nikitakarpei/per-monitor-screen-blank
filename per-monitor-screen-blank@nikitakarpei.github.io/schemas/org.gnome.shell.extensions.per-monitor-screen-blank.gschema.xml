@@ -46,6 +46,11 @@
       <summary>Show issue notifications</summary>
       <description>Show user-facing notifications when the extension logs warnings or errors.</description>
     </key>
+    <key name="disable-auto-timer-on-pointer-monitor" type="b">
+      <default>false</default>
+      <summary>Disable auto timer on pointer monitor</summary>
+      <description>Disable the auto timer for the monitor currently under the pointer.</description>
+    </key>
     <key name="fade-duration-ms" type="i">
       <default>180</default>
       <summary>Fade duration in milliseconds</summary>

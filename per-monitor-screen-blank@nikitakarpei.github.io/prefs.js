@@ -59,6 +59,12 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             'show-issue-notifications',
             'Show a notification if something is not working as expected. Sorry about that &gt;_&lt;'
         ));
+        globalGroup.add(this._makeSwitchRow(
+            settings,
+            'Disable auto timer on pointer monitor',
+            'disable-auto-timer-on-pointer-monitor',
+            'Pause the auto blank timer on the monitor currently under the pointer.'
+        ));
         globalGroup.add(this._makeSpinRow(
             settings,
             'Fade duration',
