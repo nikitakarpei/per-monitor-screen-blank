@@ -5,7 +5,6 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { State, StateMachine } from '../domain/StateMachine.js';
 import { shouldAutoBlack } from '../core/autoBlackPolicy.js';
 import { resolveSettingsModeEffect } from '../core/modeLogic.js';
-import { buildStateViewModel } from '../presentation/stateViewModel.js';
 import { resolveMonitorMode } from '../util/monitorIdentity.js';
 import { listRuntimeMonitors } from '../util/monitorSelection.js';
 import { normalizeMode } from '../util/monitorModes.js';
@@ -21,7 +20,6 @@ export class AppController {
         this._quickSettings = quickSettings;
         this._pointerContextMenu = pointerContextMenu;
         this._stateMachines = new Map();
-        this._uiListeners = new Set();
         this._monitorContexts = [];
         this._profiles = [];
         this._activeProfileId = '';
@@ -30,19 +28,10 @@ export class AppController {
         this._lastActivityByMonitorId = new Map();
         this._autoDeadlineTokens = new Map();
         this._keepAwakeDeadlineTokens = new Map();
-        const controller = this;
-        this._uiStateSource = {
-            get state() {
-                return controller._getUiState();
-            },
-            on: (_signal, handler) => controller._subscribeUi(handler),
-        };
     }
 
     enable() {
         Main.panel.statusArea.quickSettings?.addExternalIndicator(this._quickSettings);
-
-        this._quickSettings.bindState(this._uiStateSource, state => buildStateViewModel(state));
         this._quickSettings.bindProfiles(
             () => ({ profiles: this._profiles, activeProfileId: this._activeProfileId }),
             profileId => this.switchProfile(profileId)
@@ -141,7 +130,6 @@ export class AppController {
             this._applyModeSyncForMonitor(snapshot, monitor);
         this._seedCurrentPointerActivity();
         this._syncOverlay();
-        this._emitUiStateChanged();
         this._quickSettings.refreshProfiles?.();
     }
 
@@ -188,7 +176,6 @@ export class AppController {
         machine = new StateMachine();
         machine.on('state-changed', () => {
             this._syncOverlay();
-            this._emitUiStateChanged();
         });
         this._stateMachines.set(monitorId, machine);
         return machine;
@@ -205,12 +192,6 @@ export class AppController {
         return monitor ?? this._monitorContexts.find(item => item.isPrimary) ?? this._monitorContexts[0] ?? null;
     }
 
-    _getUiState() {
-        const focused = this._getFocusedMonitor();
-        if (!focused) return State.Disabled;
-        return this._stateMachines.get(focused.id)?.state ?? State.Disabled;
-    }
-
     _setFocusedMonitorMode(mode, action) {
         const target = this._getFocusedMonitor();
         if (!target) {
@@ -225,16 +206,6 @@ export class AppController {
         this._settingsGateway.setMonitorMode(target, mode);
         this._syncFromSettings();
         return true;
-    }
-
-    _subscribeUi(handler) {
-        this._uiListeners.add(handler);
-        return () => this._uiListeners.delete(handler);
-    }
-
-    _emitUiStateChanged() {
-        for (const listener of this._uiListeners)
-            listener();
     }
 
     _reconcileMonitorRuntimeState() {

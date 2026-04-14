@@ -18,7 +18,7 @@ Tested on **Ubuntu 25.10**, **GNOME 49**, **Wayland**.
 
 ## Monitor modes
 
-Each display has its own mode in the active profile. You can change it from Preferences, Quick Settings, or the pointer shortcut menu.
+Each display has its own mode in the active profile. You can change it from Preferences or the pointer shortcut menu.
 
 - **Auto** — The extension may blank that monitor after the pointer has been idle on it for the configured **Idle timeout**. Moving the pointer onto that monitor wakes it again.
 - **Disabled** — That monitor is left alone by the extension (no automatic blanking) until you choose another mode.
@@ -30,6 +30,7 @@ Each display has its own mode in the active profile. You can change it from Pref
 Press the shortcut to open a small menu at the pointer for the monitor under the cursor. From there you can switch **Auto**, **Disabled**, **Keep awake**, or **Black now** without opening full Preferences.
 
 The default is **Super+Shift+O**. Change or clear it under **Global behavior** in the extension’s Preferences (**Set…** / **Clear**). Click elsewhere or press Escape to close the menu.
+When **Show indicator** is enabled, Quick Settings adds a top-bar indicator and menu entry for switching the active profile or opening Preferences.
 
 ## Installation Guide
 

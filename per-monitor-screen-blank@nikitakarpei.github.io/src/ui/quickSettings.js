@@ -1,7 +1,6 @@
 import GObject from 'gi://GObject';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import { logInfo } from '../util/logger.js';
 
 export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class PerMonitorScreenBlankQuickSettings extends QuickSettings.SystemIndicator {
     constructor(actions = {}) {
@@ -25,28 +24,9 @@ export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class Pe
     }
 
     destroy() {
-        this._disconnect?.();
         this._item?.destroy();
         this._item = null;
         super.destroy();
-    }
-
-    bindState(stateSource, mapStateToViewModel) {
-        this._disconnect?.();
-        const sync = () => {
-            try {
-                if (!this._item) return;
-                const view = mapStateToViewModel?.(stateSource.state) ?? { icon: 'display-symbolic' };
-                if (this._indicator) this._indicator.icon_name = view.icon;
-                this._item.iconName = view.icon;
-            } catch (error) {
-                logInfo('quick settings state sync skipped during teardown', {
-                    message: error?.message ?? String(error),
-                });
-            }
-        };
-        sync();
-        this._disconnect = stateSource.on('state-changed', sync);
     }
 
     bindProfiles(getProfiles, onSelectProfile) {
