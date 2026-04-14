@@ -255,7 +255,7 @@ export class AppController {
         if (monitor.mode !== 'auto') return;
         this._lastActivityByMonitorId.set(monitor.id, now);
         const machine = this._getOrCreateMachine(monitor.id);
-        if (machine.state !== State.AutoBlack || activity?.previousMonitorIndex !== activity?.monitorIndex)
+        if (machine.state === State.AutoBlack)
             machine.transition(State.AutoAwake, 'pointer-activity');
         this._rescheduleMonitor(snapshot, monitor, machine);
     }
