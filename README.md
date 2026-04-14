@@ -1,5 +1,8 @@
 # Per-Monitor Screen Blank
 
+![GNOME Extensions review pending](https://img.shields.io/badge/GNOME%20Extensions-Review%20Pending-EAAA00?style=for-the-badge&logo=gnome&logoColor=white)
+[![Download Latest ZIP](https://img.shields.io/badge/Download-Latest%20ZIP-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/nikitakarpei/per-monitor-screen-blank/releases/latest)
+
 ## Overview
 
 **Per-Monitor Screen Blank** is a GNOME Shell extension that applies a black shell overlay to idle monitors while keeping the display layout and connected monitor state unchanged.
