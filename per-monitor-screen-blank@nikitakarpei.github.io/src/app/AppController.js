@@ -243,6 +243,7 @@ export class AppController {
 
     _handlePointerActivity(activity) {
         const snapshot = this._settingsGateway.getSnapshot();
+        this._reschedulePointerDeparture(snapshot, activity);
         const monitor = this._findMonitorByIndex(activity?.monitorIndex);
         const now = Date.now();
 
@@ -258,6 +259,32 @@ export class AppController {
         if (machine.state === State.AutoBlack)
             machine.transition(State.AutoAwake, 'pointer-activity');
         this._rescheduleMonitor(snapshot, monitor, machine);
+    }
+
+    _reschedulePointerDeparture(snapshot, activity) {
+        if (!snapshot?.disableAutoTimerOnPointerMonitor)
+            return;
+
+        const previousMonitorIndex = activity?.previousMonitorIndex;
+        const currentMonitorIndex = activity?.monitorIndex;
+        if (!Number.isInteger(previousMonitorIndex) || previousMonitorIndex === currentMonitorIndex)
+            return;
+
+        const previousMonitor = this._findMonitorByIndex(previousMonitorIndex);
+        if (!previousMonitor) {
+            if (this._monitorContexts.length > 0) {
+                logInfo('pointer departure reschedule skipped: previous monitor not found', {
+                    previousMonitorIndex,
+                    currentMonitorIndex,
+                });
+            }
+            return;
+        }
+
+        if (previousMonitor.mode !== 'auto')
+            return;
+
+        this._rescheduleMonitor(snapshot, previousMonitor, this._getOrCreateMachine(previousMonitor.id));
     }
 
     _rescheduleMonitor(snapshot, monitor, machine = this._getOrCreateMachine(monitor.id)) {
