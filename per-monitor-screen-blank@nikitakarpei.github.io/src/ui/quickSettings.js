@@ -12,7 +12,7 @@ export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class Pe
 
         this._item = new QuickSettings.QuickMenuToggle({
             title: 'Screen Blank',
-            subtitle: 'No profile',
+            subtitle: 'No preset',
             iconName: 'display-symbolic',
             toggleMode: false,
         });
@@ -48,7 +48,7 @@ export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class Pe
         }
 
         const state = this._profileGetter?.() ?? { profiles: [], activeProfileId: '' };
-        this._profileSection.addMenuItem(new PopupMenu.PopupMenuItem('Profiles', {
+        this._profileSection.addMenuItem(new PopupMenu.PopupMenuItem('Presets', {
             reactive: false,
             can_focus: false,
         }));
@@ -60,6 +60,6 @@ export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class Pe
             row.connect('activate', () => this._onSelectProfile?.(profile.id));
             this._profileSection.addMenuItem(row);
         }
-        this._item.subtitle = state.profiles.find(profile => profile.id === state.activeProfileId)?.name ?? 'No profile';
+        this._item.subtitle = state.profiles.find(profile => profile.id === state.activeProfileId)?.name ?? 'No preset';
     }
 });

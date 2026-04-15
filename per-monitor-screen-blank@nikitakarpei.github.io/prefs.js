@@ -8,7 +8,7 @@ import { listDisplayConfigMonitors } from './src/platform/MutterDisplayConfig.js
 import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
 import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
 import { logInfo, logWarn, setIssueReporter } from './src/util/logger.js';
-import { sanitizeMonitorModes } from './src/util/monitorModes.js';
+import { getMonitorModeLabel, listMonitorModes, sanitizeMonitorModes } from './src/util/monitorModes.js';
 import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async', 'communicate_utf8_finish');
@@ -19,75 +19,75 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
 
-        const page = new Adw.PreferencesPage({ title: 'General' });
-        const monitorGroup = new Adw.PreferencesGroup({ title: 'Per-monitor mode' });
-        const globalGroup = new Adw.PreferencesGroup({ title: 'Global behavior' });
-        const diagnosticsGroup = new Adw.PreferencesGroup({ title: 'Diagnostics' });
-        const profilesGroup = new Adw.PreferencesGroup({ title: 'Profiles' });
+        const page = new Adw.PreferencesPage({ title: 'Settings' });
+        const monitorGroup = new Adw.PreferencesGroup({ title: 'Monitor Modes' });
+        const globalGroup = new Adw.PreferencesGroup({ title: 'General Settings' });
+        const diagnosticsGroup = new Adw.PreferencesGroup({ title: 'Troubleshooting' });
+        const profilesGroup = new Adw.PreferencesGroup({ title: 'Presets' });
         const monitorRows = [];
         const profileRows = [];
 
         globalGroup.add(this._makeSpinRow(
             settings,
-            'Idle timeout',
+            'Blank after',
             'idle-timeout-seconds',
             1,
             1,
             3600,
             'seconds',
-            'How long the pointer must stay inactive on a monitor before Auto can blank it.'
+            'When a screen is set to Automatic, blank it after this much pointer inactivity.'
         ));
         globalGroup.add(this._makeSpinRow(
             settings,
-            'Keep awake',
+            'Keep awake for',
             'keep-awake-minutes',
             1,
             1,
             1440,
             'minutes',
-            'How long Keep Awake stays active before that monitor returns to Auto.'
+            'How long Keep Awake stays on before that screen returns to Automatic.'
         ));
         globalGroup.add(this._makeSwitchRow(
             settings,
-            'Show indicator',
+            'Show top bar icon',
             'show-indicator',
-            'Show the persistent top-bar indicator and Quick Settings entry.'
+            'Show an icon in the top bar and an entry in Quick Settings.'
         ));
         globalGroup.add(this._makeSwitchRow(
             settings,
-            'Show issue notifications',
+            'Show problem alerts',
             'show-issue-notifications',
-            'Show a notification if something is not working as expected. Sorry about that &gt;_&lt;'
+            'Show a notification when something is not working as expected.'
         ));
         globalGroup.add(this._makeSwitchRow(
             settings,
-            'Disable auto timer on pointer monitor',
+            'Do not blank the screen under the pointer',
             'disable-auto-timer-on-pointer-monitor',
-            'Pause the auto blank timer on the monitor currently under the pointer.'
+            'Pause automatic blanking for the screen your pointer is currently on.'
         ));
         globalGroup.add(this._makeSpinRow(
             settings,
-            'Fade duration',
+            'Fade time',
             'fade-duration-ms',
             10,
             0,
             5000,
             'ms',
-            'Animation time for overlay fade in and fade out.'
+            'How long the fade animation takes when the screen blacks out or wakes up.'
         ));
         globalGroup.add(this._makeSpinRow(
             settings,
-            'Dim intensity',
+            'Darkness',
             'dim-intensity-percent',
             1,
             0,
             100,
             '%',
-            'Target overlay darkness from transparent to full black.'
+            'How dark the black overlay should be, from transparent to fully black.'
         ));
         globalGroup.add(this._makePointerShortcutRow(window, settings));
         diagnosticsGroup.add(this._makeButtonRow(
-            'Open Extension Logs',
+            'Open Troubleshooting Logs',
             'Open a terminal with live extension logs.',
             'Open',
             () => this._openExtensionLogs(window).catch(err => logWarn('failed to open extension logs', { error: String(err) }))
@@ -125,7 +125,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             const isActive = profile.id === state.activeProfileId;
             const row = new Adw.ActionRow({
                 title: profile.name,
-                subtitle: isActive ? 'Active profile' : null,
+                subtitle: isActive ? 'Currently in use' : null,
                 activatable: true,
             });
             row.connect('activated', () => {
@@ -143,12 +143,12 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }
 
         const addRow = new Adw.ActionRow({
-            title: 'Add Profile',
-            subtitle: 'Create a new profile.',
+            title: 'Add Preset',
+            subtitle: 'Save another monitor setup.',
             activatable: true,
         });
         addRow.connect('activated', () => {
-            this._promptForProfileName(window, 'Create Profile', '', name => {
+            this._promptForProfileName(window, 'Create Preset', '', name => {
                 const id = createProfileId(name, state.profiles);
                 state.profiles.push({ id, name, monitorModes: {} });
                 state.activeProfileId = id;
@@ -162,8 +162,8 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     }
 
     _populateMonitorRows(settings, group, state, onChanged, dynamicRows) {
-        const modes = ['auto', 'disabled', 'keep-awake', 'manual-black'];
-        const modeLabels = ['Auto', 'Disabled', 'Keep Awake', 'Manual Black'];
+        const modes = listMonitorModes();
+        const modeLabels = modes.map(mode => getMonitorModeLabel(mode));
         const activeProfile = state.profiles.find(profile => profile.id === state.activeProfileId) ?? state.profiles[0];
         let monitorModes = sanitizeMonitorModes(activeProfile?.monitorModes);
         const monitors = this._getMonitors();
@@ -188,8 +188,8 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
 
         if (monitors.length === 0) {
             const emptyRow = new Adw.ActionRow({
-                title: 'No monitors detected',
-                subtitle: 'Connect a monitor and reopen preferences.',
+                title: 'No screens found',
+                subtitle: 'Connect a screen and reopen Settings.',
             });
             group.add(emptyRow);
             dynamicRows.push(emptyRow);
@@ -234,13 +234,13 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
 
     _makePointerShortcutRow(window, settings) {
         const row = new Adw.ActionRow({
-            title: 'Pointer menu shortcut',
-            subtitle: 'Opens the mode menu at the cursor. Clear to disable.',
+            title: 'Shortcut for monitor menu',
+            subtitle: 'Open the monitor mode menu at the pointer. Clear to turn the shortcut off.',
         });
         const accel = this._readPointerShortcutAccel(settings);
         const shortcutLabel = new Adw.ShortcutLabel({
             accelerator: accel,
-            disabled_text: 'Disabled',
+            disabled_text: 'Off',
             valign: Gtk.Align.CENTER,
         });
         const refresh = () => {
@@ -277,7 +277,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     _promptPointerShortcutCapture(window, settings, onApplied) {
         const dialog = new Adw.MessageDialog({
             transient_for: window,
-            heading: 'Set pointer menu shortcut',
+            heading: 'Set shortcut for monitor menu',
             body: 'Press the new key combination. Press Escape to cancel.',
         });
         dialog.add_response('cancel', 'Cancel');
@@ -344,7 +344,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         const menuButton = new Gtk.MenuButton({
             icon_name: 'open-menu-symbolic',
             valign: Gtk.Align.CENTER,
-            tooltip_text: 'Profile actions',
+            tooltip_text: 'Preset actions',
         });
         const popover = new Gtk.Popover();
         const box = new Gtk.Box({
@@ -361,7 +361,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         const rename = new Gtk.Button({ label: 'Rename' });
         rename.connect('clicked', () => {
             popover.popdown();
-            this._promptForProfileName(window, 'Rename Profile', profile.name, name => {
+            this._promptForProfileName(window, 'Rename Preset', profile.name, name => {
                 state.profiles = state.profiles.map(item => item.id === profile.id ? { ...item, name } : item);
                 settings.set_string('profiles-json', stringifyProfiles(state.profiles));
                 onChanged();
@@ -403,7 +403,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         const dialog = new Adw.MessageDialog({
             transient_for: window,
             heading: title,
-            body: 'Enter a profile name.',
+            body: 'Enter a preset name.',
         });
         dialog.add_response('cancel', 'Cancel');
         dialog.add_response('ok', 'Save');

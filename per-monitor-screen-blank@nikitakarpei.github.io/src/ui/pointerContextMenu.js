@@ -1,16 +1,7 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-
-function modeLabel(mode) {
-    const labels = {
-        auto: 'Auto',
-        disabled: 'Disabled',
-        'keep-awake': 'Keep Awake',
-        'manual-black': 'Black Now',
-    };
-    return labels[mode] ?? 'Disabled';
-}
+import { getMonitorModeLabel } from '../util/monitorModes.js';
 
 export class PointerContextMenu {
     constructor(actions = {}) {
@@ -45,7 +36,7 @@ export class PointerContextMenu {
 
     _rebuild(context) {
         this._menu.removeAll();
-        const header = new PopupMenu.PopupMenuItem('Per-monitor mode', { reactive: false, can_focus: false });
+        const header = new PopupMenu.PopupMenuItem('Monitor mode', { reactive: false, can_focus: false });
         this._menu.addMenuItem(header);
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
@@ -57,7 +48,7 @@ export class PointerContextMenu {
 
     _addModeAction(mode, currentMode, handler) {
         const marker = mode === currentMode ? '● ' : '';
-        this._menu.addAction(`${marker}${modeLabel(mode)}`, () => {
+        this._menu.addAction(`${marker}${getMonitorModeLabel(mode)}`, () => {
             handler();
             this._menu.close();
         });

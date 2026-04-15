@@ -21,19 +21,19 @@ Tested on **Ubuntu 25.10**, **GNOME 49**, **Wayland**.
 
 ## Monitor modes
 
-Each display has its own mode in the active profile. You can change it from Preferences or the pointer shortcut menu.
+Each display has its own mode in the active preset. You can change it from Preferences or the pointer shortcut menu.
 
-- **Auto** — The extension may blank that monitor after the pointer has been idle on it for the configured **Idle timeout**. Moving the pointer onto that monitor wakes it again.
-- **Disabled** — That monitor is left alone by the extension (no automatic blanking) until you choose another mode.
-- **Keep awake** — No automatic blanking on that monitor for the configured **Keep awake** duration (minutes); when the timer ends, that monitor returns to **Auto** so protection resumes without a manual step.
-- **Manual black** — The black overlay stays on that monitor until you switch modes. In the pointer menu this action is labeled **Black Now**.
+- **Automatic** — The extension may blank that screen after the pointer has been idle on it for the configured **Blank after** time. Moving the pointer onto that screen wakes it again.
+- **Never Blank** — That screen is left alone by the extension until you choose another mode.
+- **Keep Awake** — That screen will not blank automatically for the configured **Keep awake for** time. When the timer ends, that screen returns to **Automatic**.
+- **Black Screen** — The black overlay stays on that screen until you switch modes.
 
 ## Pointer menu shortcut
 
-Press the shortcut to open a small menu at the pointer for the monitor under the cursor. From there you can switch **Auto**, **Disabled**, **Keep awake**, or **Black now** without opening full Preferences.
+Press the shortcut to open a small menu at the pointer for the screen under the cursor. From there you can switch **Automatic**, **Never Blank**, **Keep Awake**, or **Black Screen** without opening full Preferences.
 
-The default is **Super+Shift+O**. Change or clear it under **Global behavior** in the extension’s Preferences (**Set…** / **Clear**). Click elsewhere or press Escape to close the menu.
-When **Show indicator** is enabled, Quick Settings adds a top-bar indicator and menu entry for switching the active profile or opening Preferences.
+The default is **Super+Shift+O**. Change or clear it under **General Settings** in the extension’s Preferences (**Set…** / **Clear**). Click elsewhere or press Escape to close the menu.
+When **Show top bar icon** is enabled, Quick Settings adds a top-bar indicator and menu entry for switching the active preset or opening Preferences.
 
 ## Installation Guide
 
