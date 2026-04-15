@@ -12,7 +12,12 @@ import { GnomeSignalRegistrar } from './platform/gnome-signal-registrar.js';
 import { GnomeQuickSettings } from './ui/gnome-quick-settings.js';
 import { GnomePointerContextMenu } from './ui/gnome-pointer-context-menu.js';
 import { buildIssueNotificationText } from '../shared/util/issue-notification-text.js';
-import { logInfo, logWarn, logErrorWithContext, setIssueReporter } from '../shared/util/logger.js';
+import {
+    logInfo,
+    logWarn,
+    logErrorWithContext,
+    setIssueReporter,
+} from '../shared/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     _lastIssueSignature = '';
@@ -24,7 +29,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         const settings = this.getSettings();
         const settingsGateway = new GnomeSettingsGateway(settings);
         settingsGateway.ensureStorage();
-        setIssueReporter(issue => this._reportIssue(settings, issue));
+        setIssueReporter((issue) => this._reportIssue(settings, issue));
         const signalRegistrar = new GnomeSignalRegistrar();
         const pointerActivitySource = new GnomePointerSource();
         const overlay = new GnomeOverlayManager();
@@ -40,7 +45,8 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             openSettings: () => this._openSettingsSafely(),
         });
         const deadlineScheduler = new GnomeDeadlineScheduler({
-            onDeadline: deadline => this._controller.handleScheduledDeadline(deadline),
+            onDeadline: (deadline) =>
+                this._controller?.handleScheduledDeadline(deadline),
         });
 
         this._controller = new AppController({
@@ -69,19 +75,26 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     async _openSettingsSafely() {
         try {
             if (this._openPreferencesInFlight) {
-                logWarn('preferences open request skipped: existing request still pending');
+                logWarn(
+                    'preferences open request skipped: existing request still pending',
+                );
                 return;
             }
             this._openPreferencesInFlight = true;
-            if (typeof Main.panel?.closeQuickSettings === 'function')
-                {Main.panel.closeQuickSettings();}
-            else
-                {logWarn('Main.panel.closeQuickSettings missing; prefs opened from Quick Settings may not receive focus until clicked');}
+            if (typeof Main.panel?.closeQuickSettings === 'function') {
+                Main.panel.closeQuickSettings();
+            } else {
+                logWarn(
+                    'Main.panel.closeQuickSettings missing; prefs opened from Quick Settings may not receive focus until clicked',
+                );
+            }
 
             await this._waitForNextIdle();
 
             if (!this._controller) {
-                logWarn('preferences open request skipped: extension disabled before idle callback completed');
+                logWarn(
+                    'preferences open request skipped: extension disabled before idle callback completed',
+                );
                 return;
             }
 
@@ -93,16 +106,20 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         }
     }
 
+    /** @returns {Promise<void>} */
     _waitForNextIdle() {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             const sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                if (this._openPreferencesIdleSourceId === sourceId)
-                    {this._openPreferencesIdleSourceId = undefined;}
+                if (this._openPreferencesIdleSourceId === sourceId) {
+                    this._openPreferencesIdleSourceId = undefined;
+                }
                 resolve();
                 return GLib.SOURCE_REMOVE;
             });
             if (!sourceId) {
-                logWarn('idle wait skipped: failed to allocate GLib idle source for preferences open');
+                logWarn(
+                    'idle wait skipped: failed to allocate GLib idle source for preferences open',
+                );
                 resolve();
                 return;
             }
@@ -111,24 +128,29 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     }
 
     _removeOpenPreferencesIdleSource() {
-        if (!this._openPreferencesIdleSourceId)
-            {return;}
+        if (!this._openPreferencesIdleSourceId) {
+            return;
+        }
 
         try {
             GLib.Source.remove(this._openPreferencesIdleSourceId);
         } catch (error) {
-            logWarn('failed to remove pending preferences idle source during disable', {
-                sourceId: this._openPreferencesIdleSourceId,
-                error: String(error),
-            });
+            logWarn(
+                'failed to remove pending preferences idle source during disable',
+                {
+                    sourceId: this._openPreferencesIdleSourceId,
+                    error: String(error),
+                },
+            );
         } finally {
             this._openPreferencesIdleSourceId = undefined;
         }
     }
 
     _reportIssue(settings, issue) {
-        if (!settings.get_boolean('show-issue-notifications'))
-            {return;}
+        if (!settings.get_boolean('show-issue-notifications')) {
+            return;
+        }
 
         const signature = [
             issue.level,
@@ -136,15 +158,17 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             issue.detailText,
             issue.level === 'error' ? issue.errorText : '',
         ].join('|');
-        if (signature === this._lastIssueSignature)
-            {return;}
+        if (signature === this._lastIssueSignature) {
+            return;
+        }
         this._lastIssueSignature = signature;
 
         const notification = buildIssueNotificationText(issue);
 
-        if (issue.level === 'error')
-            {Main.notifyError(notification.title, notification.body);}
-        else
-            {Main.notify(notification.title, notification.body);}
+        if (issue.level === 'error') {
+            Main.notifyError(notification.title, notification.body);
+        } else {
+            Main.notify(notification.title, notification.body);
+        }
     }
 }

@@ -3,6 +3,7 @@ import globals from 'globals';
 import importPlugin from 'eslint-plugin-import';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 const gjsGlobals = {
     ...globals.es2024,
@@ -88,4 +89,5 @@ export default [
             }],
         },
     },
+    eslintConfigPrettier,
 ];

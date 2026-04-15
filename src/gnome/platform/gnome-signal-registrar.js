@@ -12,17 +12,25 @@ export class GnomeSignalRegistrar {
             id = target.connect(signalName, handler);
             connected = true;
         } catch {
-            logWarn('failed to connect signal', { signalName, targetType: target?.constructor?.name ?? 'unknown' });
+            logWarn('failed to connect signal', {
+                signalName,
+                targetType: target?.constructor?.name ?? 'unknown',
+            });
         }
 
-        const disconnect = connected ? () => {
-            if (!id) return;
-            try {
-                target.disconnect(id);
-            } catch (error) {
-                logWarn('failed to disconnect signal', { signalName, error: error?.message ?? String(error) });
-            }
-        } : undefined;
+        const disconnect = connected
+            ? () => {
+                  if (!id) return;
+                  try {
+                      target.disconnect(id);
+                  } catch (error) {
+                      logWarn('failed to disconnect signal', {
+                          signalName,
+                          error: error?.message ?? String(error),
+                      });
+                  }
+              }
+            : undefined;
         if (!disconnect) return disconnect;
 
         this._disconnectors.push(disconnect);
@@ -38,7 +46,9 @@ export class GnomeSignalRegistrar {
             try {
                 disconnect?.();
             } catch (error) {
-                logWarn('disconnectAll failed', { error: error?.message ?? String(error) });
+                logWarn('disconnectAll failed', {
+                    error: error?.message ?? String(error),
+                });
             }
         }
     }

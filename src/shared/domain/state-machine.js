@@ -10,7 +10,8 @@ class SignalEmitter {
     #listeners = new Map();
 
     on(signal, handler) {
-        if (!this.#listeners.has(signal)) this.#listeners.set(signal, new Set());
+        if (!this.#listeners.has(signal))
+            this.#listeners.set(signal, new Set());
         this.#listeners.get(signal).add(handler);
         return () => this.off(signal, handler);
     }
@@ -20,7 +21,8 @@ class SignalEmitter {
     }
 
     emit(signal, payload) {
-        for (const handler of this.#listeners.get(signal) ?? []) handler(payload);
+        for (const handler of this.#listeners.get(signal) ?? [])
+            handler(payload);
     }
 }
 

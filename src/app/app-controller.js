@@ -40,9 +40,14 @@ export class AppController {
         });
         this._pointerActivityCoordinator = new PointerActivityCoordinator({
             monitorStateManager: this._monitorStateManager,
-            getMonitorByIndex: index => this._findMonitorByIndex(index),
-            getMachine: monitorId => this._getOrCreateMachine(monitorId),
-            rescheduleMonitor: (snapshot, monitor, machine) => this._deadlineCoordinator.rescheduleMonitor(snapshot, monitor, machine),
+            getMonitorByIndex: (index) => this._findMonitorByIndex(index),
+            getMachine: (monitorId) => this._getOrCreateMachine(monitorId),
+            rescheduleMonitor: (snapshot, monitor, machine) =>
+                this._deadlineCoordinator.rescheduleMonitor(
+                    snapshot,
+                    monitor,
+                    machine,
+                ),
         });
         this._monitorContexts = [];
         this._profiles = [];
@@ -52,16 +57,32 @@ export class AppController {
     enable() {
         this._quickSettings.enable?.();
         this._quickSettings.bindProfiles(
-            () => ({ profiles: this._profiles, activeProfileId: this._activeProfileId }),
-            profileId => this.switchProfile(profileId)
+            () => ({
+                profiles: this._profiles,
+                activeProfileId: this._activeProfileId,
+            }),
+            (profileId) => this.switchProfile(profileId),
         );
 
-        this._signalRegistrar.addDisconnector(this._settingsGateway.connectChanged(() => this._syncFromSettings()));
-        this._signalRegistrar.addDisconnector(this._monitorProvider.onMonitorsChanged(() => this._syncFromSettings()));
-        this._signalRegistrar.addDisconnector(this._settingsGateway.connectPointerShortcutChanged(() => this._reregisterPointerMenuShortcut()));
+        this._signalRegistrar.addDisconnector(
+            this._settingsGateway.connectChanged(() =>
+                this._syncFromSettings(),
+            ),
+        );
+        this._signalRegistrar.addDisconnector(
+            this._monitorProvider.onMonitorsChanged(() =>
+                this._syncFromSettings(),
+            ),
+        );
+        this._signalRegistrar.addDisconnector(
+            this._settingsGateway.connectPointerShortcutChanged(() =>
+                this._reregisterPointerMenuShortcut(),
+            ),
+        );
         this._reregisterPointerMenuShortcut();
         this._pointerActivitySource.start({
-            onPointerActivity: activity => this._handlePointerActivity(activity),
+            onPointerActivity: (activity) =>
+                this._handlePointerActivity(activity),
         });
 
         this._syncFromSettings();
@@ -111,16 +132,24 @@ export class AppController {
     }
 
     _syncFromSettings() {
-        const snapshot = createSettingsSnapshot(this._settingsGateway.getSettingsData());
+        const snapshot = createSettingsSnapshot(
+            this._settingsGateway.getSettingsData(),
+        );
         this._profiles = snapshot.profiles;
         this._activeProfileId = snapshot.activeProfileId;
-        this._monitorContexts = this._settingsSyncCoordinator.syncFromSettings(snapshot).monitorContexts;
-        this._settingsSyncCoordinator.reconcileMonitorRuntimeState(this._monitorContexts);
+        this._monitorContexts =
+            this._settingsSyncCoordinator.syncFromSettings(
+                snapshot,
+            ).monitorContexts;
+        this._settingsSyncCoordinator.reconcileMonitorRuntimeState(
+            this._monitorContexts,
+        );
         this._overlay.setFadeDuration(snapshot.fadeDurationMs);
         this._overlay.setDimIntensityPercent(snapshot.dimIntensityPercent);
         this._quickSettings.visible = snapshot.showIndicator;
-        for (const monitor of this._monitorContexts)
-            {this._applyModeSyncForMonitor(snapshot, monitor);}
+        for (const monitor of this._monitorContexts) {
+            this._applyModeSyncForMonitor(snapshot, monitor);
+        }
         this._seedCurrentPointerActivity();
         this._syncOverlay();
         this._quickSettings.refreshProfiles?.();
@@ -130,8 +159,9 @@ export class AppController {
         const blackMonitors = [];
         for (const monitor of this._monitorContexts) {
             const state = this._monitorStateManager.getState(monitor.id);
-            if (state === State.AutoBlack || state === State.ManualBlack)
-                {blackMonitors.push(monitor.index);}
+            if (state === State.AutoBlack || state === State.ManualBlack) {
+                blackMonitors.push(monitor.index);
+            }
         }
         this._overlay.setBlackMonitors(blackMonitors);
     }
@@ -156,10 +186,15 @@ export class AppController {
     _getFocusedMonitor() {
         const snapshot = this._pointerActivitySource.getPointerSnapshot();
         if (Number.isInteger(snapshot?.monitorIndex)) {
-            const found = this._monitorContexts.find(m => m.index === snapshot.monitorIndex);
+            const found = this._monitorContexts.find(
+                (m) => m.index === snapshot.monitorIndex,
+            );
             if (found) return found;
         }
-        return this._monitorContexts.find(item => item.isPrimary) ?? this._monitorContexts[0];
+        return (
+            this._monitorContexts.find((item) => item.isPrimary) ??
+            this._monitorContexts[0]
+        );
     }
 
     _setFocusedMonitorMode(mode, action) {
@@ -192,32 +227,54 @@ export class AppController {
     }
 
     _handlePointerActivity(activity) {
-        const snapshot = createSettingsSnapshot(this._settingsGateway.getSettingsData());
-        this._pointerActivityCoordinator.handlePointerActivity(snapshot, activity);
+        const snapshot = createSettingsSnapshot(
+            this._settingsGateway.getSettingsData(),
+        );
+        this._pointerActivityCoordinator.handlePointerActivity(
+            snapshot,
+            activity,
+        );
     }
 
     _reschedulePointerDeparture(snapshot, activity) {
-        this._pointerActivityCoordinator.reschedulePointerDeparture(snapshot, activity);
+        this._pointerActivityCoordinator.reschedulePointerDeparture(
+            snapshot,
+            activity,
+        );
     }
 
     _findMonitorByIndex(index) {
         let monitor;
         if (Number.isInteger(index)) {
-            monitor = this._monitorContexts.find(item => item.index === index);
+            monitor = this._monitorContexts.find(
+                (item) => item.index === index,
+            );
         }
         return monitor;
     }
 
     _handleScheduledDeadline({ deadlineKey, monitorId, token, deadlineMs }) {
-        const snapshot = createSettingsSnapshot(this._settingsGateway.getSettingsData());
-        const monitor = this._monitorContexts.find(item => item.id === monitorId);
+        const snapshot = createSettingsSnapshot(
+            this._settingsGateway.getSettingsData(),
+        );
+        const monitor = this._monitorContexts.find(
+            (item) => item.id === monitorId,
+        );
         if (!monitor) {
-            logInfo('scheduled deadline skipped: monitor missing', { deadlineKey, monitorId, token, deadlineMs });
+            logInfo('scheduled deadline skipped: monitor missing', {
+                deadlineKey,
+                monitorId,
+                token,
+                deadlineMs,
+            });
             return;
         }
         if (deadlineKey === 'keep-awake-expiry') {
             const machine = this._getOrCreateMachine(monitorId);
-            if (monitor.mode !== 'keep-awake' || machine.state !== State.KeepAwake) {
+            if (
+                monitor.mode !== 'keep-awake' ||
+                machine.state !== State.KeepAwake
+            ) {
                 logInfo('keep-awake expiry skipped: invalid state', {
                     monitorId,
                     mode: monitor.mode,
@@ -233,7 +290,11 @@ export class AppController {
         }
         const machine = this._getOrCreateMachine(monitorId);
         if (monitor.mode !== 'auto') {
-            logInfo('auto-black deadline skipped: monitor no longer auto', { monitorId, mode: monitor.mode, token });
+            logInfo('auto-black deadline skipped: monitor no longer auto', {
+                monitorId,
+                mode: monitor.mode,
+                token,
+            });
             return;
         }
         this._deadlineCoordinator.rescheduleMonitor(snapshot, monitor, machine);
@@ -243,13 +304,15 @@ export class AppController {
         this._keybindingManager.unregister('pointer-menu-shortcut');
         const accel = this._settingsGateway.getPointerShortcutAccel();
         if (!accel) {
-            logInfo('pointer menu shortcut is unset; keybinding not registered');
+            logInfo(
+                'pointer menu shortcut is unset; keybinding not registered',
+            );
             return;
         }
         this._keybindingManager.register(
             'pointer-menu-shortcut',
             this._settingsGateway.getKeybindingSettings(),
-            () => this.openPointerMenu()
+            () => this.openPointerMenu(),
         );
     }
 }

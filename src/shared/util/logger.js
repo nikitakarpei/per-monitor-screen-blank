@@ -48,12 +48,14 @@ function _serialize(value) {
 }
 
 function _reportIssue(issue) {
-    if (!issueReporter)
-        {return;}
+    if (!issueReporter) {
+        return;
+    }
     try {
         issueReporter({
             ...issue,
-            detailText: issue.details === undefined ? '' : _serialize(issue.details),
+            detailText:
+                issue.details === undefined ? '' : _serialize(issue.details),
             errorText: issue.error?.message ?? String(issue.error ?? ''),
         });
     } catch {

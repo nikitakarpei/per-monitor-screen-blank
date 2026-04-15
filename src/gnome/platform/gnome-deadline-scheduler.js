@@ -38,24 +38,48 @@ export class GnomeDeadlineScheduler {
         const token = (this._tokens.get(key) ?? 0) + 1;
         this._tokens.set(key, token);
         const delayMs = Math.max(0, Math.ceil(deadlineMs - Date.now()));
-        const sourceId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delayMs, () => {
-            const latestToken = this._tokens.get(key);
-            if (latestToken !== token) {
-                logWarn('ignored stale monitor deadline callback', { deadlineKey, monitorId, token, latestToken, deadlineMs });
+        const sourceId = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            delayMs,
+            () => {
+                const latestToken = this._tokens.get(key);
+                if (latestToken !== token) {
+                    logWarn('ignored stale monitor deadline callback', {
+                        deadlineKey,
+                        monitorId,
+                        token,
+                        latestToken,
+                        deadlineMs,
+                    });
+                    return GLib.SOURCE_REMOVE;
+                }
+                this._entries.delete(key);
+                this._tokens.delete(key);
+                try {
+                    this._onDeadline?.({
+                        deadlineKey,
+                        monitorId,
+                        token,
+                        deadlineMs,
+                    });
+                } catch (error) {
+                    logErrorWithContext(
+                        error,
+                        'monitor deadline callback failed',
+                        { deadlineKey, monitorId, token },
+                    );
+                }
                 return GLib.SOURCE_REMOVE;
-            }
-            this._entries.delete(key);
-            this._tokens.delete(key);
-            try {
-                this._onDeadline?.({ deadlineKey, monitorId, token, deadlineMs });
-            } catch (error) {
-                logErrorWithContext(error, 'monitor deadline callback failed', { deadlineKey, monitorId, token });
-            }
-            return GLib.SOURCE_REMOVE;
-        });
+            },
+        );
         if (!sourceId) {
             this._tokens.delete(key);
-            logWarn('monitor deadline schedule skipped: no GLib source id', { deadlineKey, monitorId, deadlineMs, token });
+            logWarn('monitor deadline schedule skipped: no GLib source id', {
+                deadlineKey,
+                monitorId,
+                deadlineMs,
+                token,
+            });
             return;
         }
         this._entries.set(key, { sourceId, token, deadlineKey });

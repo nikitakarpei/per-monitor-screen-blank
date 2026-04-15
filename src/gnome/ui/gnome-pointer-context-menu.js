@@ -1,12 +1,21 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import { getMonitorModeLabel, listMonitorModes } from '../../shared/util/monitor-modes.js';
+import {
+    getMonitorModeLabel,
+    listMonitorModes,
+} from '../../shared/util/monitor-modes.js';
 
 export class GnomePointerContextMenu {
     constructor(actions = {}) {
         this._actions = actions;
-        this._anchor = new St.Widget({ reactive: true, width: 1, height: 1, x: 0, y: 0 });
+        this._anchor = new St.Widget({
+            reactive: true,
+            width: 1,
+            height: 1,
+            x: 0,
+            y: 0,
+        });
         Main.uiGroup.add_child(this._anchor);
 
         this._menu = new PopupMenu.PopupMenu(this._anchor, 0, St.Side.TOP);
@@ -36,27 +45,39 @@ export class GnomePointerContextMenu {
 
     _rebuild(context) {
         this._menu.removeAll();
-        const header = new PopupMenu.PopupMenuItem('Monitor mode', { reactive: false, can_focus: false });
+        const header = new PopupMenu.PopupMenuItem('Monitor mode', {
+            reactive: false,
+            can_focus: false,
+        });
         this._menu.addMenuItem(header);
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         for (const mode of listMonitorModes()) {
-            this._addModeAction(mode, context.currentMode, this._getModeHandler(mode));
+            this._addModeAction(
+                mode,
+                context.currentMode,
+                this._getModeHandler(mode),
+            );
         }
     }
 
     _getModeHandler(mode) {
         switch (mode) {
-        case 'auto': { return () => this._actions.auto?.();
-        }
-        case 'disabled': { return () => this._actions.disabled?.();
-        }
-        case 'keep-awake': { return () => this._actions.keepAwake?.();
-        }
-        case 'manual-black': { return () => this._actions.blackNow?.();
-        }
-        default: { return () => {};
-        }
+            case 'auto': {
+                return () => this._actions.auto?.();
+            }
+            case 'disabled': {
+                return () => this._actions.disabled?.();
+            }
+            case 'keep-awake': {
+                return () => this._actions.keepAwake?.();
+            }
+            case 'manual-black': {
+                return () => this._actions.blackNow?.();
+            }
+            default: {
+                return () => {};
+            }
         }
     }
 

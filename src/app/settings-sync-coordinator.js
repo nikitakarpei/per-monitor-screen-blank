@@ -10,11 +10,20 @@ export class SettingsSyncCoordinator {
     }
 
     syncFromSettings(snapshot) {
-        const runtimeMonitors = this._monitorProvider.listMonitors().filter(monitor => monitor.isStable);
+        const runtimeMonitors = this._monitorProvider
+            .listMonitors()
+            .filter((monitor) => monitor.isStable);
         const monitorModes = snapshot.monitorModes;
-        const runtimeIds = new Set(runtimeMonitors.map(monitor => monitor.id));
-        const unmatchedKeys = Object.keys(monitorModes).filter(key => !runtimeIds.has(key));
-        const unmatchedActiveKeys = unmatchedKeys.filter(key => normalizeMode(monitorModes[key], 'disabled') !== 'disabled');
+        const runtimeIds = new Set(
+            runtimeMonitors.map((monitor) => monitor.id),
+        );
+        const unmatchedKeys = Object.keys(monitorModes).filter(
+            (key) => !runtimeIds.has(key),
+        );
+        const unmatchedActiveKeys = unmatchedKeys.filter(
+            (key) =>
+                normalizeMode(monitorModes[key], 'disabled') !== 'disabled',
+        );
         if (unmatchedKeys.length > 0) {
             logInfo('monitor mode keys not present in runtime monitors', {
                 unmatchedKeys,
@@ -27,7 +36,7 @@ export class SettingsSyncCoordinator {
                 unmatchedActiveKeys,
             });
         }
-        const monitorContexts = runtimeMonitors.map(monitor => ({
+        const monitorContexts = runtimeMonitors.map((monitor) => ({
             ...monitor,
             mode: resolveMonitorMode(monitorModes, monitor, 'disabled'),
         }));
@@ -35,8 +44,12 @@ export class SettingsSyncCoordinator {
             logInfo('no runtime monitors detected', {
                 reason: 'platform returned no monitors for Per-Monitor Screen Blank',
             });
-        } else if (monitorContexts.every(monitor => monitor.mode === 'disabled')) {
-            logInfo('all monitors are disabled in active profile', { activeProfileId: snapshot.activeProfileId });
+        } else if (
+            monitorContexts.every((monitor) => monitor.mode === 'disabled')
+        ) {
+            logInfo('all monitors are disabled in active profile', {
+                activeProfileId: snapshot.activeProfileId,
+            });
         }
         return { monitorContexts };
     }
@@ -46,7 +59,9 @@ export class SettingsSyncCoordinator {
     }
 
     reconcileMonitorRuntimeState(monitorContexts) {
-        const activeMonitorIds = new Set(monitorContexts.map(monitor => monitor.id));
+        const activeMonitorIds = new Set(
+            monitorContexts.map((monitor) => monitor.id),
+        );
         for (const monitorId of this._monitorStateManager.getMonitorIds()) {
             if (activeMonitorIds.has(monitorId)) continue;
             this._monitorStateManager.removeMonitor(monitorId);

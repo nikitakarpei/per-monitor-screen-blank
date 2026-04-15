@@ -19,7 +19,10 @@ export class GnomeSettingsGateway {
     }
 
     connectPointerShortcutChanged(handler) {
-        const id = this._settings.connect('changed::pointer-menu-shortcut', handler);
+        const id = this._settings.connect(
+            'changed::pointer-menu-shortcut',
+            handler,
+        );
         return () => this._settings.disconnect(id);
     }
 
@@ -35,12 +38,19 @@ export class GnomeSettingsGateway {
 
     ensureStorage() {
         const profilesRaw = this._settings.get_string('profiles-json');
-        if (!profilesRaw || profilesRaw === '[]')
-            {this._settings.set_string('profiles-json', stringifyProfiles(defaultProfiles()));}
+        if (!profilesRaw || profilesRaw === '[]') {
+            this._settings.set_string(
+                'profiles-json',
+                stringifyProfiles(defaultProfiles()),
+            );
+        }
 
         const { profiles, activeProfileId } = this._readProfilesState();
-        if (this._settings.get_string('active-profile-id') !== activeProfileId)
-            {this._settings.set_string('active-profile-id', activeProfileId);}
+        if (
+            this._settings.get_string('active-profile-id') !== activeProfileId
+        ) {
+            this._settings.set_string('active-profile-id', activeProfileId);
+        }
         return { profiles, activeProfileId };
     }
 
@@ -50,42 +60,63 @@ export class GnomeSettingsGateway {
             idleTimeoutSeconds: this._settings.get_int('idle-timeout-seconds'),
             keepAwakeMinutes: this._settings.get_int('keep-awake-minutes'),
             showIndicator: this._settings.get_boolean('show-indicator'),
-            disableAutoTimerOnPointerMonitor: this._settings.get_boolean('disable-auto-timer-on-pointer-monitor'),
+            disableAutoTimerOnPointerMonitor: this._settings.get_boolean(
+                'disable-auto-timer-on-pointer-monitor',
+            ),
             fadeDurationMs: this._settings.get_int('fade-duration-ms'),
-            dimIntensityPercent: this._settings.get_int('dim-intensity-percent'),
+            dimIntensityPercent: this._settings.get_int(
+                'dim-intensity-percent',
+            ),
         };
     }
 
     setMonitorMode(monitorIdentity, mode) {
-        const key = typeof monitorIdentity === 'string'
-            ? monitorIdentity.trim()
-            : String(monitorIdentity?.id ?? '').trim();
+        const key =
+            typeof monitorIdentity === 'string'
+                ? monitorIdentity.trim()
+                : String(monitorIdentity?.id ?? '').trim();
         if (!key) {
             logWarn('setMonitorMode called with empty monitorId');
             return;
         }
         const { profiles, activeProfileId } = this.ensureStorage();
-        const nextProfiles = profiles.map(profile => {
+        const nextProfiles = profiles.map((profile) => {
             if (profile.id !== activeProfileId) return profile;
             return {
                 ...profile,
-                monitorModes: assignMonitorMode(profile.monitorModes, monitorIdentity, normalizeMode(mode)),
+                monitorModes: assignMonitorMode(
+                    profile.monitorModes,
+                    monitorIdentity,
+                    normalizeMode(mode),
+                ),
             };
         });
-        this._settings.set_string('profiles-json', stringifyProfiles(nextProfiles));
+        this._settings.set_string(
+            'profiles-json',
+            stringifyProfiles(nextProfiles),
+        );
     }
 
     setActiveProfile(profileId) {
         const { profiles } = this.ensureStorage();
         const activeProfileId = ensureActiveProfileId(profiles, profileId);
-        if (activeProfileId !== profileId)
-            {logWarn('requested profile not found, falling back', { requested: profileId, activeProfileId });}
+        if (activeProfileId !== profileId) {
+            logWarn('requested profile not found, falling back', {
+                requested: profileId,
+                activeProfileId,
+            });
+        }
         this._settings.set_string('active-profile-id', activeProfileId);
     }
 
     _readProfilesState() {
-        const profiles = parseProfiles(this._settings.get_string('profiles-json'));
-        const activeProfileId = ensureActiveProfileId(profiles, this._settings.get_string('active-profile-id'));
+        const profiles = parseProfiles(
+            this._settings.get_string('profiles-json'),
+        );
+        const activeProfileId = ensureActiveProfileId(
+            profiles,
+            this._settings.get_string('active-profile-id'),
+        );
         return { profiles, activeProfileId };
     }
 }

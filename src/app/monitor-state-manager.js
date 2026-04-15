@@ -27,7 +27,9 @@ export class MonitorStateManager {
 
     reconcileMonitors(monitorContexts) {
         const now = Date.now();
-        const activeMonitorIds = new Set(monitorContexts.map(monitor => monitor.id));
+        const activeMonitorIds = new Set(
+            monitorContexts.map((monitor) => monitor.id),
+        );
         for (const monitorId of this._stateMachines.keys()) {
             if (activeMonitorIds.has(monitorId)) continue;
             this._stateMachines.delete(monitorId);
@@ -37,8 +39,9 @@ export class MonitorStateManager {
         }
 
         for (const monitor of monitorContexts) {
-            if (!this._lastActivityByMonitorId.has(monitor.id))
-                {this._lastActivityByMonitorId.set(monitor.id, now);}
+            if (!this._lastActivityByMonitorId.has(monitor.id)) {
+                this._lastActivityByMonitorId.set(monitor.id, now);
+            }
         }
     }
 
@@ -48,7 +51,7 @@ export class MonitorStateManager {
             monitor.mode,
             snapshot.keepAwakeMinutes,
             this._lastModes.get(monitor.id),
-            this._lastKeepAwakeMinutes.get(monitor.id)
+            this._lastKeepAwakeMinutes.get(monitor.id),
         );
 
         if (modeEffect.transitionState) {
@@ -58,8 +61,9 @@ export class MonitorStateManager {
             machine.setKeepAwake(modeEffect.keepAwakeMs);
         } else if (monitor.mode === 'auto') {
             machine.keepAwakeUntil = undefined;
-            if (machine.state !== State.AutoBlack)
-                {machine.transition(State.AutoAwake, 'settings');}
+            if (machine.state !== State.AutoBlack) {
+                machine.transition(State.AutoAwake, 'settings');
+            }
         }
 
         this._lastModes.set(monitor.id, monitor.mode);

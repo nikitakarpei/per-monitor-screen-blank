@@ -2,7 +2,10 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { DEFAULTS } from '../../shared/core/defaults.js';
-import { dimIntensityPercentToOpacity, normalizeDimIntensityPercent } from '../../shared/core/dim-intensity.js';
+import {
+    dimIntensityPercentToOpacity,
+    normalizeDimIntensityPercent,
+} from '../../shared/core/dim-intensity.js';
 import { normalizeFadeDurationMs } from '../../shared/core/fade-duration.js';
 import { logInfo, logWarn } from '../../shared/util/logger.js';
 
@@ -13,6 +16,7 @@ export class GnomeOverlayManager {
     #actors = new Map();
     #visibleMonitors = new Set();
     #signalIds = [];
+    /** @type {number} */
     #fadeDurationMs = FADE_DURATION_MS;
     #targetOpacity = dimIntensityPercentToOpacity(DIM_INTENSITY_PERCENT);
 
@@ -29,10 +33,12 @@ export class GnomeOverlayManager {
 
     setBlackMonitors(monitorIndexes = []) {
         const nextIndexes = new Set(monitorIndexes);
-        if (nextIndexes.size === 0 && this.#actors.size > 0)
-            {logInfo('clearing all black monitors');}
-        if (nextIndexes.size > 0 && this.#signalIds.length === 0)
-            {this.#bindGeometrySignals();}
+        if (nextIndexes.size === 0 && this.#actors.size > 0) {
+            logInfo('clearing all black monitors');
+        }
+        if (nextIndexes.size > 0 && this.#signalIds.length === 0) {
+            this.#bindGeometrySignals();
+        }
 
         for (const monitorIndex of nextIndexes) {
             const actor = this.#ensureActor(monitorIndex);
@@ -47,12 +53,15 @@ export class GnomeOverlayManager {
     }
 
     setFadeDuration(durationMs = FADE_DURATION_MS) {
-        this.#fadeDurationMs = normalizeFadeDurationMs(durationMs, FADE_DURATION_MS);
+        this.#fadeDurationMs = normalizeFadeDurationMs(
+            durationMs,
+            FADE_DURATION_MS,
+        );
     }
 
     setDimIntensityPercent(percent = DIM_INTENSITY_PERCENT) {
         this.#targetOpacity = dimIntensityPercentToOpacity(
-            normalizeDimIntensityPercent(percent, DIM_INTENSITY_PERCENT)
+            normalizeDimIntensityPercent(percent, DIM_INTENSITY_PERCENT),
         );
         for (const monitorIndex of this.#visibleMonitors) {
             const actor = this.#actors.get(monitorIndex);
@@ -90,8 +99,9 @@ export class GnomeOverlayManager {
                 Main.layoutManager.removeChrome(actor);
                 actor.destroy();
                 this.#actors.delete(monitorIndex);
-                if (this.#actors.size === 0)
-                    {this.#unbindGeometrySignals();}
+                if (this.#actors.size === 0) {
+                    this.#unbindGeometrySignals();
+                }
             },
         });
     }
@@ -107,7 +117,10 @@ export class GnomeOverlayManager {
             try {
                 target.disconnect(id);
             } catch (error) {
-                logWarn('overlay signal disconnect failed', { id, error: error?.message ?? String(error) });
+                logWarn('overlay signal disconnect failed', {
+                    id,
+                    error: error?.message ?? String(error),
+                });
             }
         }
         this.#signalIds = [];
@@ -118,17 +131,23 @@ export class GnomeOverlayManager {
             const id = target.connect(signalName, () => this.#syncGeometry());
             this.#signalIds.push({ target, id });
         } catch {
-            logWarn('overlay signal unavailable', { signalName, targetType: target?.constructor?.name ?? 'unknown' });
+            logWarn('overlay signal unavailable', {
+                signalName,
+                targetType: target?.constructor?.name ?? 'unknown',
+            });
         }
     }
 
     #syncGeometry() {
-        for (const [monitorIndex, actor] of this.#actors)
-            {this.#syncGeometryForMonitor(monitorIndex, actor);}
+        for (const [monitorIndex, actor] of this.#actors) {
+            this.#syncGeometryForMonitor(monitorIndex, actor);
+        }
     }
 
     #syncGeometryForMonitor(monitorIndex, actor) {
-        const monitor = Main.layoutManager.monitors?.[monitorIndex] ?? Main.layoutManager.primaryMonitor;
+        const monitor =
+            Main.layoutManager.monitors?.[monitorIndex] ??
+            Main.layoutManager.primaryMonitor;
         if (!monitor) {
             logWarn('failed to resolve monitor geometry', { monitorIndex });
             return;
@@ -155,7 +174,10 @@ export class GnomeOverlayManager {
         });
         actor.set_style('background-color: #000000;');
         actor.hide();
-        Main.layoutManager.addChrome(actor, { affectsInputRegion: false, trackFullscreen: true });
+        Main.layoutManager.addChrome(actor, {
+            affectsInputRegion: false,
+            trackFullscreen: true,
+        });
         this.#actors.set(monitorIndex, actor);
         return actor;
     }

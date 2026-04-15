@@ -8,7 +8,7 @@ export class GnomeKeybindingManager {
      * Registers a global keybinding using the GNOME Shell window manager.
      *
      * @param {string} name - GSettings key name for the accelerator strv
-     * @param {Gio.Settings} settings - GSettings instance containing the keybinding key
+     * @param {object} settings - GSettings instance containing the keybinding key
      * @param {() => void} callback
      */
     register(name, settings, callback) {
@@ -18,10 +18,12 @@ export class GnomeKeybindingManager {
                 settings,
                 Meta.KeyBindingFlags.NONE,
                 Shell.ActionMode.ALL,
-                callback
+                callback,
             );
         } catch (error) {
-            logErrorWithContext(error, 'failed to register keybinding', { name });
+            logErrorWithContext(error, 'failed to register keybinding', {
+                name,
+            });
         }
     }
 
@@ -36,7 +38,9 @@ export class GnomeKeybindingManager {
         try {
             Main.wm.removeKeybinding(name);
         } catch (error) {
-            logErrorWithContext(error, 'failed to unregister keybinding', { name });
+            logErrorWithContext(error, 'failed to unregister keybinding', {
+                name,
+            });
         }
     }
 }
