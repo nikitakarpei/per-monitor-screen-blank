@@ -23,10 +23,18 @@ Tested on **Ubuntu 25.10**, **GNOME 49**, **Wayland**.
 
 Each display has its own mode in the active preset. You can change it from Preferences or the pointer shortcut menu.
 
-- **Automatic** — The extension may blank that screen after the pointer has been idle on it for the configured **Blank after** time. Moving the pointer onto that screen wakes it again.
+- **Automatic** — The extension may blank that screen after it has had no pointer activity for the configured **Blank after** time. Any pointer activity on that screen wakes it again.
 - **Never Blank** — That screen is left alone by the extension until you choose another mode.
 - **Keep Awake** — That screen will not blank automatically for the configured **Keep awake for** time. When the timer ends, that screen returns to **Automatic**.
 - **Black Screen** — The black overlay stays on that screen until you switch modes.
+
+## General settings
+
+- **Blank after** — How long a screen in Automatic mode must go without pointer activity before it blanks.
+- **Keep awake for** — How long Keep Awake stays active before the screen returns to Automatic.
+- **Do not blank the screen under the pointer** — While enabled, automatic blanking is paused for whichever screen the pointer is currently on.
+- **Darkness** — How opaque the black overlay is, from transparent to fully black.
+- **Fade time** — Duration of the fade animation when a screen blacks out or wakes up.
 
 ## Pointer menu shortcut
 
