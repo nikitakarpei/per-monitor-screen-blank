@@ -5,15 +5,26 @@
   "scripts": {
     "lint": "eslint src",
     "lint:js": "eslint src",
-    "lint:dead-code": "knip --reporter compact"
+    "lint:dead-code": "knip --reporter compact",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src",
+    "typecheck": "tsc"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run lint && npm run format:check && npm run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-sonarjs": "^3.0.5",
     "eslint-plugin-unicorn": "^64.0.0",
     "globals": "^16.4.0",
-    "knip": "^6.4.1"
+    "knip": "^6.4.1",
+    "prettier": "^3.8.3",
+    "simple-git-hooks": "^2.13.1",
+    "ts-api-utils": "^2.5.0",
+    "typescript": "^6.0.2"
   }
 }
