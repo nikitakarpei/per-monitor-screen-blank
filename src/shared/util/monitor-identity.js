@@ -12,7 +12,7 @@ export function buildMonitorIdentity({
     };
 }
 
-export function buildStableMonitorId({ vendor = '', product = '', serial = '' } = {}) {
+function buildStableMonitorId({ vendor = '', product = '', serial = '' } = {}) {
     const vendorKey = _normalizeIdentityPart(vendor);
     const productKey = _normalizeIdentityPart(product);
     const serialKey = _normalizeIdentityPart(serial);

@@ -5,7 +5,7 @@ export function normalizeKeepAwakeMinutes(minutes, fallback = DEFAULTS.keepAwake
     return Math.max(1, Number.isFinite(minutes) ? minutes : fallback);
 }
 
-export function shouldRearmKeepAwake(mode, keepAwakeMinutes, lastMode, lastKeepAwakeMinutes) {
+function shouldRearmKeepAwake(mode, keepAwakeMinutes, lastMode, lastKeepAwakeMinutes) {
     return mode === 'keep-awake' && (mode !== lastMode || keepAwakeMinutes !== lastKeepAwakeMinutes);
 }
 

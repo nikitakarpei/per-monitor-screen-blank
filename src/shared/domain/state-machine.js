@@ -6,7 +6,7 @@ export const State = Object.freeze({
     ManualBlack: 'ManualBlack',
 });
 
-export class SignalEmitter {
+class SignalEmitter {
     #listeners = new Map();
 
     on(signal, handler) {

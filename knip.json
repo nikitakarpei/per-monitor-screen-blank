@@ -1,0 +1,14 @@
+{
+  "ignoreDependencies": [
+    "^gi$",
+    "^resource$",
+    "^ts-api-utils$"
+  ],
+  "entry": [
+    "src/gnome/extension.js",
+    "src/gnome/prefs.js"
+  ],
+  "project": [
+    "src/**/*.js"
+  ]
+}
