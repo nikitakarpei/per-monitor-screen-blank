@@ -2,6 +2,7 @@
 
 ![GNOME Extensions review pending](https://img.shields.io/badge/GNOME%20Extensions-Review%20Pending-EAAA00?style=for-the-badge&logo=gnome&logoColor=white)
 [![Download Latest ZIP](https://img.shields.io/badge/Download-Latest%20ZIP-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/nikitakarpei/per-monitor-screen-blank/releases/latest)
+![Built with AI](https://img.shields.io/badge/Built_with-AI-4285F4?style=flat-square&logo=google-gemini&logoColor=white)
 
 ## Overview
 
