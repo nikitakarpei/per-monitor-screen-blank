@@ -3,18 +3,16 @@
 set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-src="$repo_root/per-monitor-screen-blank@nikitakarpei.github.io"
-dest="$HOME/.local/share/gnome-shell/extensions/per-monitor-screen-blank@nikitakarpei.github.io"
+uuid="per-monitor-screen-blank@nikitakarpei.github.io"
+dest="$HOME/.local/share/gnome-shell/extensions/$uuid"
+
+sh "$repo_root/scripts/build-gnome.sh"
 
 mkdir -p "$dest"
-cp -R "$src/." "$dest/"
-
-if command -v glib-compile-schemas >/dev/null 2>&1; then
-  glib-compile-schemas "$dest/schemas"
-fi
+cp -R "$repo_root/dist/$uuid/." "$dest/"
 
 if command -v gnome-extensions >/dev/null 2>&1; then
-  gnome-extensions enable per-monitor-screen-blank@nikitakarpei.github.io >/dev/null 2>&1 || true
+  gnome-extensions enable "$uuid" >/dev/null 2>&1 || true
 fi
 
 printf '%s\n' "Installed to: $dest" "Reload GNOME Shell if needed." "Open GNOME Extensions to verify the extension is enabled."

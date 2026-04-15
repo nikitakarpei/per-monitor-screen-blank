@@ -4,12 +4,12 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import { listDisplayConfigMonitors } from './src/platform/MutterDisplayConfig.js';
-import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
-import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from './src/util/monitorIdentity.js';
-import { logInfo, logWarn, setIssueReporter } from './src/util/logger.js';
-import { getMonitorModeLabel, listMonitorModes, sanitizeMonitorModes } from './src/util/monitorModes.js';
-import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/util/profileConfig.js';
+import { listDisplayConfigMonitors } from './src/platform/gnome/MutterDisplayConfig.js';
+import { buildIssueNotificationText } from './src/shared/util/issueNotificationText.js';
+import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from './src/shared/util/monitorIdentity.js';
+import { logInfo, logWarn, setIssueReporter } from './src/shared/util/logger.js';
+import { getMonitorModeLabel, listMonitorModes, sanitizeMonitorModes } from './src/shared/util/monitorModes.js';
+import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/shared/util/profileConfig.js';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async', 'communicate_utf8_finish');
 

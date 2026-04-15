@@ -1,15 +1,15 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { DEFAULTS } from '../core/defaults.js';
-import { dimIntensityPercentToOpacity, normalizeDimIntensityPercent } from '../core/dimIntensity.js';
-import { normalizeFadeDurationMs } from '../core/fadeDuration.js';
-import { logInfo, logWarn } from '../util/logger.js';
+import { DEFAULTS } from '../../shared/core/defaults.js';
+import { dimIntensityPercentToOpacity, normalizeDimIntensityPercent } from '../../shared/core/dimIntensity.js';
+import { normalizeFadeDurationMs } from '../../shared/core/fadeDuration.js';
+import { logInfo, logWarn } from '../../shared/util/logger.js';
 
 const FADE_DURATION_MS = DEFAULTS.fadeDurationMs;
 const DIM_INTENSITY_PERCENT = DEFAULTS.dimIntensityPercent;
 
-export class ShellOverlayManager {
+export class GnomeOverlayManager {
     #actors = new Map();
     #visibleMonitors = new Set();
     #signalIds = [];

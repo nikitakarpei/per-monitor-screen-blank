@@ -1,9 +1,9 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import { getMonitorModeLabel } from '../util/monitorModes.js';
+import { getMonitorModeLabel } from '../../shared/util/monitorModes.js';
 
-export class PointerContextMenu {
+export class GnomePointerContextMenu {
     constructor(actions = {}) {
         this._actions = actions;
         this._anchor = new St.Widget({ reactive: true, width: 1, height: 1, x: 0, y: 0 });

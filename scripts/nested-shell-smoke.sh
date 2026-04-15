@@ -22,7 +22,9 @@ run_wait="${2:-6}"
 nested_log=$(mktemp)
 extension_context_log=$(mktemp)
 trap 'rm -f "$nested_log" "$extension_context_log"' EXIT
-src_extension_dir="$repo_root/per-monitor-screen-blank@nikitakarpei.github.io"
+
+sh "$repo_root/scripts/build-gnome.sh"
+src_extension_dir="$repo_root/dist/$uuid"
 # Avoid bare "ERROR:" — it matches notifyError body text ("error: Per-Monitor ...") in nested logs.
 error_pattern='JS ERROR|TypeError|SyntaxError|ReferenceError|No signal|GType|Argument string may not be null|Unhandled promise rejection|CRITICAL|GLib-CRITICAL|Gjs-CRITICAL|\[per-monitor-screen-blank\] ERROR:'
 

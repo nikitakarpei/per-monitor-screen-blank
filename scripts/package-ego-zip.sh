@@ -5,7 +5,7 @@
 set -eu
 
 usage() {
-  printf '%s\n' "Usage: sh $0" "  Writes dist/<uuid>.zip from per-monitor-screen-blank@nikitakarpei.github.io/"
+  printf '%s\n' "Usage: sh $0" "  Writes dist/<uuid>.zip from the built extension in dist/<uuid>/."
 }
 
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -15,12 +15,15 @@ fi
 
 repo_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
-src="$repo_root/$uuid"
 out_dir="$repo_root/dist"
 zip_path="$out_dir/${uuid}.zip"
 
+sh "$repo_root/scripts/build-gnome.sh"
+
+src="$out_dir/$uuid"
+
 if [ ! -f "$src/metadata.json" ]; then
-  printf 'ERROR: extension source missing: %s\n' "$src" >&2
+  printf 'ERROR: built extension missing: %s\n' "$src" >&2
   exit 1
 fi
 
@@ -35,7 +38,6 @@ trap 'rm -rf "$stage"' EXIT
 cp -a "$src/." "$stage/"
 rm -f "$stage/schemas/gschemas.compiled"
 
-mkdir -p "$out_dir"
 rm -f "$zip_path"
 ( cd "$stage" && zip -r -q "$zip_path" . )
 

@@ -1,8 +1,8 @@
 import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { logInfo, logWarn, logErrorWithContext } from '../util/logger.js';
+import { logInfo, logWarn, logErrorWithContext } from '../../shared/util/logger.js';
 
-export class ShellPointerActivitySource {
+export class GnomePointerSource {
     constructor() {
         this._pointerWatcher = PointerWatcher.getPointerWatcher();
         this._watch = null;

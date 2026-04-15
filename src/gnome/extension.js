@@ -2,15 +2,17 @@ import GLib from 'gi://GLib';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { AppController } from './src/app/AppController.js';
-import { ShellOverlayManager } from './src/platform/ShellOverlayManager.js';
-import { PerMonitorScreenBlankQuickSettings } from './src/ui/quickSettings.js';
-import { PointerContextMenu } from './src/ui/pointerContextMenu.js';
-import { GSettingsGateway } from './src/platform/GSettingsGateway.js';
-import { ShellPointerActivitySource } from './src/platform/ShellPointerActivitySource.js';
-import { MonitorDeadlineScheduler } from './src/platform/MonitorDeadlineScheduler.js';
-import { ShellSignalRegistrar } from './src/platform/ShellSignalRegistrar.js';
-import { buildIssueNotificationText } from './src/util/issueNotificationText.js';
-import { logInfo, logWarn, logErrorWithContext, setIssueReporter } from './src/util/logger.js';
+import { GnomeOverlayManager } from './src/platform/gnome/GnomeOverlayManager.js';
+import { GnomePointerSource } from './src/platform/gnome/GnomePointerSource.js';
+import { GnomeMonitorProvider } from './src/platform/gnome/GnomeMonitorProvider.js';
+import { GnomeDeadlineScheduler } from './src/platform/gnome/GnomeDeadlineScheduler.js';
+import { GnomeSettingsGateway } from './src/platform/gnome/GnomeSettingsGateway.js';
+import { GnomeKeybindingManager } from './src/platform/gnome/GnomeKeybindingManager.js';
+import { GnomeSignalRegistrar } from './src/platform/gnome/GnomeSignalRegistrar.js';
+import { GnomeQuickSettings } from './src/ui/gnome/GnomeQuickSettings.js';
+import { GnomePointerContextMenu } from './src/ui/gnome/GnomePointerContextMenu.js';
+import { buildIssueNotificationText } from './src/shared/util/issueNotificationText.js';
+import { logInfo, logWarn, logErrorWithContext, setIssueReporter } from './src/shared/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     _lastIssueSignature = '';
@@ -20,22 +22,24 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     enable() {
         logInfo('extension enabled');
         const settings = this.getSettings();
-        const settingsGateway = new GSettingsGateway(settings);
+        const settingsGateway = new GnomeSettingsGateway(settings);
         settingsGateway.ensureStorage();
         setIssueReporter(issue => this._reportIssue(settings, issue));
-        const signalRegistrar = new ShellSignalRegistrar();
-        const pointerActivitySource = new ShellPointerActivitySource();
-        const overlay = new ShellOverlayManager();
-        const pointerContextMenu = new PointerContextMenu({
+        const signalRegistrar = new GnomeSignalRegistrar();
+        const pointerActivitySource = new GnomePointerSource();
+        const overlay = new GnomeOverlayManager();
+        const monitorProvider = new GnomeMonitorProvider();
+        const keybindingManager = new GnomeKeybindingManager();
+        const pointerContextMenu = new GnomePointerContextMenu({
             auto: () => this._controller?.setMode('auto'),
             disabled: () => this._controller?.setDisabled(),
             keepAwake: () => this._controller?.setKeepAwake(),
             blackNow: () => this._controller?.setBlackNow(),
         });
-        const quickSettings = new PerMonitorScreenBlankQuickSettings({
+        const quickSettings = new GnomeQuickSettings({
             openSettings: () => this._openSettingsSafely(),
         });
-        const deadlineScheduler = new MonitorDeadlineScheduler({
+        const deadlineScheduler = new GnomeDeadlineScheduler({
             onDeadline: deadline => this._controller.handleScheduledDeadline(deadline),
         });
 
@@ -47,6 +51,8 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             overlay,
             pointerContextMenu,
             quickSettings,
+            monitorProvider,
+            keybindingManager,
         });
         this._controller.enable();
     }

@@ -42,7 +42,7 @@ reset_settings_data() {
     return
   fi
 
-  for schema_dir in "$dest/schemas" "$repo_root/per-monitor-screen-blank@nikitakarpei.github.io/schemas"; do
+  for schema_dir in "$dest/schemas" "$repo_root/dist/$uuid/schemas" "$repo_root/src/gnome/schemas"; do
     if [ -f "$schema_dir/gschemas.compiled" ] &&
       gsettings --schemadir "$schema_dir" writable "$settings_schema" active-profile-id >/dev/null 2>&1; then
       gsettings --schemadir "$schema_dir" reset-recursively "$settings_schema"

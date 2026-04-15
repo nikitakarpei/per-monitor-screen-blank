@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 
-import { buildMonitorIdentity, normalizeConnector } from '../util/monitorIdentity.js';
-import { logInfo, logWarn } from '../util/logger.js';
+import { buildMonitorIdentity, normalizeConnector } from '../../shared/util/monitorIdentity.js';
+import { logInfo, logWarn } from '../../shared/util/logger.js';
 
 const BUS_NAME = 'org.gnome.Mutter.DisplayConfig';
 const OBJECT_PATH = '/org/gnome/Mutter/DisplayConfig';

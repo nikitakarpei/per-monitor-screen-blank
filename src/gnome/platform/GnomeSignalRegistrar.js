@@ -1,6 +1,6 @@
-import { logWarn } from '../util/logger.js';
+import { logWarn } from '../../shared/util/logger.js';
 
-export class ShellSignalRegistrar {
+export class GnomeSignalRegistrar {
     constructor() {
         this._disconnectors = [];
     }

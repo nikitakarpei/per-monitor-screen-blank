@@ -1,7 +1,7 @@
 import GLib from 'gi://GLib';
-import { logWarn, logErrorWithContext } from '../util/logger.js';
+import { logWarn, logErrorWithContext } from '../../shared/util/logger.js';
 
-export class MonitorDeadlineScheduler {
+export class GnomeDeadlineScheduler {
     constructor({ onDeadline }) {
         this._onDeadline = onDeadline;
         this._entries = new Map();

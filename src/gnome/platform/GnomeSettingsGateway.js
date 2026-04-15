@@ -1,15 +1,15 @@
-import { createSettingsSnapshot } from '../domain/SettingsSnapshot.js';
-import { assignMonitorMode } from '../util/monitorIdentity.js';
-import { normalizeMode } from '../util/monitorModes.js';
-import { logWarn } from '../util/logger.js';
+import { createSettingsSnapshot } from '../../shared/domain/SettingsSnapshot.js';
+import { assignMonitorMode } from '../../shared/util/monitorIdentity.js';
+import { normalizeMode } from '../../shared/util/monitorModes.js';
+import { logWarn } from '../../shared/util/logger.js';
 import {
     defaultProfiles,
     ensureActiveProfileId,
     parseProfiles,
     stringifyProfiles,
-} from '../util/profileConfig.js';
+} from '../../shared/util/profileConfig.js';
 
-export class GSettingsGateway {
+export class GnomeSettingsGateway {
     constructor(settings) {
         this._settings = settings;
     }

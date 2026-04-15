@@ -1,17 +1,22 @@
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-
-import { State, StateMachine } from '../domain/StateMachine.js';
-import { shouldAutoBlack } from '../core/autoBlackPolicy.js';
-import { resolveSettingsModeEffect } from '../core/modeLogic.js';
-import { resolveMonitorMode } from '../util/monitorIdentity.js';
-import { listRuntimeMonitors } from '../util/monitorSelection.js';
-import { normalizeMode } from '../util/monitorModes.js';
-import { logInfo, logErrorWithContext } from '../util/logger.js';
+import { State, StateMachine } from '../shared/domain/StateMachine.js';
+import { shouldAutoBlack } from '../shared/core/autoBlackPolicy.js';
+import { resolveSettingsModeEffect } from '../shared/core/modeLogic.js';
+import { resolveMonitorMode } from '../shared/util/monitorIdentity.js';
+import { normalizeMode } from '../shared/util/monitorModes.js';
+import { logInfo, logErrorWithContext } from '../shared/util/logger.js';
 
 export class AppController {
-    constructor({ settingsGateway, pointerActivitySource, deadlineScheduler, signalRegistrar, overlay, quickSettings, pointerContextMenu }) {
+    constructor({
+        settingsGateway,
+        pointerActivitySource,
+        deadlineScheduler,
+        signalRegistrar,
+        overlay,
+        quickSettings,
+        pointerContextMenu,
+        monitorProvider,
+        keybindingManager,
+    }) {
         this._settingsGateway = settingsGateway;
         this._pointerActivitySource = pointerActivitySource;
         this._deadlineScheduler = deadlineScheduler;
@@ -19,6 +24,8 @@ export class AppController {
         this._overlay = overlay;
         this._quickSettings = quickSettings;
         this._pointerContextMenu = pointerContextMenu;
+        this._monitorProvider = monitorProvider;
+        this._keybindingManager = keybindingManager;
         this._stateMachines = new Map();
         this._monitorContexts = [];
         this._profiles = [];
@@ -31,14 +38,14 @@ export class AppController {
     }
 
     enable() {
-        Main.panel.statusArea.quickSettings?.addExternalIndicator(this._quickSettings);
+        this._quickSettings.enable?.();
         this._quickSettings.bindProfiles(
             () => ({ profiles: this._profiles, activeProfileId: this._activeProfileId }),
             profileId => this.switchProfile(profileId)
         );
 
         this._signalRegistrar.addDisconnector(this._settingsGateway.connectChanged(() => this._syncFromSettings()));
-        this._signalRegistrar.connect(Main.layoutManager, 'monitors-changed', () => this._syncFromSettings());
+        this._signalRegistrar.addDisconnector(this._monitorProvider.onMonitorsChanged(() => this._syncFromSettings()));
         this._signalRegistrar.addDisconnector(this._settingsGateway.connectPointerShortcutChanged(() => this._reregisterPointerMenuShortcut()));
         this._reregisterPointerMenuShortcut();
         this._pointerActivitySource.start({
@@ -55,7 +62,7 @@ export class AppController {
         this._overlay.disable();
         this._quickSettings.destroy();
         this._pointerContextMenu?.destroy?.();
-        this._unregisterPointerMenuShortcut();
+        this._keybindingManager.unregister('pointer-menu-shortcut');
     }
 
     setMode(mode) {
@@ -94,7 +101,7 @@ export class AppController {
         const snapshot = this._settingsGateway.getSnapshot();
         this._profiles = snapshot.profiles;
         this._activeProfileId = snapshot.activeProfileId;
-        const runtimeMonitors = listRuntimeMonitors(global.display);
+        const runtimeMonitors = this._monitorProvider.listMonitors();
         const monitorModes = snapshot.monitorModes;
         const runtimeIds = new Set(runtimeMonitors.map(monitor => monitor.id));
         const unmatchedKeys = Object.keys(monitorModes).filter(key => !runtimeIds.has(key));
@@ -117,7 +124,7 @@ export class AppController {
         }));
         if (this._monitorContexts.length === 0) {
             logInfo('no runtime monitors detected', {
-                reason: 'GNOME runtime returned no monitors for Per-Monitor Screen Blank',
+                reason: 'platform returned no monitors for Per-Monitor Screen Blank',
             });
         } else if (this._monitorContexts.every(monitor => monitor.mode === 'disabled')) {
             logInfo('all monitors are disabled in active profile', { activeProfileId: this._activeProfileId });
@@ -182,14 +189,12 @@ export class AppController {
     }
 
     _getFocusedMonitor() {
-        const [x, y] = global.get_pointer();
-        const monitor = this._monitorContexts.find(item => {
-            const geometry = Main.layoutManager.monitors?.[item.index];
-            if (!geometry) return false;
-            return x >= geometry.x && x < geometry.x + geometry.width &&
-                y >= geometry.y && y < geometry.y + geometry.height;
-        });
-        return monitor ?? this._monitorContexts.find(item => item.isPrimary) ?? this._monitorContexts[0] ?? null;
+        const snapshot = this._pointerActivitySource.getPointerSnapshot();
+        if (Number.isInteger(snapshot?.monitorIndex)) {
+            const found = this._monitorContexts.find(m => m.index === snapshot.monitorIndex);
+            if (found) return found;
+        }
+        return this._monitorContexts.find(item => item.isPrimary) ?? this._monitorContexts[0] ?? null;
     }
 
     _setFocusedMonitorMode(mode, action) {
@@ -393,31 +398,16 @@ export class AppController {
     }
 
     _reregisterPointerMenuShortcut() {
-        this._unregisterPointerMenuShortcut();
+        this._keybindingManager.unregister('pointer-menu-shortcut');
         const accel = this._settingsGateway.getPointerShortcutAccel();
         if (!accel) {
             logInfo('pointer menu shortcut is unset; keybinding not registered');
             return;
         }
-        try {
-            Main.wm.addKeybinding(
-                'pointer-menu-shortcut',
-                this._settingsGateway.getKeybindingSettings(),
-                Meta.KeyBindingFlags.NONE,
-                Shell.ActionMode.ALL,
-                () => this.openPointerMenu()
-            );
-        } catch (error) {
-            logErrorWithContext(error, 'failed to register pointer-menu shortcut', { accel });
-        }
-    }
-
-    _unregisterPointerMenuShortcut() {
-        try {
-            Main.wm.removeKeybinding('pointer-menu-shortcut');
-        } catch (_) {
-            // removeKeybinding throws when the binding is not registered; this is expected on
-            // first run and whenever the shortcut is cleared, so the failure is intentionally silent.
-        }
+        this._keybindingManager.register(
+            'pointer-menu-shortcut',
+            this._settingsGateway.getKeybindingSettings(),
+            () => this.openPointerMenu()
+        );
     }
 }

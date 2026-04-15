@@ -1,8 +1,9 @@
 import GObject from 'gi://GObject';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class PerMonitorScreenBlankQuickSettings extends QuickSettings.SystemIndicator {
+export const GnomeQuickSettings = GObject.registerClass(class GnomeQuickSettings extends QuickSettings.SystemIndicator {
     constructor(actions = {}) {
         super();
         this._actions = actions;
@@ -21,6 +22,10 @@ export const PerMonitorScreenBlankQuickSettings = GObject.registerClass(class Pe
         this._item.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._item.menu.addAction('Open Settings', () => this._actions.openSettings?.());
         this.quickSettingsItems.push(this._item);
+    }
+
+    enable() {
+        Main.panel.statusArea.quickSettings?.addExternalIndicator(this);
     }
 
     destroy() {
