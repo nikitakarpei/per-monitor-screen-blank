@@ -14,6 +14,28 @@ const gjsGlobals = {
     logError: 'readonly',
 };
 
+const layeringRules = {
+    'import/no-restricted-paths': ['error', {
+        zones: [
+            {
+                target: './src/shared',
+                from: './src/app',
+                message: 'shared/ must not import from app/ — it is a platform-agnostic leaf layer.',
+            },
+            {
+                target: './src/shared',
+                from: './src/gnome',
+                message: 'shared/ must not import from gnome/ — it is a platform-agnostic leaf layer.',
+            },
+            {
+                target: './src/app',
+                from: './src/gnome',
+                message: 'app/ must not import from gnome/ — keep the application layer platform-agnostic.',
+            },
+        ],
+    }],
+};
+
 const sharedRules = {
     ...js.configs.recommended.rules,
     ...importPlugin.flatConfigs.recommended.rules,
@@ -62,7 +84,7 @@ export default [
             sourceType: 'module',
             globals: gjsGlobals,
         },
-        rules: sharedRules,
+        rules: { ...sharedRules, ...layeringRules },
     },
     {
         files: ['src/gnome/extension.js'],
