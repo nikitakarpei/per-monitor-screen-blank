@@ -18,7 +18,7 @@ export const GnomeQuickSettings = GObject.registerClass(class GnomeQuickSettings
             toggleMode: false,
         });
         this._item.menu.setHeader('display-symbolic', 'Per-Monitor Screen Blank');
-        this._profileSection = null;
+        this._profileSection = undefined;
         this._item.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._item.menu.addAction('Open Settings', () => this._actions.openSettings?.());
         this.quickSettingsItems.push(this._item);
@@ -30,7 +30,7 @@ export const GnomeQuickSettings = GObject.registerClass(class GnomeQuickSettings
 
     destroy() {
         this._item?.destroy();
-        this._item = null;
+        this._item = undefined;
         super.destroy();
     }
 

@@ -1,4 +1,4 @@
-import { State } from '../shared/domain/StateMachine.js';
+import { State } from '../shared/domain/state-machine.js';
 import { logInfo } from '../shared/util/logger.js';
 
 export class PointerActivityCoordinator {
@@ -24,18 +24,18 @@ export class PointerActivityCoordinator {
         this._monitorStateManager.recordPointerActivity(monitor.id, now);
         const machine = this._getMachine(monitor.id);
         if (machine.state === State.AutoBlack)
-            machine.transition(State.AutoAwake, 'pointer-activity');
+            {machine.transition(State.AutoAwake, 'pointer-activity');}
         this._rescheduleMonitor(snapshot, monitor, machine);
     }
 
     reschedulePointerDeparture(snapshot, activity) {
         if (!snapshot?.disableAutoTimerOnPointerMonitor)
-            return;
+            {return;}
 
         const previousMonitorIndex = activity?.previousMonitorIndex;
         const currentMonitorIndex = activity?.monitorIndex;
         if (!Number.isInteger(previousMonitorIndex) || previousMonitorIndex === currentMonitorIndex)
-            return;
+            {return;}
 
         const previousMonitor = this._getMonitorByIndex(previousMonitorIndex);
         if (!previousMonitor) {
@@ -49,7 +49,7 @@ export class PointerActivityCoordinator {
         }
 
         if (previousMonitor.mode !== 'auto')
-            return;
+            {return;}
 
         this._rescheduleMonitor(snapshot, previousMonitor, this._getMachine(previousMonitor.id));
     }

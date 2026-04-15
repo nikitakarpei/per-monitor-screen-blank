@@ -5,15 +5,15 @@ import { logInfo, logWarn, logErrorWithContext } from '../../shared/util/logger.
 export class GnomePointerSource {
     constructor() {
         this._pointerWatcher = PointerWatcher.getPointerWatcher();
-        this._watch = null;
-        this.onPointerActivity = null;
-        this._lastMonitorIndex = null;
-        this._lastPointer = { x: null, y: null };
+        this._watch = undefined;
+        this.onPointerActivity = undefined;
+        this._lastMonitorIndex = undefined;
+        this._lastPointer = { x: undefined, y: undefined };
     }
 
     start(callbacks = {}) {
         this.stop();
-        this.onPointerActivity = callbacks.onPointerActivity ?? null;
+        this.onPointerActivity = callbacks.onPointerActivity;
         try {
             this._watch = this._pointerWatcher.addWatch(100, (x, y) => {
                 this._handlePointerSample({ x, y, eventType: 'pointer-watch' });
@@ -32,14 +32,14 @@ export class GnomePointerSource {
                 logWarn('failed to stop shell pointer watcher', { error: error?.message ?? String(error) });
             }
         }
-        this._watch = null;
-        this.onPointerActivity = null;
-        this._lastMonitorIndex = null;
-        this._lastPointer = { x: null, y: null };
+        this._watch = undefined;
+        this.onPointerActivity = undefined;
+        this._lastMonitorIndex = undefined;
+        this._lastPointer = { x: undefined, y: undefined };
     }
 
     getPointerSnapshot() {
-        const [x, y] = global.get_pointer();
+        const [x, y] = globalThis.get_pointer();
         return {
             x,
             y,
@@ -50,7 +50,7 @@ export class GnomePointerSource {
     _handlePointerSample({ x, y, eventType = 'pointer-watch' }) {
         if (!Number.isFinite(x) || !Number.isFinite(y)) {
             logInfo('pointer watcher returned invalid coordinates; falling back to global pointer', { x, y, eventType });
-            [x, y] = global.get_pointer();
+            [x, y] = globalThis.get_pointer();
         }
 
         const previousMonitorIndex = this._lastMonitorIndex;
@@ -61,7 +61,7 @@ export class GnomePointerSource {
         this._lastMonitorIndex = monitorIndex;
 
         if (!pointerMoved && !monitorChanged)
-            return;
+            {return;}
 
         this.onPointerActivity?.({
             eventType,
@@ -74,15 +74,14 @@ export class GnomePointerSource {
 
     _resolveMonitorIndex(x, y) {
         const monitors = Main.layoutManager?.monitors ?? [];
-        for (let index = 0; index < monitors.length; index++) {
-            const monitor = monitors[index];
+        for (const [index, monitor] of monitors.entries()) {
             if (x >= monitor.x && x < monitor.x + monitor.width &&
                 y >= monitor.y && y < monitor.y + monitor.height)
-                return index;
+                {return index;}
         }
 
-        if (typeof global.display?.get_primary_monitor === 'function')
-            return global.display.get_primary_monitor();
+        if (typeof globalThis.display?.get_primary_monitor === 'function')
+            {return globalThis.display.get_primary_monitor();}
 
         logInfo('failed to resolve pointer monitor; defaulting to monitor 0', { x, y });
         return 0;

@@ -36,6 +36,7 @@ const sharedRules = {
     'no-use-before-define': ['error', { classes: false, functions: false }],
     'no-var': 'error',
     'object-shorthand': ['error', 'always'],
+    'import/no-unresolved': ['error', { ignore: ['^gi://', '^resource:///'] }],
     'prefer-arrow-callback': ['error', { allowNamedFunctions: true }],
     'prefer-const': ['error', { destructuring: 'all' }],
     'prefer-template': 'error',

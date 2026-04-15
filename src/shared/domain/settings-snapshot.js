@@ -1,8 +1,8 @@
 import { DEFAULTS } from '../core/defaults.js';
-import { normalizeDimIntensityPercent } from '../core/dimIntensity.js';
-import { normalizeKeepAwakeMinutes } from '../core/modeLogic.js';
-import { sanitizeMonitorModes } from '../util/monitorModes.js';
-import { ensureActiveProfileId, sanitizeProfiles } from '../util/profileConfig.js';
+import { normalizeDimIntensityPercent } from '../core/dim-intensity.js';
+import { normalizeKeepAwakeMinutes } from '../core/mode-logic.js';
+import { sanitizeMonitorModes } from '../util/monitor-modes.js';
+import { ensureActiveProfileId, sanitizeProfiles } from '../util/profile-config.js';
 
 export function createSettingsSnapshot(raw) {
     const profiles = sanitizeProfiles(raw.profiles);

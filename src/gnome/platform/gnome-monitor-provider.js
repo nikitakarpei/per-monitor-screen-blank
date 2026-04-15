@@ -1,7 +1,7 @@
 import Meta from 'gi://Meta';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { buildMonitorIdentity } from '../../shared/util/monitorIdentity.js';
-import { logInfo } from '../../shared/util/logger.js';
+import { buildMonitorIdentity } from '../../shared/util/monitor-identity.js';
+import { logInfo, logWarn } from '../../shared/util/logger.js';
 
 export class GnomeMonitorProvider {
     /**
@@ -11,10 +11,10 @@ export class GnomeMonitorProvider {
      * @returns {{ index: number, id: string, isStable: boolean, connector: string, isPrimary: boolean }[]}
      */
     listMonitors() {
-        const display = global.display;
+        const display = globalThis.display;
         const count = typeof display?.get_n_monitors === 'function' ? display.get_n_monitors() : 0;
         const primary = typeof display?.get_primary_monitor === 'function' ? display.get_primary_monitor() : 0;
-        const monitorManager = global.backend?.get_monitor_manager?.() ?? Meta.MonitorManager.get?.();
+        const monitorManager = globalThis.backend?.get_monitor_manager?.() ?? Meta.MonitorManager.get?.();
         const managerMonitors = monitorManager?.get_monitors?.() ?? [];
         const monitors = [];
 
@@ -60,7 +60,12 @@ export class GnomeMonitorProvider {
         return () => {
             try {
                 Main.layoutManager.disconnect(id);
-            } catch (_) {}
+            } catch (error) {
+                logWarn('failed to disconnect monitors-changed listener', {
+                    id,
+                    error: error?.message ?? String(error),
+                });
+            }
         };
     }
 }

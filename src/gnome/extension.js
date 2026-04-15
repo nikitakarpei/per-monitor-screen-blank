@@ -1,22 +1,22 @@
 import GLib from 'gi://GLib';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { AppController } from './src/app/AppController.js';
-import { GnomeOverlayManager } from './src/platform/gnome/GnomeOverlayManager.js';
-import { GnomePointerSource } from './src/platform/gnome/GnomePointerSource.js';
-import { GnomeMonitorProvider } from './src/platform/gnome/GnomeMonitorProvider.js';
-import { GnomeDeadlineScheduler } from './src/platform/gnome/GnomeDeadlineScheduler.js';
-import { GnomeSettingsGateway } from './src/platform/gnome/GnomeSettingsGateway.js';
-import { GnomeKeybindingManager } from './src/platform/gnome/GnomeKeybindingManager.js';
-import { GnomeSignalRegistrar } from './src/platform/gnome/GnomeSignalRegistrar.js';
-import { GnomeQuickSettings } from './src/ui/gnome/GnomeQuickSettings.js';
-import { GnomePointerContextMenu } from './src/ui/gnome/GnomePointerContextMenu.js';
-import { buildIssueNotificationText } from './src/shared/util/issueNotificationText.js';
-import { logInfo, logWarn, logErrorWithContext, setIssueReporter } from './src/shared/util/logger.js';
+import { AppController } from '../app/app-controller.js';
+import { GnomeOverlayManager } from './platform/gnome-overlay-manager.js';
+import { GnomePointerSource } from './platform/gnome-pointer-source.js';
+import { GnomeMonitorProvider } from './platform/gnome-monitor-provider.js';
+import { GnomeDeadlineScheduler } from './platform/gnome-deadline-scheduler.js';
+import { GnomeSettingsGateway } from './platform/gnome-settings-gateway.js';
+import { GnomeKeybindingManager } from './platform/gnome-keybinding-manager.js';
+import { GnomeSignalRegistrar } from './platform/gnome-signal-registrar.js';
+import { GnomeQuickSettings } from './ui/gnome-quick-settings.js';
+import { GnomePointerContextMenu } from './ui/gnome-pointer-context-menu.js';
+import { buildIssueNotificationText } from '../shared/util/issue-notification-text.js';
+import { logInfo, logWarn, logErrorWithContext, setIssueReporter } from '../shared/util/logger.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     _lastIssueSignature = '';
-    _openPreferencesIdleSourceId = null;
+    _openPreferencesIdleSourceId = undefined;
     _openPreferencesInFlight = false;
 
     enable() {
@@ -58,12 +58,12 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     }
 
     disable() {
-        setIssueReporter(null);
+        setIssueReporter(undefined);
         this._lastIssueSignature = '';
         this._removeOpenPreferencesIdleSource();
         this._openPreferencesInFlight = false;
         this._controller?.disable();
-        this._controller = null;
+        this._controller = undefined;
     }
 
     async _openSettingsSafely() {
@@ -74,9 +74,9 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             }
             this._openPreferencesInFlight = true;
             if (typeof Main.panel?.closeQuickSettings === 'function')
-                Main.panel.closeQuickSettings();
+                {Main.panel.closeQuickSettings();}
             else
-                logWarn('Main.panel.closeQuickSettings missing; prefs opened from Quick Settings may not receive focus until clicked');
+                {logWarn('Main.panel.closeQuickSettings missing; prefs opened from Quick Settings may not receive focus until clicked');}
 
             await this._waitForNextIdle();
 
@@ -97,7 +97,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         return new Promise(resolve => {
             const sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 if (this._openPreferencesIdleSourceId === sourceId)
-                    this._openPreferencesIdleSourceId = null;
+                    {this._openPreferencesIdleSourceId = undefined;}
                 resolve();
                 return GLib.SOURCE_REMOVE;
             });
@@ -112,7 +112,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
 
     _removeOpenPreferencesIdleSource() {
         if (!this._openPreferencesIdleSourceId)
-            return;
+            {return;}
 
         try {
             GLib.Source.remove(this._openPreferencesIdleSourceId);
@@ -122,13 +122,13 @@ export default class PerMonitorScreenBlankExtension extends Extension {
                 error: String(error),
             });
         } finally {
-            this._openPreferencesIdleSourceId = null;
+            this._openPreferencesIdleSourceId = undefined;
         }
     }
 
     _reportIssue(settings, issue) {
         if (!settings.get_boolean('show-issue-notifications'))
-            return;
+            {return;}
 
         const signature = [
             issue.level,
@@ -137,14 +137,14 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             issue.level === 'error' ? issue.errorText : '',
         ].join('|');
         if (signature === this._lastIssueSignature)
-            return;
+            {return;}
         this._lastIssueSignature = signature;
 
         const notification = buildIssueNotificationText(issue);
 
         if (issue.level === 'error')
-            Main.notifyError(notification.title, notification.body);
+            {Main.notifyError(notification.title, notification.body);}
         else
-            Main.notify(notification.title, notification.body);
+            {Main.notify(notification.title, notification.body);}
     }
 }

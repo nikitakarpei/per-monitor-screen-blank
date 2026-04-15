@@ -1,12 +1,12 @@
-import { assignMonitorMode } from '../../shared/util/monitorIdentity.js';
-import { normalizeMode } from '../../shared/util/monitorModes.js';
+import { assignMonitorMode } from '../../shared/util/monitor-identity.js';
+import { normalizeMode } from '../../shared/util/monitor-modes.js';
 import { logWarn } from '../../shared/util/logger.js';
 import {
     defaultProfiles,
     ensureActiveProfileId,
     parseProfiles,
     stringifyProfiles,
-} from '../../shared/util/profileConfig.js';
+} from '../../shared/util/profile-config.js';
 
 export class GnomeSettingsGateway {
     constructor(settings) {
@@ -25,7 +25,7 @@ export class GnomeSettingsGateway {
 
     getPointerShortcutAccel() {
         const strv = this._settings.get_strv('pointer-menu-shortcut');
-        const raw = strv.length ? String(strv[0] ?? '') : '';
+        const raw = strv.length > 0 ? String(strv[0] ?? '') : '';
         return raw.trim();
     }
 
@@ -36,11 +36,11 @@ export class GnomeSettingsGateway {
     ensureStorage() {
         const profilesRaw = this._settings.get_string('profiles-json');
         if (!profilesRaw || profilesRaw === '[]')
-            this._settings.set_string('profiles-json', stringifyProfiles(defaultProfiles()));
+            {this._settings.set_string('profiles-json', stringifyProfiles(defaultProfiles()));}
 
         const { profiles, activeProfileId } = this._readProfilesState();
         if (this._settings.get_string('active-profile-id') !== activeProfileId)
-            this._settings.set_string('active-profile-id', activeProfileId);
+            {this._settings.set_string('active-profile-id', activeProfileId);}
         return { profiles, activeProfileId };
     }
 
@@ -79,7 +79,7 @@ export class GnomeSettingsGateway {
         const { profiles } = this.ensureStorage();
         const activeProfileId = ensureActiveProfileId(profiles, profileId);
         if (activeProfileId !== profileId)
-            logWarn('requested profile not found, falling back', { requested: profileId, activeProfileId });
+            {logWarn('requested profile not found, falling back', { requested: profileId, activeProfileId });}
         this._settings.set_string('active-profile-id', activeProfileId);
     }
 

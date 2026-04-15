@@ -1,4 +1,4 @@
-import { normalizeMode } from './monitorModes.js';
+import { normalizeMode } from './monitor-modes.js';
 
 export function buildMonitorIdentity({
     vendor = '',
@@ -17,7 +17,7 @@ export function buildStableMonitorId({ vendor = '', product = '', serial = '' } 
     const productKey = _normalizeIdentityPart(product);
     const serialKey = _normalizeIdentityPart(serial);
     if (!serialKey)
-        return '';
+        {return '';}
 
     return `monitor:${_encodeIdentityPart(vendorKey)}:${_encodeIdentityPart(productKey)}:${_encodeIdentityPart(serialKey)}`;
 }
@@ -25,26 +25,27 @@ export function buildStableMonitorId({ vendor = '', product = '', serial = '' } 
 export function resolveMonitorMode(monitorModes, monitorIdentity, fallback = 'disabled') {
     const id = _getMonitorId(monitorIdentity);
     if (!id || !Object.hasOwn(monitorModes ?? {}, id))
-        return fallback;
+        {return fallback;}
     return normalizeMode(monitorModes[id], fallback);
 }
 
 export function assignMonitorMode(monitorModes, monitorIdentity, mode) {
     const id = _getMonitorId(monitorIdentity);
+    const sourceMonitorModes = monitorModes ?? {};
     if (!id)
-        return { ...(monitorModes ?? {}) };
+        {return { ...sourceMonitorModes };}
     return {
-        ...(monitorModes ?? {}),
+        ...sourceMonitorModes,
         [id]: normalizeMode(mode),
     };
 }
 
 function _getMonitorId(monitorIdentity) {
     if (!monitorIdentity)
-        return '';
+        {return '';}
 
     if (typeof monitorIdentity === 'string')
-        return monitorIdentity.trim();
+        {return monitorIdentity.trim();}
 
     return String(monitorIdentity.id ?? '').trim();
 }
@@ -66,7 +67,10 @@ export function buildMonitorLabel({
     model = '',
     connector = '',
 } = {}) {
-    const descriptor = [manufacturer, model].map(part => String(part ?? '').trim()).filter(Boolean).join(' ');
+    const descriptor = [manufacturer, model]
+        .map(part => String(part ?? '').trim())
+        .filter(Boolean)
+        .join(' ');
     const connectorSuffix = connector ? ` (${connector})` : '';
     return descriptor ? `${descriptor}${connectorSuffix}` : connector || 'Unknown Monitor';
 }

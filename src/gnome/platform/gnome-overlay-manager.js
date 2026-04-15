@@ -2,8 +2,8 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { DEFAULTS } from '../../shared/core/defaults.js';
-import { dimIntensityPercentToOpacity, normalizeDimIntensityPercent } from '../../shared/core/dimIntensity.js';
-import { normalizeFadeDurationMs } from '../../shared/core/fadeDuration.js';
+import { dimIntensityPercentToOpacity, normalizeDimIntensityPercent } from '../../shared/core/dim-intensity.js';
+import { normalizeFadeDurationMs } from '../../shared/core/fade-duration.js';
 import { logInfo, logWarn } from '../../shared/util/logger.js';
 
 const FADE_DURATION_MS = DEFAULTS.fadeDurationMs;
@@ -30,9 +30,9 @@ export class GnomeOverlayManager {
     setBlackMonitors(monitorIndexes = []) {
         const nextIndexes = new Set(monitorIndexes);
         if (nextIndexes.size === 0 && this.#actors.size > 0)
-            logInfo('clearing all black monitors');
+            {logInfo('clearing all black monitors');}
         if (nextIndexes.size > 0 && this.#signalIds.length === 0)
-            this.#bindGeometrySignals();
+            {this.#bindGeometrySignals();}
 
         for (const monitorIndex of nextIndexes) {
             const actor = this.#ensureActor(monitorIndex);
@@ -40,7 +40,7 @@ export class GnomeOverlayManager {
             this.#showMonitor(monitorIndex, actor);
         }
 
-        for (const monitorIndex of [...this.#actors.keys()]) {
+        for (const monitorIndex of this.#actors.keys()) {
             if (nextIndexes.has(monitorIndex)) continue;
             this.#hideMonitor(monitorIndex);
         }
@@ -91,7 +91,7 @@ export class GnomeOverlayManager {
                 actor.destroy();
                 this.#actors.delete(monitorIndex);
                 if (this.#actors.size === 0)
-                    this.#unbindGeometrySignals();
+                    {this.#unbindGeometrySignals();}
             },
         });
     }
@@ -117,14 +117,14 @@ export class GnomeOverlayManager {
         try {
             const id = target.connect(signalName, () => this.#syncGeometry());
             this.#signalIds.push({ target, id });
-        } catch (error) {
+        } catch {
             logWarn('overlay signal unavailable', { signalName, targetType: target?.constructor?.name ?? 'unknown' });
         }
     }
 
     #syncGeometry() {
         for (const [monitorIndex, actor] of this.#actors)
-            this.#syncGeometryForMonitor(monitorIndex, actor);
+            {this.#syncGeometryForMonitor(monitorIndex, actor);}
     }
 
     #syncGeometryForMonitor(monitorIndex, actor) {

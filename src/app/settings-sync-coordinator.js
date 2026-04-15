@@ -1,5 +1,5 @@
-import { resolveMonitorMode } from '../shared/util/monitorIdentity.js';
-import { normalizeMode } from '../shared/util/monitorModes.js';
+import { resolveMonitorMode } from '../shared/util/monitor-identity.js';
+import { normalizeMode } from '../shared/util/monitor-modes.js';
 import { logInfo } from '../shared/util/logger.js';
 
 export class SettingsSyncCoordinator {

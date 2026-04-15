@@ -1,4 +1,4 @@
-import { State } from '../domain/StateMachine.js';
+import { State } from '../domain/state-machine.js';
 import { DEFAULTS } from './defaults.js';
 
 export function normalizeKeepAwakeMinutes(minutes, fallback = DEFAULTS.keepAwakeMinutes) {
@@ -11,13 +11,13 @@ export function shouldRearmKeepAwake(mode, keepAwakeMinutes, lastMode, lastKeepA
 
 export function resolveSettingsModeEffect(mode, keepAwakeMinutes, lastMode, lastKeepAwakeMinutes) {
     if (mode === 'disabled')
-        return { transitionState: State.Disabled, keepAwakeMs: null };
+        {return { transitionState: State.Disabled, keepAwakeMs: undefined };}
 
     if (shouldRearmKeepAwake(mode, keepAwakeMinutes, lastMode, lastKeepAwakeMinutes))
-        return { transitionState: null, keepAwakeMs: keepAwakeMinutes * 60 * 1000 };
+        {return { transitionState: undefined, keepAwakeMs: keepAwakeMinutes * 60 * 1000 };}
 
     if (mode === 'manual-black')
-        return { transitionState: State.ManualBlack, keepAwakeMs: null };
+        {return { transitionState: State.ManualBlack, keepAwakeMs: undefined };}
 
-    return { transitionState: null, keepAwakeMs: null };
+    return { transitionState: undefined, keepAwakeMs: undefined };
 }

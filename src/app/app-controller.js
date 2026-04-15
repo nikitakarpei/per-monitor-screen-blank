@@ -1,10 +1,10 @@
-import { State } from '../shared/domain/StateMachine.js';
-import { createSettingsSnapshot } from '../shared/domain/SettingsSnapshot.js';
-import { logInfo, logErrorWithContext } from '../shared/util/logger.js';
-import { MonitorStateManager } from './MonitorStateManager.js';
-import { MonitorDeadlineCoordinator } from './MonitorDeadlineCoordinator.js';
-import { PointerActivityCoordinator } from './PointerActivityCoordinator.js';
-import { SettingsSyncCoordinator } from './SettingsSyncCoordinator.js';
+import { State } from '../shared/domain/state-machine.js';
+import { createSettingsSnapshot } from '../shared/domain/settings-snapshot.js';
+import { logInfo } from '../shared/util/logger.js';
+import { MonitorStateManager } from './monitor-state-manager.js';
+import { MonitorDeadlineCoordinator } from './monitor-deadline-coordinator.js';
+import { PointerActivityCoordinator } from './pointer-activity-coordinator.js';
+import { SettingsSyncCoordinator } from './settings-sync-coordinator.js';
 
 export class AppController {
     constructor({
@@ -120,7 +120,7 @@ export class AppController {
         this._overlay.setDimIntensityPercent(snapshot.dimIntensityPercent);
         this._quickSettings.visible = snapshot.showIndicator;
         for (const monitor of this._monitorContexts)
-            this._applyModeSyncForMonitor(snapshot, monitor);
+            {this._applyModeSyncForMonitor(snapshot, monitor);}
         this._seedCurrentPointerActivity();
         this._syncOverlay();
         this._quickSettings.refreshProfiles?.();
@@ -131,7 +131,7 @@ export class AppController {
         for (const monitor of this._monitorContexts) {
             const state = this._monitorStateManager.getState(monitor.id);
             if (state === State.AutoBlack || state === State.ManualBlack)
-                blackMonitors.push(monitor.index);
+                {blackMonitors.push(monitor.index);}
         }
         this._overlay.setBlackMonitors(blackMonitors);
     }
@@ -159,7 +159,7 @@ export class AppController {
             const found = this._monitorContexts.find(m => m.index === snapshot.monitorIndex);
             if (found) return found;
         }
-        return this._monitorContexts.find(item => item.isPrimary) ?? this._monitorContexts[0] ?? null;
+        return this._monitorContexts.find(item => item.isPrimary) ?? this._monitorContexts[0];
     }
 
     _setFocusedMonitorMode(mode, action) {
@@ -187,7 +187,7 @@ export class AppController {
         this._handlePointerActivity({
             ...snapshot,
             eventType: 'seed',
-            previousMonitorIndex: null,
+            previousMonitorIndex: undefined,
         });
     }
 
@@ -201,8 +201,11 @@ export class AppController {
     }
 
     _findMonitorByIndex(index) {
-        if (!Number.isInteger(index)) return null;
-        return this._monitorContexts.find(monitor => monitor.index === index) ?? null;
+        let monitor;
+        if (Number.isInteger(index)) {
+            monitor = this._monitorContexts.find(item => item.index === index);
+        }
+        return monitor;
     }
 
     _handleScheduledDeadline({ deadlineKey, monitorId, token, deadlineMs }) {
@@ -223,7 +226,7 @@ export class AppController {
                 });
                 return;
             }
-            machine.keepAwakeUntil = null;
+            machine.keepAwakeUntil = undefined;
             this._settingsGateway.setMonitorMode(monitorId, 'auto');
             this._syncFromSettings();
             return;

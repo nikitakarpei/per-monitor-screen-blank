@@ -1,7 +1,7 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import { getMonitorModeLabel, listMonitorModes } from '../../shared/util/monitorModes.js';
+import { getMonitorModeLabel, listMonitorModes } from '../../shared/util/monitor-modes.js';
 
 export class GnomePointerContextMenu {
     constructor(actions = {}) {
@@ -9,7 +9,7 @@ export class GnomePointerContextMenu {
         this._anchor = new St.Widget({ reactive: true, width: 1, height: 1, x: 0, y: 0 });
         Main.uiGroup.add_child(this._anchor);
 
-        this._menu = new PopupMenu.PopupMenu(this._anchor, 0.0, St.Side.TOP);
+        this._menu = new PopupMenu.PopupMenu(this._anchor, 0, St.Side.TOP);
         this._menu.actor.hide();
         Main.uiGroup.add_child(this._menu.actor);
 
@@ -20,15 +20,15 @@ export class GnomePointerContextMenu {
 
     destroy() {
         this._menu?.destroy();
-        this._menu = null;
-        this._menuManager = null;
+        this._menu = undefined;
+        this._menuManager = undefined;
         this._anchor?.destroy();
-        this._anchor = null;
+        this._anchor = undefined;
     }
 
     open(context = {}) {
         if (!this._menu || !this._anchor) return;
-        const [x, y] = global.get_pointer();
+        const [x, y] = globalThis.get_pointer();
         this._anchor.set_position(x, y);
         this._rebuild(context);
         this._menu.open();
@@ -47,11 +47,16 @@ export class GnomePointerContextMenu {
 
     _getModeHandler(mode) {
         switch (mode) {
-        case 'auto': return () => this._actions.auto?.();
-        case 'disabled': return () => this._actions.disabled?.();
-        case 'keep-awake': return () => this._actions.keepAwake?.();
-        case 'manual-black': return () => this._actions.blackNow?.();
-        default: return () => {};
+        case 'auto': { return () => this._actions.auto?.();
+        }
+        case 'disabled': { return () => this._actions.disabled?.();
+        }
+        case 'keep-awake': { return () => this._actions.keepAwake?.();
+        }
+        case 'manual-black': { return () => this._actions.blackNow?.();
+        }
+        default: { return () => {};
+        }
         }
     }
 

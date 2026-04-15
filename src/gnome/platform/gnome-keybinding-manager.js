@@ -35,6 +35,8 @@ export class GnomeKeybindingManager {
     unregister(name) {
         try {
             Main.wm.removeKeybinding(name);
-        } catch (_) {}
+        } catch (error) {
+            logErrorWithContext(error, 'failed to unregister keybinding', { name });
+        }
     }
 }

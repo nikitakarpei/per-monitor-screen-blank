@@ -4,12 +4,12 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import { listDisplayConfigMonitors } from './src/platform/gnome/MutterDisplayConfig.js';
-import { buildIssueNotificationText } from './src/shared/util/issueNotificationText.js';
-import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from './src/shared/util/monitorIdentity.js';
-import { logInfo, logWarn, setIssueReporter } from './src/shared/util/logger.js';
-import { getMonitorModeLabel, listMonitorModes, sanitizeMonitorModes } from './src/shared/util/monitorModes.js';
-import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from './src/shared/util/profileConfig.js';
+import { listDisplayConfigMonitors } from './platform/mutter-display-config.js';
+import { buildIssueNotificationText } from '../shared/util/issue-notification-text.js';
+import { assignMonitorMode, buildMonitorLabel, resolveMonitorMode } from '../shared/util/monitor-identity.js';
+import { logInfo, logWarn, setIssueReporter } from '../shared/util/logger.js';
+import { getMonitorModeLabel, listMonitorModes, sanitizeMonitorModes } from '../shared/util/monitor-modes.js';
+import { createProfileId, ensureActiveProfileId, parseProfiles, stringifyProfiles } from '../shared/util/profile-config.js';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async', 'communicate_utf8_finish');
 
@@ -90,7 +90,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             'Open Troubleshooting Logs',
             'Open a terminal with live extension logs.',
             'Open',
-            () => this._openExtensionLogs(window).catch(err => logWarn('failed to open extension logs', { error: String(err) }))
+            () => this._openExtensionLogs(window).catch(error => logWarn('failed to open extension logs', { error: String(error) }))
         ));
 
         const profileState = this._makeProfilesState(settings);
@@ -109,7 +109,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         window.add(page);
         setIssueReporter(issue => this._reportIssue(window, settings, issue));
         window.connect('destroy', () => {
-            setIssueReporter(null);
+            setIssueReporter(undefined);
             this._lastIssueSignature = '';
         });
     }
@@ -125,7 +125,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             const isActive = profile.id === state.activeProfileId;
             const row = new Adw.ActionRow({
                 title: profile.name,
-                subtitle: isActive ? 'Currently in use' : null,
+                subtitle: isActive ? 'Currently in use' : undefined,
                 activatable: true,
             });
             row.connect('activated', () => {
@@ -197,7 +197,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     }
 
     _getMonitors() {
-        return listDisplayConfigMonitors().filter(monitor => monitor.isStable).map((monitor, index) => ({
+        return listDisplayConfigMonitors().filter(monitor => monitor.isStable).map(monitor => ({
             ...monitor,
             label: buildMonitorLabel({
                 manufacturer: monitor.vendor,
@@ -207,22 +207,24 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         }));
     }
 
-    _makeSwitchRow(settings, title, key, subtitle = null) {
+    _makeSwitchRow(settings, title, key, subtitle) {
         const row = new Adw.SwitchRow({ title, subtitle });
         row.active = settings.get_boolean(key);
         row.connect('notify::active', () => settings.set_boolean(key, row.active));
         return row;
     }
 
-    _makeSpinRow(settings, title, key, step, lower, upper, suffix, subtitle = null) {
+    _makeSpinRow(settings, title, key, step, lower, upper, suffix, subtitle) {
         const row = new Adw.ActionRow({ title, subtitle });
         const adj = new Gtk.Adjustment({ lower, upper, step_increment: step, page_increment: step * 10, value: settings.get_int(key) });
         const spin = new Gtk.SpinButton({ adjustment: adj, numeric: true, valign: Gtk.Align.CENTER });
-        const label = suffix ? new Gtk.Label({ label: suffix, valign: Gtk.Align.CENTER }) : null;
+        let label;
+        if (suffix)
+            {label = new Gtk.Label({ label: suffix, valign: Gtk.Align.CENTER });}
         spin.connect('value-changed', () => settings.set_int(key, spin.get_value_as_int()));
         row.add_suffix(spin);
         if (label)
-            row.add_suffix(label);
+            {row.add_suffix(label);}
         row.activatable_widget = spin;
         return row;
     }
@@ -300,7 +302,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             }
             const mods = state & Gtk.accelerator_get_default_mod_mask();
             if (!Gtk.accelerator_valid(keyval, mods))
-                return Gdk.EVENT_STOP;
+                {return Gdk.EVENT_STOP;}
 
             const accel = Gtk.accelerator_name(keyval, mods);
             const parsed = Gtk.accelerator_parse(accel);
@@ -321,9 +323,9 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             try {
                 sink.grab_focus();
-            } catch (err) {
+            } catch (error) {
                 logWarn('shortcut capture focus failed', {
-                    error: String(err),
+                    error: String(error),
                 });
             }
             return GLib.SOURCE_REMOVE;
@@ -435,28 +437,31 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         for (const row of rows.splice(0)) {
             try {
                 group.remove(row);
-            } catch (_) {
-                // Row might already be detached; ignore.
+            } catch {
+                logInfo('preferences row removal skipped: row already detached');
             }
         }
     }
 
     async _findExtensionStartCursor() {
+        let cursor;
         try {
             const proc = new Gio.Subprocess({
                 argv: ['journalctl', '--user', '-g', 'per-monitor-screen-blank.*extension enabled',
                     '-n', '1', '--output=json', '--no-pager'],
                 flags: Gio.SubprocessFlags.STDOUT_PIPE,
             });
-            proc.init(null);
-            const [, stdout] = await proc.communicate_utf8_async(null, null);
+            proc.init();
+            const [, stdout] = await proc.communicate_utf8_async();
             if (!stdout?.trim())
-                return null;
+                {return cursor;}
             const entry = JSON.parse(stdout.trim());
-            return entry['__CURSOR'] ?? null;
-        } catch (_) {
-            return null;
+            cursor = entry['__CURSOR'];
+        } catch {
+            logInfo('failed to read extension start cursor from journal');
         }
+
+        return cursor;
     }
 
     async _openExtensionLogs(window) {
@@ -471,17 +476,16 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
         if (GLib.find_program_in_path('xdg-terminal-exec')) {
             try {
                 GLib.spawn_async(
-                    null,
+                    undefined,
                     ['xdg-terminal-exec', '--', ...journalArgv],
-                    null,
+                    undefined,
                     GLib.SpawnFlags.SEARCH_PATH,
-                    null,
                 );
                 return;
-            } catch (err) {
+            } catch (error) {
                 logWarn('failed to launch default terminal for extension logs', {
                     launcher: 'xdg-terminal-exec',
-                    error: String(err),
+                    error: String(error),
                 });
             }
         } else {
@@ -504,7 +508,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
 
     _reportIssue(window, settings, issue) {
         if (!settings.get_boolean('show-issue-notifications'))
-            return;
+            {return;}
 
         const signature = [
             issue.level,
@@ -513,7 +517,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             issue.level === 'error' ? issue.errorText : '',
         ].join('|');
         if (signature === this._lastIssueSignature)
-            return;
+            {return;}
         this._lastIssueSignature = signature;
 
         const notification = buildIssueNotificationText(issue);

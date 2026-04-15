@@ -18,7 +18,7 @@ export class GnomeDeadlineScheduler {
 
     cancelMonitor(monitorId) {
         const prefix = `${String(monitorId ?? '')}:`;
-        for (const key of [...this._entries.keys()]) {
+        for (const key of this._entries.keys()) {
             if (!key.startsWith(prefix)) continue;
             this._removeEntry(key);
             this._tokens.delete(key);
@@ -26,7 +26,7 @@ export class GnomeDeadlineScheduler {
     }
 
     cancelAll() {
-        for (const key of [...this._entries.keys()]) {
+        for (const key of this._entries.keys()) {
             this._removeEntry(key);
             this._tokens.delete(key);
         }

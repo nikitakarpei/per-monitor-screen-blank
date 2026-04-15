@@ -28,10 +28,10 @@ export class StateMachine extends SignalEmitter {
     constructor(initialState = State.Disabled) {
         super();
         this.state = initialState;
-        this.keepAwakeUntil = null;
+        this.keepAwakeUntil = undefined;
     }
 
-    transition(nextState, reason = null) {
+    transition(nextState, reason) {
         if (this.state === nextState) return false;
         const previous = this.state;
         this.state = nextState;

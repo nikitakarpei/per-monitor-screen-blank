@@ -1,28 +1,31 @@
 const PREFIX = '[per-monitor-screen-blank]';
-let issueReporter = null;
+let issueReporter;
 
-export function logInfo(message, details = null) {
-    if (details !== null)
-        log(`${PREFIX} INFO: ${message} | ${_serialize(details)}`);
-    else
+export function logInfo(message, details) {
+    if (details === undefined) {
         log(`${PREFIX} INFO: ${message}`);
+        return;
+    }
+
+    log(`${PREFIX} INFO: ${message} | ${_serialize(details)}`);
 }
 
-export function logWarn(message, details = null) {
-    if (details !== null)
-        log(`${PREFIX} WARN: ${message} | ${_serialize(details)}`);
-    else
+export function logWarn(message, details) {
+    if (details === undefined) {
         log(`${PREFIX} WARN: ${message}`);
+    } else {
+        log(`${PREFIX} WARN: ${message} | ${_serialize(details)}`);
+    }
+
     _reportIssue({
         level: 'warn',
         message,
         details,
-        error: null,
     });
 }
 
-export function logErrorWithContext(error, message, details = null) {
-    const detailText = details !== null ? ` | ${_serialize(details)}` : '';
+export function logErrorWithContext(error, message, details) {
+    const detailText = details === undefined ? '' : ` | ${_serialize(details)}`;
     logError(error, `${PREFIX} ERROR: ${message}${detailText}`);
     _reportIssue({
         level: 'error',
@@ -33,27 +36,27 @@ export function logErrorWithContext(error, message, details = null) {
 }
 
 export function setIssueReporter(reporter) {
-    issueReporter = reporter ?? null;
+    issueReporter = reporter;
 }
 
 function _serialize(value) {
     try {
         return JSON.stringify(value);
-    } catch (_) {
+    } catch {
         return String(value);
     }
 }
 
 function _reportIssue(issue) {
     if (!issueReporter)
-        return;
+        {return;}
     try {
         issueReporter({
             ...issue,
-            detailText: issue.details !== null ? _serialize(issue.details) : '',
+            detailText: issue.details === undefined ? '' : _serialize(issue.details),
             errorText: issue.error?.message ?? String(issue.error ?? ''),
         });
-    } catch (_) {
+    } catch {
         // Avoid recursive logging if notification/reporting itself fails.
     }
 }

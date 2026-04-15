@@ -1,5 +1,5 @@
-import { State } from '../shared/domain/StateMachine.js';
-import { shouldAutoBlack } from '../shared/core/autoBlackPolicy.js';
+import { State } from '../shared/domain/state-machine.js';
+import { shouldAutoBlack } from '../shared/core/auto-black-policy.js';
 
 export class MonitorDeadlineCoordinator {
     constructor({ deadlineScheduler, pointerActivitySource, monitorStateManager }) {
@@ -10,7 +10,7 @@ export class MonitorDeadlineCoordinator {
 
     rescheduleMonitor(snapshot, monitor, machine) {
         if (!monitor || !snapshot) return;
-        if (monitor.mode === 'keep-awake' && machine.keepAwakeUntil !== null) {
+        if (monitor.mode === 'keep-awake' && machine.keepAwakeUntil !== undefined) {
             this._deadlineScheduler.schedule('keep-awake-expiry', monitor.id, machine.keepAwakeUntil);
             this.cancelAutoDeadline(monitor.id);
             return;
@@ -27,7 +27,7 @@ export class MonitorDeadlineCoordinator {
         const isPointerOnTargetMonitor = this._pointerActivitySource.getPointerSnapshot().monitorIndex === monitor.index;
         if (snapshot.disableAutoTimerOnPointerMonitor && isPointerOnTargetMonitor) {
             if (machine.state === State.AutoBlack)
-                machine.transition(State.AutoAwake, 'auto-reschedule');
+                {machine.transition(State.AutoAwake, 'auto-reschedule');}
             this.cancelAutoDeadline(monitor.id);
             return;
         }
@@ -44,7 +44,7 @@ export class MonitorDeadlineCoordinator {
         }
 
         if (machine.state !== State.AutoBlack)
-            machine.transition(State.AutoAwake, 'auto-reschedule');
+            {machine.transition(State.AutoAwake, 'auto-reschedule');}
         const deadlineMs = lastActivityAt + Math.max(0, snapshot.idleTimeoutSeconds) * 1000;
         this._deadlineScheduler.schedule('auto-black', monitor.id, deadlineMs);
     }
