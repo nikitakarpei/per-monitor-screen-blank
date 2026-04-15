@@ -11,7 +11,7 @@
     "typecheck": "tsc"
   },
   "simple-git-hooks": {
-    "pre-commit": "npm run lint && npm run format:check && npm run typecheck"
+    "pre-commit": "npm run format && git add -u && npm run lint && npm run lint:dead-code && npm run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
