@@ -197,7 +197,7 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     }
 
     _getMonitors() {
-        return listDisplayConfigMonitors().map((monitor, index) => ({
+        return listDisplayConfigMonitors().filter(monitor => monitor.isStable).map((monitor, index) => ({
             ...monitor,
             label: buildMonitorLabel({
                 manufacturer: monitor.vendor,

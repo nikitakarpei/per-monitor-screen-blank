@@ -11,17 +11,18 @@ export class GnomeSignalRegistrar {
             id = target.connect(signalName, handler);
         } catch (_) {
             logWarn('failed to connect signal', { signalName, targetType: target?.constructor?.name ?? 'unknown' });
-            return false;
+            return null;
         }
-        this._disconnectors.push(() => {
+        const disconnect = () => {
             if (!id) return;
             try {
                 target.disconnect(id);
             } catch (error) {
                 logWarn('failed to disconnect signal', { signalName, error: error?.message ?? String(error) });
             }
-        });
-        return true;
+        };
+        this._disconnectors.push(disconnect);
+        return disconnect;
     }
 
     addDisconnector(disconnect) {

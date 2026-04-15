@@ -1,4 +1,3 @@
-import { createSettingsSnapshot } from '../../shared/domain/SettingsSnapshot.js';
 import { assignMonitorMode } from '../../shared/util/monitorIdentity.js';
 import { normalizeMode } from '../../shared/util/monitorModes.js';
 import { logWarn } from '../../shared/util/logger.js';
@@ -45,18 +44,16 @@ export class GnomeSettingsGateway {
         return { profiles, activeProfileId };
     }
 
-    getSnapshot() {
-        const normalized = this._readProfilesState();
-        return createSettingsSnapshot({
-            profiles: normalized.profiles,
-            activeProfileId: normalized.activeProfileId,
+    getSettingsData() {
+        return {
+            ...this._readProfilesState(),
             idleTimeoutSeconds: this._settings.get_int('idle-timeout-seconds'),
             keepAwakeMinutes: this._settings.get_int('keep-awake-minutes'),
             showIndicator: this._settings.get_boolean('show-indicator'),
             disableAutoTimerOnPointerMonitor: this._settings.get_boolean('disable-auto-timer-on-pointer-monitor'),
             fadeDurationMs: this._settings.get_int('fade-duration-ms'),
             dimIntensityPercent: this._settings.get_int('dim-intensity-percent'),
-        });
+        };
     }
 
     setMonitorMode(monitorIdentity, mode) {

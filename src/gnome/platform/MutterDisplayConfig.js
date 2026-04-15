@@ -22,7 +22,7 @@ export function listDisplayConfigMonitors() {
         );
         const [, monitors, logicalMonitors] = result.deep_unpack();
         const primaryConnectors = _collectPrimaryConnectors(logicalMonitors);
-        return monitors.map(entry => _buildMonitor(entry, primaryConnectors)).filter(Boolean);
+        return monitors.map(entry => _buildMonitor(entry, primaryConnectors));
     } catch (error) {
         logWarn('failed to query Mutter display config for monitor identities', {
             busName: BUS_NAME,
@@ -67,13 +67,12 @@ function _buildMonitor(entry, primaryConnectors) {
         isPrimary: primaryConnectors.has(normalizeConnector(connectorName)),
     };
     if (!monitor.isStable) {
-        logInfo('display config monitor missing stable hardware identity; monitor skipped', {
+        logInfo('display config monitor missing stable hardware identity; returning fallback identity', {
             connector: monitor.connector,
             vendor: monitor.vendor,
             product: monitor.product,
             serial: monitor.serial,
         });
-        return null;
     }
 
     return monitor;

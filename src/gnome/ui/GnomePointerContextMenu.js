@@ -1,7 +1,7 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import { getMonitorModeLabel } from '../../shared/util/monitorModes.js';
+import { getMonitorModeLabel, listMonitorModes } from '../../shared/util/monitorModes.js';
 
 export class GnomePointerContextMenu {
     constructor(actions = {}) {
@@ -40,10 +40,19 @@ export class GnomePointerContextMenu {
         this._menu.addMenuItem(header);
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._addModeAction('auto', context.currentMode, () => this._actions.auto?.());
-        this._addModeAction('disabled', context.currentMode, () => this._actions.disabled?.());
-        this._addModeAction('keep-awake', context.currentMode, () => this._actions.keepAwake?.());
-        this._addModeAction('manual-black', context.currentMode, () => this._actions.blackNow?.());
+        for (const mode of listMonitorModes()) {
+            this._addModeAction(mode, context.currentMode, this._getModeHandler(mode));
+        }
+    }
+
+    _getModeHandler(mode) {
+        switch (mode) {
+        case 'auto': return () => this._actions.auto?.();
+        case 'disabled': return () => this._actions.disabled?.();
+        case 'keep-awake': return () => this._actions.keepAwake?.();
+        case 'manual-black': return () => this._actions.blackNow?.();
+        default: return () => {};
+        }
     }
 
     _addModeAction(mode, currentMode, handler) {

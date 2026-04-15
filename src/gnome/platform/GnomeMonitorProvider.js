@@ -5,8 +5,8 @@ import { logInfo } from '../../shared/util/logger.js';
 
 export class GnomeMonitorProvider {
     /**
-     * Returns all currently connected monitors with stable hardware identities.
-     * Monitors without a stable serial-based ID are skipped.
+     * Returns all currently connected monitors with hardware identity details.
+     * Unstable monitors are included and marked with isStable=false.
      *
      * @returns {{ index: number, id: string, isStable: boolean, connector: string, isPrimary: boolean }[]}
      */
@@ -33,14 +33,13 @@ export class GnomeMonitorProvider {
             });
 
             if (!runtimeSpec.isStable) {
-                logInfo('runtime monitor missing stable hardware identity; monitor skipped', {
+                logInfo('runtime monitor missing stable hardware identity; monitor returned unstable', {
                     index,
                     connector,
                     vendor: String(managerMonitor.get_vendor?.() ?? '').trim(),
                     product: String(managerMonitor.get_product?.() ?? '').trim(),
                     serial: String(managerMonitor.get_serial?.() ?? '').trim(),
                 });
-                continue;
             }
 
             monitors.push({ index, ...runtimeSpec, connector, isPrimary: index === primary });

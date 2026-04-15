@@ -1,9 +1,10 @@
-import { State, StateMachine } from '../shared/domain/StateMachine.js';
-import { shouldAutoBlack } from '../shared/core/autoBlackPolicy.js';
-import { resolveSettingsModeEffect } from '../shared/core/modeLogic.js';
-import { resolveMonitorMode } from '../shared/util/monitorIdentity.js';
-import { normalizeMode } from '../shared/util/monitorModes.js';
+import { State } from '../shared/domain/StateMachine.js';
+import { createSettingsSnapshot } from '../shared/domain/SettingsSnapshot.js';
 import { logInfo, logErrorWithContext } from '../shared/util/logger.js';
+import { MonitorStateManager } from './MonitorStateManager.js';
+import { MonitorDeadlineCoordinator } from './MonitorDeadlineCoordinator.js';
+import { PointerActivityCoordinator } from './PointerActivityCoordinator.js';
+import { SettingsSyncCoordinator } from './SettingsSyncCoordinator.js';
 
 export class AppController {
     constructor({
@@ -26,15 +27,26 @@ export class AppController {
         this._pointerContextMenu = pointerContextMenu;
         this._monitorProvider = monitorProvider;
         this._keybindingManager = keybindingManager;
-        this._stateMachines = new Map();
+        this._monitorStateManager = new MonitorStateManager();
+        this._settingsSyncCoordinator = new SettingsSyncCoordinator({
+            monitorProvider,
+            monitorStateManager: this._monitorStateManager,
+            deadlineScheduler,
+        });
+        this._deadlineCoordinator = new MonitorDeadlineCoordinator({
+            deadlineScheduler,
+            pointerActivitySource,
+            monitorStateManager: this._monitorStateManager,
+        });
+        this._pointerActivityCoordinator = new PointerActivityCoordinator({
+            monitorStateManager: this._monitorStateManager,
+            getMonitorByIndex: index => this._findMonitorByIndex(index),
+            getMachine: monitorId => this._getOrCreateMachine(monitorId),
+            rescheduleMonitor: (snapshot, monitor, machine) => this._deadlineCoordinator.rescheduleMonitor(snapshot, monitor, machine),
+        });
         this._monitorContexts = [];
         this._profiles = [];
         this._activeProfileId = '';
-        this._lastModes = new Map();
-        this._lastKeepAwakeMinutes = new Map();
-        this._lastActivityByMonitorId = new Map();
-        this._autoDeadlineTokens = new Map();
-        this._keepAwakeDeadlineTokens = new Map();
     }
 
     enable() {
@@ -59,6 +71,7 @@ export class AppController {
         this._deadlineScheduler.cancelAll();
         this._pointerActivitySource.stop();
         this._signalRegistrar.disconnectAll();
+        this._monitorStateManager.clear();
         this._overlay.disable();
         this._quickSettings.destroy();
         this._pointerContextMenu?.destroy?.();
@@ -98,38 +111,11 @@ export class AppController {
     }
 
     _syncFromSettings() {
-        const snapshot = this._settingsGateway.getSnapshot();
+        const snapshot = createSettingsSnapshot(this._settingsGateway.getSettingsData());
         this._profiles = snapshot.profiles;
         this._activeProfileId = snapshot.activeProfileId;
-        const runtimeMonitors = this._monitorProvider.listMonitors();
-        const monitorModes = snapshot.monitorModes;
-        const runtimeIds = new Set(runtimeMonitors.map(monitor => monitor.id));
-        const unmatchedKeys = Object.keys(monitorModes).filter(key => !runtimeIds.has(key));
-        const unmatchedActiveKeys = unmatchedKeys.filter(key => normalizeMode(monitorModes[key], 'disabled') !== 'disabled');
-        if (unmatchedKeys.length > 0) {
-            logInfo('monitor mode keys not present in runtime monitors', {
-                unmatchedKeys,
-                unmatchedActiveKeys,
-            });
-        }
-        if (unmatchedActiveKeys.length > 0) {
-            logInfo('monitor mapping mismatch', {
-                activeProfileId: this._activeProfileId,
-                unmatchedActiveKeys,
-            });
-        }
-        this._monitorContexts = runtimeMonitors.map(monitor => ({
-            ...monitor,
-            mode: resolveMonitorMode(monitorModes, monitor, 'disabled'),
-        }));
-        if (this._monitorContexts.length === 0) {
-            logInfo('no runtime monitors detected', {
-                reason: 'platform returned no monitors for Per-Monitor Screen Blank',
-            });
-        } else if (this._monitorContexts.every(monitor => monitor.mode === 'disabled')) {
-            logInfo('all monitors are disabled in active profile', { activeProfileId: this._activeProfileId });
-        }
-        this._reconcileMonitorRuntimeState();
+        this._monitorContexts = this._settingsSyncCoordinator.syncFromSettings(snapshot).monitorContexts;
+        this._settingsSyncCoordinator.reconcileMonitorRuntimeState(this._monitorContexts);
         this._overlay.setFadeDuration(snapshot.fadeDurationMs);
         this._overlay.setDimIntensityPercent(snapshot.dimIntensityPercent);
         this._quickSettings.visible = snapshot.showIndicator;
@@ -143,8 +129,7 @@ export class AppController {
     _syncOverlay() {
         const blackMonitors = [];
         for (const monitor of this._monitorContexts) {
-            const machine = this._stateMachines.get(monitor.id);
-            const state = machine?.state ?? State.Disabled;
+            const state = this._monitorStateManager.getState(monitor.id);
             if (state === State.AutoBlack || state === State.ManualBlack)
                 blackMonitors.push(monitor.index);
         }
@@ -153,38 +138,18 @@ export class AppController {
 
     _applyModeSyncForMonitor(snapshot, monitor) {
         const machine = this._getOrCreateMachine(monitor.id);
-        const modeEffect = resolveSettingsModeEffect(
-            monitor.mode,
-            snapshot.keepAwakeMinutes,
-            this._lastModes.get(monitor.id) ?? null,
-            this._lastKeepAwakeMinutes.get(monitor.id) ?? null
-        );
-
-        if (modeEffect.transitionState) {
-            machine.transition(modeEffect.transitionState, 'settings');
-            machine.keepAwakeUntil = null;
-        } else if (modeEffect.keepAwakeMs !== null) {
-            machine.setKeepAwake(modeEffect.keepAwakeMs);
-        } else if (monitor.mode === 'auto') {
-            machine.keepAwakeUntil = null;
-            if (machine.state !== State.AutoBlack)
-                machine.transition(State.AutoAwake, 'settings');
-        }
-
-        this._lastModes.set(monitor.id, monitor.mode);
-        this._lastKeepAwakeMinutes.set(monitor.id, snapshot.keepAwakeMinutes);
-        this._rescheduleMonitor(snapshot, monitor, machine);
+        this._settingsSyncCoordinator.syncMonitorSettings(snapshot, monitor);
+        this._deadlineCoordinator.rescheduleMonitor(snapshot, monitor, machine);
     }
 
     _getOrCreateMachine(monitorId) {
-        let machine = this._stateMachines.get(monitorId);
-        if (machine) return machine;
-
-        machine = new StateMachine();
-        machine.on('state-changed', () => {
-            this._syncOverlay();
-        });
-        this._stateMachines.set(monitorId, machine);
+        const machine = this._monitorStateManager.getMachine(monitorId);
+        if (!machine._overlayListenerAttached) {
+            machine.on('state-changed', () => {
+                this._syncOverlay();
+            });
+            machine._overlayListenerAttached = true;
+        }
         return machine;
     }
 
@@ -213,26 +178,6 @@ export class AppController {
         return true;
     }
 
-    _reconcileMonitorRuntimeState() {
-        const now = Date.now();
-        const activeMonitorIds = new Set(this._monitorContexts.map(monitor => monitor.id));
-        for (const monitorId of [...this._stateMachines.keys()]) {
-            if (activeMonitorIds.has(monitorId)) continue;
-            this._stateMachines.delete(monitorId);
-            this._lastModes.delete(monitorId);
-            this._lastKeepAwakeMinutes.delete(monitorId);
-            this._lastActivityByMonitorId.delete(monitorId);
-            this._autoDeadlineTokens.delete(monitorId);
-            this._keepAwakeDeadlineTokens.delete(monitorId);
-            this._deadlineScheduler.cancelMonitor(monitorId);
-        }
-
-        for (const monitor of this._monitorContexts) {
-            if (!this._lastActivityByMonitorId.has(monitor.id))
-                this._lastActivityByMonitorId.set(monitor.id, now);
-        }
-    }
-
     _seedCurrentPointerActivity() {
         const snapshot = this._pointerActivitySource.getPointerSnapshot();
         if (!snapshot || !Number.isInteger(snapshot.monitorIndex)) {
@@ -247,108 +192,12 @@ export class AppController {
     }
 
     _handlePointerActivity(activity) {
-        const snapshot = this._settingsGateway.getSnapshot();
-        this._reschedulePointerDeparture(snapshot, activity);
-        const monitor = this._findMonitorByIndex(activity?.monitorIndex);
-        const now = Date.now();
-
-        if (!monitor) {
-            if (this._monitorContexts.length === 0) return;
-            logInfo('pointer activity ignored: monitor not found', { monitorIndex: activity?.monitorIndex });
-            return;
-        }
-
-        if (monitor.mode !== 'auto') return;
-        this._lastActivityByMonitorId.set(monitor.id, now);
-        const machine = this._getOrCreateMachine(monitor.id);
-        if (machine.state === State.AutoBlack)
-            machine.transition(State.AutoAwake, 'pointer-activity');
-        this._rescheduleMonitor(snapshot, monitor, machine);
+        const snapshot = createSettingsSnapshot(this._settingsGateway.getSettingsData());
+        this._pointerActivityCoordinator.handlePointerActivity(snapshot, activity);
     }
 
     _reschedulePointerDeparture(snapshot, activity) {
-        if (!snapshot?.disableAutoTimerOnPointerMonitor)
-            return;
-
-        const previousMonitorIndex = activity?.previousMonitorIndex;
-        const currentMonitorIndex = activity?.monitorIndex;
-        if (!Number.isInteger(previousMonitorIndex) || previousMonitorIndex === currentMonitorIndex)
-            return;
-
-        const previousMonitor = this._findMonitorByIndex(previousMonitorIndex);
-        if (!previousMonitor) {
-            if (this._monitorContexts.length > 0) {
-                logInfo('pointer departure reschedule skipped: previous monitor not found', {
-                    previousMonitorIndex,
-                    currentMonitorIndex,
-                });
-            }
-            return;
-        }
-
-        if (previousMonitor.mode !== 'auto')
-            return;
-
-        this._rescheduleMonitor(snapshot, previousMonitor, this._getOrCreateMachine(previousMonitor.id));
-    }
-
-    _rescheduleMonitor(snapshot, monitor, machine = this._getOrCreateMachine(monitor.id)) {
-        if (!monitor || !snapshot) return;
-        if (monitor.mode === 'keep-awake' && machine.keepAwakeUntil !== null) {
-            const token = this._nextDeadlineToken(this._keepAwakeDeadlineTokens, monitor.id);
-            this._deadlineScheduler.scheduleKeepAwakeExpiry(monitor.id, machine.keepAwakeUntil, token);
-            this._cancelAutoDeadline(monitor.id);
-            return;
-        }
-
-        this._cancelKeepAwakeDeadline(monitor.id);
-        if (monitor.mode !== 'auto') {
-            this._cancelAutoDeadline(monitor.id);
-            return;
-        }
-
-        const lastActivityAt = this._lastActivityByMonitorId.get(monitor.id) ?? Date.now();
-        const targetIdleTimeMs = Date.now() - lastActivityAt;
-        const isPointerOnTargetMonitor = this._pointerActivitySource.getPointerSnapshot().monitorIndex === monitor.index;
-        if (snapshot.disableAutoTimerOnPointerMonitor && isPointerOnTargetMonitor) {
-            if (machine.state === State.AutoBlack)
-                machine.transition(State.AutoAwake, 'auto-reschedule');
-            this._cancelAutoDeadline(monitor.id);
-            return;
-        }
-        const shouldBlack = shouldAutoBlack({
-            targetIdleTimeMs,
-            idleTimeoutSeconds: snapshot.idleTimeoutSeconds,
-            isCurrentlyAutoBlack: machine.state === State.AutoBlack,
-            isPointerOnTargetMonitor,
-        });
-        if (shouldBlack) {
-            machine.transition(State.AutoBlack, 'auto-deadline');
-            this._cancelAutoDeadline(monitor.id);
-            return;
-        }
-
-        if (machine.state !== State.AutoBlack)
-            machine.transition(State.AutoAwake, 'auto-reschedule');
-        const token = this._nextDeadlineToken(this._autoDeadlineTokens, monitor.id);
-        const deadlineMs = lastActivityAt + Math.max(0, snapshot.idleTimeoutSeconds) * 1000;
-        this._deadlineScheduler.scheduleAutoBlack(monitor.id, deadlineMs, token);
-    }
-
-    _nextDeadlineToken(tokenMap, monitorId) {
-        const nextToken = (tokenMap.get(monitorId) ?? 0) + 1;
-        tokenMap.set(monitorId, nextToken);
-        return nextToken;
-    }
-
-    _cancelAutoDeadline(monitorId) {
-        this._autoDeadlineTokens.delete(monitorId);
-        this._deadlineScheduler.cancelAutoBlack(monitorId);
-    }
-
-    _cancelKeepAwakeDeadline(monitorId) {
-        this._keepAwakeDeadlineTokens.delete(monitorId);
-        this._deadlineScheduler.cancelKeepAwakeExpiry(monitorId);
+        this._pointerActivityCoordinator.reschedulePointerDeparture(snapshot, activity);
     }
 
     _findMonitorByIndex(index) {
@@ -356,22 +205,14 @@ export class AppController {
         return this._monitorContexts.find(monitor => monitor.index === index) ?? null;
     }
 
-    _handleScheduledDeadline({ kind, monitorId, token, deadlineMs }) {
-        const snapshot = this._settingsGateway.getSnapshot();
+    _handleScheduledDeadline({ deadlineKey, monitorId, token, deadlineMs }) {
+        const snapshot = createSettingsSnapshot(this._settingsGateway.getSettingsData());
         const monitor = this._monitorContexts.find(item => item.id === monitorId);
         if (!monitor) {
-            logInfo('scheduled deadline skipped: monitor missing', { kind, monitorId, token, deadlineMs });
+            logInfo('scheduled deadline skipped: monitor missing', { deadlineKey, monitorId, token, deadlineMs });
             return;
         }
-        const tokenMap = kind === 'keep-awake-expiry' ? this._keepAwakeDeadlineTokens : this._autoDeadlineTokens;
-        const expectedToken = tokenMap.get(monitorId);
-        if (expectedToken !== token) {
-            logInfo('scheduled deadline skipped: stale token', { kind, monitorId, token, expectedToken, deadlineMs });
-            return;
-        }
-
-        if (kind === 'keep-awake-expiry') {
-            tokenMap.delete(monitorId);
+        if (deadlineKey === 'keep-awake-expiry') {
             const machine = this._getOrCreateMachine(monitorId);
             if (monitor.mode !== 'keep-awake' || machine.state !== State.KeepAwake) {
                 logInfo('keep-awake expiry skipped: invalid state', {
@@ -387,14 +228,12 @@ export class AppController {
             this._syncFromSettings();
             return;
         }
-
-        tokenMap.delete(monitorId);
         const machine = this._getOrCreateMachine(monitorId);
         if (monitor.mode !== 'auto') {
             logInfo('auto-black deadline skipped: monitor no longer auto', { monitorId, mode: monitor.mode, token });
             return;
         }
-        this._rescheduleMonitor(snapshot, monitor, machine);
+        this._deadlineCoordinator.rescheduleMonitor(snapshot, monitor, machine);
     }
 
     _reregisterPointerMenuShortcut() {
