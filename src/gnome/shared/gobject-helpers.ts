@@ -1,7 +1,4 @@
 import GObject from 'gi://GObject';
-import { Logger } from '../../util/logger.js';
-
-const logger = new Logger('gobject-helpers');
 
 // Tracks which targets each holder has connected to, enabling bulk disconnect
 const holderTargets = new WeakMap<object, Set<object>>();
@@ -92,12 +89,12 @@ export function gobjectDisconnectObject(
 
     const holderMap = signalTracker.get(holder);
     if (!holderMap) {
-        logger.warn('gobjectDisconnectObject: no tracked signals for holder');
+        logError('gobjectDisconnectObject: no tracked signals for holder');
         return;
     }
     const targetIds = holderMap.get(target);
     if (!targetIds || targetIds.length === 0) {
-        logger.warn('gobjectDisconnectObject: no tracked signals for target');
+        logError('gobjectDisconnectObject: no tracked signals for target');
         return;
     }
     const disconnectable = targetAny as { disconnect(id: number): void };
