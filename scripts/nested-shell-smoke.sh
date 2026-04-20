@@ -11,6 +11,12 @@ for cmd in dbus-run-session gnome-shell gsettings rg; do
     exit 1
   fi
 done
+
+if [ "${XDG_SESSION_TYPE:-}" != "wayland" ] || [ -z "${WAYLAND_DISPLAY:-}" ] || [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+  printf '%s\n' 'ERROR: nested GNOME Shell smoke test must be run from an existing graphical Wayland session.'
+  printf '%s\n' '       Please start it from a usable Wayland desktop session and try again.'
+  exit 1
+fi
 have_timeout=0
 if command -v timeout >/dev/null 2>&1; then
   have_timeout=1
@@ -45,7 +51,10 @@ dbus-run-session sh -eu -c '
   mkdir -p "$extension_dir"
   cp -R "$extension_src/." "$extension_dir/"
   if command -v glib-compile-schemas >/dev/null 2>&1; then
-    glib-compile-schemas "$extension_dir/schemas" >/dev/null 2>&1 || true
+    if ! glib-compile-schemas "$extension_dir/schemas" >/dev/null 2>&1; then
+      printf '%s\n' "ERROR: failed to compile extension schemas in $extension_dir/schemas"
+      exit 1
+    fi
   fi
 
   gsettings set org.gnome.shell disable-user-extensions false >/dev/null 2>&1 || true
@@ -59,7 +68,19 @@ dbus-run-session sh -eu -c '
   G_MESSAGES_DEBUG=all SHELL_DEBUG=all gnome-shell "$shell_mode" --wayland >"$log_file" 2>&1 &
   shell_pid=$!
 
-  sleep "$boot_delay"
+  boot_deadline=$(( $(date +%s) + boot_delay ))
+  while :; do
+    if rg -q "Extension $extension_uuid in state ACTIVE after loading|State: ACTIVE" "$log_file" 2>/dev/null; then
+      break
+    fi
+    if ! kill -0 "$shell_pid" >/dev/null 2>&1; then
+      break
+    fi
+    if [ "$(date +%s)" -ge "$boot_deadline" ]; then
+      break
+    fi
+    sleep 1
+  done
 
   {
     echo "== Nested shell mode: $shell_mode =="
@@ -75,7 +96,16 @@ dbus-run-session sh -eu -c '
     fi
   } >>"$log_file" 2>&1
 
-  sleep "$run_delay"
+  run_deadline=$(( $(date +%s) + run_delay ))
+  while :; do
+    if rg -q "Extension $extension_uuid in state ACTIVE after loading|State: ACTIVE" "$log_file" 2>/dev/null; then
+      break
+    fi
+    if [ "$(date +%s)" -ge "$run_deadline" ]; then
+      break
+    fi
+    sleep 1
+  done
 
   kill "$shell_pid" >/dev/null 2>&1 || true
   wait "$shell_pid" >/dev/null 2>&1 || true

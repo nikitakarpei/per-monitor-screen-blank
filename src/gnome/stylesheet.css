@@ -1,1 +1,4 @@
-/* Per-Monitor Screen Blank — optional styling for shell overlay (.per-monitor-screen-blank-overlay). */
+/* Per-Monitor Screen Blank — shell overlay styling. */
+.per-monitor-screen-blank-overlay {
+    background-color: #000000;
+}

@@ -42,7 +42,7 @@ Each display has its own mode in the active preset. You can change it from Prefe
 Press the shortcut to open a small menu at the pointer for the screen under the cursor. From there you can switch **Automatic**, **Never Blank**, **Keep Awake**, or **Black Screen** without opening full Preferences.
 
 The default is **Super+Shift+O**. Change or clear it under **General Settings** in the extension’s Preferences (**Set…** / **Clear**). Click elsewhere or press Escape to close the menu.
-When **Show top bar icon** is enabled, Quick Settings adds a top-bar indicator and menu entry for switching the active preset or opening Preferences.
+When **Show quick settings menu** is enabled, Quick Settings adds a menu entry for switching the active preset or opening Preferences.
 
 ## Installation Guide
 
@@ -69,6 +69,7 @@ sh ./scripts/uninstall.sh --remove-data
 ## Development Notes
 
 - `npm run lint` runs ESLint as the JS harness for this extension. It uses ESLint core rules plus `eslint-plugin-sonarjs` for maintainability smells, `eslint-plugin-unicorn` for modern JS correctness rules, and `eslint-plugin-import` for import hygiene.
-- `sh ./scripts/nested-shell-smoke.sh` runs a nested GNOME Shell smoke workflow (requires `dbus-run-session`, `gnome-shell`, `gsettings`, `rg`).
+- `ego-lint` runs during `sh ./scripts/package-ego-zip.sh` against the built extension/package output before upload.
+- `sh ./scripts/nested-shell-smoke.sh` runs a nested GNOME Shell smoke workflow (requires `dbus-run-session`, `gnome-shell`, `gsettings`, `rg`, and an existing graphical Wayland session).
 - `sh ./scripts/package-ego-zip.sh` writes `dist/per-monitor-screen-blank@nikitakarpei.github.io.zip` for [extensions.gnome.org](https://extensions.gnome.org/) (extension files at zip root; requires `zip` and `glib-compile-schemas`).
 - Runtime logs are prefixed with `[per-monitor-screen-blank]` in `journalctl` (Preferences can open a filtered follow stream via `journalctl --user -f --no-pager -g per-monitor-screen-blank`).

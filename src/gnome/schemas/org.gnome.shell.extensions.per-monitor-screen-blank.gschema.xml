@@ -4,15 +4,10 @@
     id="org.gnome.shell.extensions.per-monitor-screen-blank"
     path="/org/gnome/shell/extensions/per-monitor-screen-blank/"
   >
-    <key name="monitor-modes-json" type="s">
-      <default>'{}'</default>
-      <summary>Per-monitor mode map</summary>
-      <description>JSON object that maps monitor identifiers to mode values.</description>
-    </key>
-    <key name="profiles-json" type="s">
-      <default>'[]'</default>
-      <summary>Profiles configuration</summary>
-      <description>JSON array of profile objects containing monitor modes.</description>
+    <key name="profile-ids" type="as">
+      <default>[]</default>
+      <summary>Profile IDs list</summary>
+      <description>Array of profile IDs defining the order and availability of profiles.</description>
     </key>
     <key name="active-profile-id" type="s">
       <default>''</default>
@@ -36,10 +31,10 @@
       <summary>Keep awake duration in minutes</summary>
       <description>How long Keep Awake remains active.</description>
     </key>
-    <key name="show-indicator" type="b">
+    <key name="show-quick-settings-menu" type="b">
       <default>true</default>
-      <summary>Show indicator</summary>
-      <description>Show the persistent top-bar indicator.</description>
+      <summary>Show quick settings menu</summary>
+      <description>Show the extension's menu in the GNOME quick settings panel.</description>
     </key>
     <key name="show-issue-notifications" type="b">
       <default>true</default>
@@ -60,6 +55,29 @@
       <default>100</default>
       <summary>Dim intensity percentage</summary>
       <description>Target black overlay intensity from 0 to 100 percent.</description>
+    </key>
+
+    <key name="known-monitors" type="s">
+      <default>'[]'</default>
+      <summary>Known monitors</summary>
+      <description>JSON array of known monitor identities and their display labels, persisted by the extension for the prefs process. Format: [{"monitorId":"...","label":"..."}]</description>
+    </key>
+  </schema>
+
+  <!-- Relocatable schema for individual profiles -->
+  <schema
+    id="org.gnome.shell.extensions.per-monitor-screen-blank.profile"
+    gettext-domain="per-monitor-screen-blank"
+  >
+    <key name="name" type="s">
+      <default>''</default>
+      <summary>Profile name</summary>
+      <description>Display name for this profile.</description>
+    </key>
+    <key name="monitor-modes" type="s">
+      <default>'{}'</default>
+      <summary>Monitor modes configuration</summary>
+      <description>JSON object mapping monitor IDs to their configured modes (auto, keep-awake, disabled, manual-black).</description>
     </key>
   </schema>
 </schemalist>

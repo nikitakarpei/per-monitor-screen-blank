@@ -1,14 +1,11 @@
 {
-  "ignoreDependencies": [
-    "^gi$",
-    "^resource$",
-    "^ts-api-utils$"
-  ],
-  "entry": [
-    "src/gnome/extension.js",
-    "src/gnome/prefs.js"
-  ],
-  "project": [
-    "src/**/*.js"
-  ]
+    "ignoreDependencies": ["^gi$", "^resource$", "^ts-api-utils$", "^esbuild$"],
+    "entry": [
+        "src/gnome/extension.ts",
+        "src/gnome/prefs.ts",
+        "types/girs-ambient.ts"
+    ],
+    "project": [
+        "src/**/*.ts"
+    ]
 }

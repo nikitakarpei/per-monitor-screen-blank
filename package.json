@@ -1,30 +1,39 @@
 {
-  "name": "per-monitor-screen-blank",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "lint": "eslint src",
-    "lint:js": "eslint src",
-    "lint:dead-code": "knip --reporter compact",
-    "format": "prettier --write src",
-    "format:check": "prettier --check src",
-    "typecheck": "tsc"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npm run format && git add -u && npm run lint && npm run lint:dead-code && npm run typecheck"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "eslint": "^9.39.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-sonarjs": "^3.0.5",
-    "eslint-plugin-unicorn": "^64.0.0",
-    "globals": "^16.4.0",
-    "knip": "^6.4.1",
-    "prettier": "^3.8.3",
-    "simple-git-hooks": "^2.13.1",
-    "ts-api-utils": "^2.5.0",
-    "typescript": "^6.0.2"
-  }
+    "name": "per-monitor-screen-blank",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "lint": "eslint src",
+        "lint:js": "eslint src",
+        "lint:dead-code": "knip --reporter compact",
+        "format": "prettier --write src",
+        "format:check": "prettier --check src",
+        "typecheck": "tsc",
+        "test": "vitest"
+    },
+    "simple-git-hooks": {
+        "pre-commit": "npm run format && git add -u && npm run lint && npm run lint:dead-code && npm run typecheck"
+    },
+    "overrides": {
+        "@girs/mtk-17": "17.0.0-4.0.0-rc.3"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@girs/gnome-shell": "49.1.0",
+        "esbuild": "^0.28.0",
+        "eslint": "^10.2.1",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-import-resolver-typescript": "^4.4.4",
+        "eslint-plugin-import-x": "^4.0.0",
+        "eslint-plugin-sonarjs": "^4.0.3",
+        "eslint-plugin-unicorn": "^64.0.0",
+        "globals": "^17.5.0",
+        "knip": "^6.4.1",
+        "prettier": "^3.8.3",
+        "simple-git-hooks": "^2.13.1",
+        "ts-api-utils": "^2.5.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.58.2",
+        "vitest": "^4.1.4"
+    }
 }

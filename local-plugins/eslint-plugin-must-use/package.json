@@ -1,0 +1,24 @@
+{
+  "name": "eslint-plugin-must-use",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ESLint rule: require non-void return values to be used or explicitly discarded with void",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@typescript-eslint/utils": ">=6.0.0",
+    "typescript": ">=5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": ">=18.0.0",
+    "@typescript-eslint/rule-tester": ">=6.0.0",
+    "@typescript-eslint/types": "^8.58.2",
+    "@typescript-eslint/utils": "^8.58.2",
+    "typescript": ">=5.0.0",
+    "vitest": ">=1.0.0"
+  }
+}

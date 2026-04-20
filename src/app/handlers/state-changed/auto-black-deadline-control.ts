@@ -1,0 +1,40 @@
+import { DeadlineScheduler } from '../../../domain/ports-domain';
+import { StateChangedEvent } from '../../services/app-event-bus';
+import { LoggerPort } from '../../../util/logger';
+import { SettingsGateway } from '../../../ports';
+import { DEADLINE_KEYS } from '../../../domain/deadline-keys';
+import { FocusedMonitorService } from '../../services/focused-monitor-service';
+
+type AutoBlackDeadlineControlDeps = {
+    focusedMonitorService: FocusedMonitorService;
+    deadlineScheduler: DeadlineScheduler;
+    settingsGateway: SettingsGateway;
+    logger: LoggerPort;
+};
+
+/**
+ * Handles the `state-changed` event and controls the auto-black deadline for the monitor.
+ */
+export function autoBlackDeadlineControl(
+    deps: AutoBlackDeadlineControlDeps,
+    payload: StateChangedEvent['payload'],
+): void {
+    if (payload.current === 'AutoAwake') {
+        deps.deadlineScheduler.cancelMonitor(payload.monitorId);
+        const deadlineMs =
+            Date.now() + deps.settingsGateway.getIdleTimeoutSeconds() * 1000;
+        deps.deadlineScheduler.schedule(
+            DEADLINE_KEYS.autoBlack,
+            payload.monitorId,
+            deadlineMs,
+        );
+        return;
+    }
+
+    if (payload.previous === 'AutoAwake') {
+        deps.deadlineScheduler.cancel(
+            DEADLINE_KEYS.autoBlack,
+            payload.monitorId,
+        );
+    }
+}

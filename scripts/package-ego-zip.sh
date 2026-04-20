@@ -27,6 +27,8 @@ if [ ! -f "$src/metadata.json" ]; then
   exit 1
 fi
 
+sh "$repo_root/scripts/ego-lint.sh" "$src"
+
 if ! command -v zip >/dev/null 2>&1; then
   printf 'ERROR: zip command not found.\n' >&2
   exit 1
