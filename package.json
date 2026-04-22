@@ -2,7 +2,9 @@
     "name": "per-monitor-screen-blank",
     "private": true,
     "type": "module",
-    "workspaces": ["local-plugins/*"],
+    "workspaces": [
+        "local-plugins/*"
+    ],
     "scripts": {
         "lint": "eslint src",
         "lint:js": "eslint src",
@@ -14,7 +16,14 @@
         "prepare": "simple-git-hooks"
     },
     "simple-git-hooks": {
-        "pre-commit": "git stash push --keep-index -q && npm run format && git add -u && git stash pop -q && npm run lint && npm run lint:dead-code && npm run typecheck"
+        "pre-commit": "npx lint-staged",
+        "pre-push": "npm run lint:dead-code && npm run typecheck"
+    },
+    "lint-staged": {
+        "src/**/*.{js,ts}": [
+            "prettier --write",
+            "eslint"
+        ]
     },
     "overrides": {
         "@girs/mtk-17": "17.0.0-4.0.0-rc.3",
@@ -47,6 +56,7 @@
         "eslint-plugin-unicorn": "^64.0.0",
         "globals": "^17.5.0",
         "knip": "^6.4.1",
+        "lint-staged": "^16.4.0",
         "prettier": "^3.8.3",
         "semver": "^7.7.4",
         "simple-git-hooks": "^2.13.1",
