@@ -1,0 +1,58 @@
+name: Dependency audit
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run audit
+        id: audit
+        run: |
+          output=$(npm audit --audit-level=high 2>&1) || true
+          echo "result<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$output" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          npm audit --audit-level=high
+
+      - name: Create issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          body="## npm audit found high or critical vulnerabilities
+
+          \`\`\`
+          ${{ steps.audit.outputs.result }}
+          \`\`\`
+
+          Run \`npm audit\` locally for details, then \`npm audit fix\` if safe."
+
+          existing=$(gh issue list --label "security-audit" --state open --json number --jq '.[0].number' || true)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Audit still failing as of $(date -u +%Y-%m-%d):
+
+          \`\`\`
+          ${{ steps.audit.outputs.result }}
+          \`\`\`"
+          else
+            gh issue create \
+              --title "npm audit: high/critical vulnerabilities found" \
+              --body "$body" \
+              --label "security-audit"
+          fi
