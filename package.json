@@ -9,13 +9,30 @@
         "format": "prettier --write src",
         "format:check": "prettier --check src",
         "typecheck": "tsc",
-        "test": "vitest"
+        "test": "vitest",
+        "prepare": "simple-git-hooks"
     },
     "simple-git-hooks": {
-        "pre-commit": "npm run format && git add -u && npm run lint && npm run lint:dead-code && npm run typecheck"
+        "pre-commit": "git stash push --keep-index -q && npm run format && git add -u && git stash pop -q && npm run lint && npm run lint:dead-code && npm run typecheck"
     },
     "overrides": {
-        "@girs/mtk-17": "17.0.0-4.0.0-rc.3"
+        "@girs/mtk-17": "17.0.0-4.0.0-rc.3",
+        "@girs/atk-1.0": "2.60.0-4.0.0-rc.4",
+        "@girs/cairo-1.0": "1.0.0-4.0.0-rc.4",
+        "@girs/freetype2-2.0": "2.0.0-4.0.0-rc.4",
+        "@girs/gdk-4.0": "4.0.0-4.0.0-rc.4",
+        "@girs/gdkpixbuf-2.0": "2.0.0-4.0.0-rc.4",
+        "@girs/gio-2.0": "2.88.0-4.0.0-rc.4",
+        "@girs/gjs": "4.0.0-rc.4",
+        "@girs/glib-2.0": "2.88.0-4.0.0-rc.4",
+        "@girs/gmodule-2.0": "2.0.0-4.0.0-rc.4",
+        "@girs/gobject-2.0": "2.88.0-4.0.0-rc.4",
+        "@girs/graphene-1.0": "1.0.0-4.0.0-rc.4",
+        "@girs/gsk-4.0": "4.0.0-4.0.0-rc.4",
+        "@girs/gtk-4.0": "4.23.0-4.0.0-rc.4",
+        "@girs/harfbuzz-0.0": "13.2.1-4.0.0-rc.4",
+        "@girs/pango-1.0": "1.57.1-4.0.0-rc.4",
+        "@girs/pangocairo-1.0": "1.0.0-4.0.0-rc.4"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
@@ -30,6 +47,7 @@
         "globals": "^17.5.0",
         "knip": "^6.4.1",
         "prettier": "^3.8.3",
+        "semver": "^7.7.4",
         "simple-git-hooks": "^2.13.1",
         "ts-api-utils": "^2.5.0",
         "typescript": "^6.0.3",
