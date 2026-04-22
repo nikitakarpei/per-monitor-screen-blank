@@ -1,12 +1,13 @@
 import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
-import type { Logger } from '../../util/logger.js';
-import type { PointerSource, PlatformEventEmitter } from '../../ports/index.js';
-import type { PointerPosition } from '../../domain/ports-domain.js';
-import type { MonitorIndexResolver } from './gnome-monitor-tracker.js';
+import { Logger } from '../../util/logger.js';
+import { PlatformEventEmitter } from '../../app/ports/platform-events.js';
+import { PointerSource } from '../../app/ports/monitors.js';
+import { GnomeMonitorIndex } from './gnome-monitor-index.js';
+import { PointerPosition } from '../../domain/types.js';
 
 export class GnomePointerSource implements PointerSource {
     readonly #pointerWatcher = PointerWatcher.getPointerWatcher();
-    readonly #indexResolver: MonitorIndexResolver;
+    readonly #indexResolver: GnomeMonitorIndex;
     readonly #emitter: PlatformEventEmitter;
     readonly #logger: Logger;
     #watch?: PointerWatcher.PointerWatch;
@@ -17,7 +18,7 @@ export class GnomePointerSource implements PointerSource {
     constructor(options: {
         logger: Logger;
         eventEmitter: PlatformEventEmitter;
-        indexResolver: MonitorIndexResolver;
+        indexResolver: GnomeMonitorIndex;
     }) {
         this.#emitter = options.eventEmitter;
         this.#logger = options.logger;

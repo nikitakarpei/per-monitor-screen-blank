@@ -1,4 +1,4 @@
-import type { LoggerPort } from '../util/logger.js';
+import { LoggerPort } from './logger.js';
 
 type EventListener<TPayload extends object> = (payload: TPayload) => void;
 

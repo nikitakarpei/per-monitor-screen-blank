@@ -1,16 +1,18 @@
 import Gio from 'gi://Gio';
-import type { PlatformEventEmitter } from '../../ports/index.js';
+import { PlatformEventEmitter } from '../../app/ports/platform-events.js';
 import { resolveMode, type MonitorMode } from '../../domain/monitor-mode.js';
-import type { ProfileId } from '../../domain/ports-domain.js';
+import { ProfileId } from '../../domain/types.js';
 import {
     gsettingsChangedSignal,
     PROFILE_GSETTINGS_KEYS,
 } from '../gsettings-schema-keys.js';
 
-/**
- * GSettings wrapper for a single profile.
- * Emits events through PlatformEventEmitter when settings change.
- */
+interface ProfileStoreDeps {
+    profileId: ProfileId;
+    settings: Gio.Settings;
+    eventEmitter: PlatformEventEmitter;
+}
+
 export class ProfileStore {
     readonly #profileId: ProfileId;
     readonly #settings: Gio.Settings;
@@ -19,16 +21,12 @@ export class ProfileStore {
     #destroyed = false;
     #previousModes: Record<string, MonitorMode> = {};
 
-    constructor(options: {
-        profileId: ProfileId;
-        settings: Gio.Settings;
-        eventEmitter: PlatformEventEmitter;
-    }) {
-        this.#profileId = options.profileId;
-        this.#settings = options.settings;
-        this.#eventEmitter = options.eventEmitter;
+    constructor(deps: ProfileStoreDeps) {
+        this.#profileId = deps.profileId;
+        this.#settings = deps.settings;
+        this.#eventEmitter = deps.eventEmitter;
         this.#wireSignals();
-        this.#previousModes = this.#getMonitorModesMap();
+        this.#previousModes = this.#getMonitorModes();
     }
 
     get id(): ProfileId {
@@ -50,16 +48,16 @@ export class ProfileStore {
     }
 
     getMonitorMode(monitorId: string): MonitorMode {
-        const modes = this.#getMonitorModesMap();
+        const modes = this.#getMonitorModes();
         return resolveMode(modes[monitorId]);
     }
 
     getMonitorModes(): Record<string, MonitorMode> {
-        return this.#getMonitorModesMap();
+        return this.#getMonitorModes();
     }
 
     setMonitorMode(monitorId: string, mode: MonitorMode): void {
-        const modes = this.#getMonitorModesMap();
+        const modes = this.#getMonitorModes();
         const newModes = { ...modes, [monitorId]: mode };
         const saved = this.#settings.set_string(
             PROFILE_GSETTINGS_KEYS.monitorModes,
@@ -88,7 +86,7 @@ export class ProfileStore {
         this.#previousModes = {};
     }
 
-    #getMonitorModesMap(): Record<string, MonitorMode> {
+    #getMonitorModes(): Record<string, MonitorMode> {
         const raw = this.#settings.get_string(
             PROFILE_GSETTINGS_KEYS.monitorModes,
         );
@@ -124,7 +122,7 @@ export class ProfileStore {
         const modesChangedId = this.#settings.connect(
             gsettingsChangedSignal(PROFILE_GSETTINGS_KEYS.monitorModes),
             () => {
-                const newModes = this.#getMonitorModesMap();
+                const newModes = this.#getMonitorModes();
                 const previousModes = this.#previousModes;
 
                 // Emit events for monitors with changed or new modes

@@ -1,16 +1,17 @@
 import Gio from 'gi://Gio';
-import type { PlatformEventBus } from '../../ports/index.js';
-import type { ProfileId } from '../../domain/ports-domain.js';
-import type { MonitorMode } from '../../domain/monitor-mode.js';
+import GLib from 'gi://GLib';
+import { PlatformEventEmitter } from '../../app/ports/platform-events.js';
+import { Profile, ProfileId } from '../../domain/types.js';
+import { MonitorMode } from '../../domain/monitor-mode.js';
 import {
     GSETTINGS_KEYS,
     gsettingsChangedSignal,
 } from '../gsettings-schema-keys.js';
 import { ProfileStore } from './profile-store.js';
 
-interface CreateProfileOptions {
+interface ProfileRegistryDeps {
     settings: Gio.Settings;
-    eventBus: PlatformEventBus;
+    eventEmitter: PlatformEventEmitter;
     createProfileSettings: (profileId: ProfileId) => Gio.Settings;
 }
 
@@ -19,27 +20,21 @@ interface CreateProfileOptions {
  * Creates/destroys ProfileStore instances as profiles are added/removed.
  */
 export class ProfileRegistry {
-    readonly #mainSettings: Gio.Settings;
-    readonly #eventBus: PlatformEventBus;
+    readonly #settings: Gio.Settings;
+    readonly #eventEmitter: PlatformEventEmitter;
+
     readonly #gsettingsFactory: (_profileId: ProfileId) => Gio.Settings;
     readonly #profileStores = new Map<ProfileId, ProfileStore>();
+    readonly #pendingCreatedIds = new Set<ProfileId>();
     readonly #signalConnections: number[] = [];
     #destroyed = false;
     #started = false;
 
-    constructor(options: CreateProfileOptions) {
-        this.#mainSettings = options.settings;
-        this.#eventBus = options.eventBus;
+    constructor(deps: ProfileRegistryDeps) {
+        this.#settings = deps.settings;
+        this.#eventEmitter = deps.eventEmitter;
         this.#gsettingsFactory = (profileId: ProfileId) => {
-            try {
-                return options.createProfileSettings(profileId);
-            } catch (error) {
-                logError(
-                    error,
-                    `per-monitor-screen-blank: Failed to create profile settings for ${profileId}`,
-                );
-                throw error;
-            }
+            return deps.createProfileSettings(profileId);
         };
     }
 
@@ -58,97 +53,72 @@ export class ProfileRegistry {
         }
         this.#destroyed = true;
 
-        // Disconnect all signals
         for (const id of this.#signalConnections) {
             try {
-                this.#mainSettings.disconnect(id);
+                this.#settings.disconnect(id);
             } catch {
                 // Ignore disconnect errors
             }
         }
         this.#signalConnections.length = 0;
 
-        // Destroy all profile stores
         for (const store of this.#profileStores.values()) {
             store.destroy();
         }
         this.#profileStores.clear();
+        this.#pendingCreatedIds.clear();
     }
 
     createProfile(
-        id: ProfileId,
         name: string,
-        initialModes?: Map<string, MonitorMode>,
+        initialModes?: Record<string, MonitorMode>,
     ): ProfileStore {
-        if (this.#profileStores.has(id)) {
-            throw new Error(`Profile ${id} already exists`);
-        }
+        const id = this.#generateId();
 
-        // Add to profile-ids list
-        const profileIds = this.#mainSettings.get_strv(
-            GSETTINGS_KEYS.profileIds,
-        );
-        if (!profileIds.includes(id)) {
-            const newIds = [...profileIds, id];
-            const saved = this.#mainSettings.set_strv(
-                GSETTINGS_KEYS.profileIds,
-                newIds,
-            );
-            if (!saved) {
-                throw new Error(
-                    `failed to add profile ${id} to profile-ids list`,
-                );
-            }
-        }
-
-        // Create the profile store
-        const profileSettings = this.#gsettingsFactory(id);
-        const nameSet = profileSettings.set_string('name', name || id);
-        const modesSet = profileSettings.set_string('monitor-modes', '{}');
-        if (!nameSet || !modesSet) {
-            throw new Error(`failed to initialize profile ${id} settings`);
-        }
-
-        // Create and store the ProfileStore
         const store = new ProfileStore({
             profileId: id,
-            settings: profileSettings,
-            eventEmitter: this.#eventBus,
+            settings: this.#gsettingsFactory(id),
+            eventEmitter: this.#eventEmitter,
         });
-        this.#profileStores.set(id, store);
 
-        // Set initial modes if provided
+        store.setName(name);
         if (initialModes) {
-            for (const [monitorId, mode] of initialModes.entries()) {
+            for (const [monitorId, mode] of Object.entries(initialModes)) {
                 store.setMonitorMode(monitorId, mode);
             }
         }
 
-        // Emit profile-created event after profile is fully set up
-        this.#eventBus.emit({
-            type: 'profile-created',
-            payload: { profileId: id },
-        });
+        const profileIds = this.#settings.get_strv(GSETTINGS_KEYS.profileIds);
+
+        const newIds = [...profileIds, id];
+        const saved = this.#settings.set_strv(
+            GSETTINGS_KEYS.profileIds,
+            newIds,
+        );
+        if (!saved) {
+            throw new Error(`failed to add profile ${id} to profile-ids list`);
+        }
+
+        this.#profileStores.set(id, store);
+        this.#pendingCreatedIds.add(id);
 
         return store;
     }
 
-    deleteProfile(id: ProfileId): boolean {
+    deleteProfile(id: ProfileId): void {
         const store = this.#profileStores.get(id);
         if (!store) {
-            return false;
+            throw new Error(`profile ${id} not found`);
         }
         store.destroy();
         this.#profileStores.delete(id);
 
         // Remove from profile-ids list
-        const profileIds = this.#mainSettings.get_strv(
-            GSETTINGS_KEYS.profileIds,
-        );
+        const profileIds = this.#settings.get_strv(GSETTINGS_KEYS.profileIds);
         const index = profileIds.indexOf(id);
         if (index !== -1) {
             const newIds = profileIds.filter((_, index_) => index_ !== index);
-            const saved = this.#mainSettings.set_strv(
+            const saved = this.#settings.set_strv(
                 GSETTINGS_KEYS.profileIds,
                 newIds,
             );
@@ -166,7 +136,7 @@ export class ProfileRegistry {
             if (remainingIds.length > 0) {
                 this.setActiveProfileId(remainingIds[0]!);
             } else {
-                const cleared = this.#mainSettings.set_string(
+                const cleared = this.#settings.set_string(
                     GSETTINGS_KEYS.activeProfileId,
                     '',
                 );
@@ -177,19 +147,46 @@ export class ProfileRegistry {
                 }
             }
         }
-        return true;
     }
 
-    getProfileSettings(id: ProfileId): ProfileStore | undefined {
+    getProfileStore(id: ProfileId): ProfileStore | undefined {
         return this.#profileStores.get(id);
     }
 
     getProfileIds(): ProfileId[] {
-        return this.#mainSettings.get_strv(GSETTINGS_KEYS.profileIds);
+        return this.#settings.get_strv(GSETTINGS_KEYS.profileIds);
     }
 
     getActiveProfileId(): ProfileId {
-        return this.#mainSettings.get_string(GSETTINGS_KEYS.activeProfileId);
+        return this.#settings.get_string(GSETTINGS_KEYS.activeProfileId);
+    }
+
+    getProfile(id: ProfileId): Profile | undefined {
+        const store = this.#profileStores.get(id);
+        if (!store) {
+            return undefined;
+        }
+        return {
+            id: store.id,
+            name: store.getName(),
+            monitorModes: store.getMonitorModes(),
+        };
+    }
+
+    getAllProfiles(): Profile[] {
+        return [...this.#profileStores.values()].map((store) => ({
+            id: store.id,
+            name: store.getName(),
+            monitorModes: store.getMonitorModes(),
+        }));
+    }
+
+    getActiveProfile(): Profile | undefined {
+        const activeId = this.getActiveProfileId();
+        if (!activeId) {
+            return undefined;
+        }
+        return this.getProfile(activeId);
     }
 
     setActiveProfileId(id: ProfileId): void {
@@ -203,7 +200,7 @@ export class ProfileRegistry {
             throw new Error(`Profile ${id} does not exist`);
         }
 
-        const saved = this.#mainSettings.set_string(
+        const saved = this.#settings.set_string(
             GSETTINGS_KEYS.activeProfileId,
             id,
         );
@@ -212,47 +209,16 @@ export class ProfileRegistry {
         }
     }
 
-    onProfileSwitched(
-        callback: (payload: { profileId: ProfileId }) => void,
-    ): () => void {
-        return this.#eventBus.on('profile-switched', callback);
-    }
-
-    onMonitorModeChanged(
-        callback: (payload: {
-            profileId: ProfileId;
-            monitorId: string;
-            mode: MonitorMode;
-        }) => void,
-    ): () => void {
-        return this.#eventBus.on('monitor-mode-changed', callback);
-    }
-
-    ensureDefaultProfile(): ProfileStore {
+    ensureDefaultProfile(): void {
         const profileIds = this.getProfileIds();
         if (profileIds.length === 0) {
-            const store = this.createProfile('default', 'Default');
-            this.setActiveProfileId('default');
-            return store;
+            const store = this.createProfile('Default');
+            this.setActiveProfileId(store.id);
         }
+    }
 
-        const activeId = this.getActiveProfileId();
-        if (!activeId) {
-            // No active profile set, activate the first available
-            const firstId = profileIds[0]!;
-            this.setActiveProfileId(firstId);
-            return this.getProfileSettings(firstId)!;
-        }
-
-        const existingStore = this.getProfileSettings(activeId);
-        if (existingStore) {
-            return existingStore;
-        }
-
-        // Active profile references a non-existent profile, fallback to first available
-        const firstId = profileIds[0]!;
-        this.setActiveProfileId(firstId);
-        return this.getProfileSettings(firstId)!;
+    #generateId(): string {
+        return GLib.uuid_string_random();
     }
 
     #syncProfileStores(): void {
@@ -269,11 +235,10 @@ export class ProfileRegistry {
         // Create stores for new profiles
         for (const id of profileIds) {
             if (!this.#profileStores.has(id)) {
-                const profileSettings = this.#gsettingsFactory(id);
                 const store = new ProfileStore({
                     profileId: id,
-                    settings: profileSettings,
-                    eventEmitter: this.#eventBus,
+                    settings: this.#gsettingsFactory(id),
+                    eventEmitter: this.#eventEmitter,
                 });
                 this.#profileStores.set(id, store);
             }
@@ -281,11 +246,25 @@ export class ProfileRegistry {
     }
 
     #wireMainSignals(): void {
-        const profileIdsChangedId = this.#mainSettings.connect(
+        const profileIdsChangedId = this.#settings.connect(
             gsettingsChangedSignal(GSETTINGS_KEYS.profileIds),
             () => {
+                const knownIds = new Set(this.#profileStores.keys());
                 this.#syncProfileStores();
-                this.#eventBus.emit({
+
+                for (const id of this.#profileStores.keys()) {
+                    if (
+                        this.#pendingCreatedIds.delete(id) ||
+                        !knownIds.has(id)
+                    ) {
+                        this.#eventEmitter.emit({
+                            type: 'profile-created',
+                            payload: { profileId: id },
+                        });
+                    }
+                }
+
+                this.#eventEmitter.emit({
                     type: 'profile-ids-changed',
                     payload: {},
                 });
@@ -293,11 +272,11 @@ export class ProfileRegistry {
         );
         this.#signalConnections.push(profileIdsChangedId);
 
-        const activeProfileChangedId = this.#mainSettings.connect(
+        const activeProfileChangedId = this.#settings.connect(
             gsettingsChangedSignal(GSETTINGS_KEYS.activeProfileId),
             () => {
                 const newId = this.getActiveProfileId();
-                this.#eventBus.emit({
+                this.#eventEmitter.emit({
                     type: 'profile-switched',
                     payload: {
                         profileId: newId,

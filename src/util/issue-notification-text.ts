@@ -1,4 +1,4 @@
-import type { IssueReport } from './logger.js';
+import { IssueReport } from './logger.js';
 
 export function buildIssueNotificationText(issue: Pick<IssueReport, 'level'>) {
     const title =

@@ -1,41 +1,31 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { listCurrentMonitorIdentities } from './mutter-display-config.js';
-import type { LoggerPort } from '../../util/logger.js';
-import {
-    gobjectConnectObject,
-    gobjectDisconnectObject,
-} from '../shared/gobject-helpers.js';
-import type { PlatformEventEmitter } from '../../ports/index.js';
-import type { MonitorIdentity } from '../../domain/ports-domain.js';
+import { LoggerPort } from '../../util/logger.js';
+import { PlatformEventEmitter } from '../../app/ports/platform-events.js';
+import { GnomeMonitorIndex } from './gnome-monitor-index.js';
+import { MonitorIdentity } from '../../domain/types.js';
 
-interface GnomeMonitorTrackerOptions {
-    readonly logger: LoggerPort;
-    readonly eventEmitter: PlatformEventEmitter;
-}
-
-export interface MonitorIndexResolver {
-    getMonitorIdByIndex(index: number): string;
-    tryGetMonitorIdByIndex(index: number): string | undefined;
-    getIndexByMonitorId(id: string): number;
-    tryGetIndexByMonitorId(id: string): number | undefined;
-}
-
-export class GnomeMonitorTracker implements MonitorIndexResolver {
+export class GnomeMonitorTracker implements GnomeMonitorIndex {
     readonly #logger: LoggerPort;
     readonly #eventEmitter: PlatformEventEmitter;
     readonly #knownMonitorIds: Set<string>;
     readonly #indexById: Map<string, number>;
 
-    constructor(options: GnomeMonitorTrackerOptions) {
-        this.#logger = options.logger;
-        this.#eventEmitter = options.eventEmitter;
+    constructor({
+        logger,
+        eventEmitter,
+    }: {
+        readonly logger: LoggerPort;
+        readonly eventEmitter: PlatformEventEmitter;
+    }) {
+        this.#logger = logger;
+        this.#eventEmitter = eventEmitter;
         this.#knownMonitorIds = new Set();
         this.#indexById = new Map();
     }
 
     start(): void {
-        gobjectConnectObject(
-            Main.layoutManager,
+        Main.layoutManager.connectObject(
             'monitors-changed',
             this.#onMonitorsChanged.bind(this),
             this,
@@ -73,7 +63,7 @@ export class GnomeMonitorTracker implements MonitorIndexResolver {
 
     stop(): void {
         try {
-            gobjectDisconnectObject(Main.layoutManager, this);
+            Main.layoutManager.disconnectObject(this);
         } catch {
             this.#logger.warn('failed to disconnect monitors-changed signal');
         }

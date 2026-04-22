@@ -1,14 +1,12 @@
 import Gio from 'gi://Gio';
-import type {
-    PlatformEventEmitter,
-    SettingsGateway,
-} from '../../ports/index.js';
+import { PlatformEventEmitter } from '../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../app/ports/settings.js';
 import {
     DEFAULT_MONITOR_MODE,
     type MonitorMode,
 } from '../../domain/monitor-mode.js';
-import type { Profile, ProfileId } from '../../domain/ports-domain.js';
-import type { Logger } from '../../util/logger.js';
+import { Profile, ProfileId } from '../../domain/types.js';
+import { Logger } from '../../util/logger.js';
 import {
     GSETTINGS_KEYS,
     gsettingsChangedSignal,
@@ -30,16 +28,11 @@ export class GnomeSettingsGateway implements SettingsGateway {
     #started = false;
     #destroyed = false;
 
-    constructor(options: {
-        settings: Gio.Settings;
-        eventEmitter: PlatformEventEmitter;
-        profileRegistry: ProfileRegistry;
-        logger: Logger;
-    }) {
-        this.#settings = options.settings;
-        this.#eventEmitter = options.eventEmitter;
-        this.#profileRegistry = options.profileRegistry;
-        this.#logger = options.logger;
+    constructor(deps: GnomeSettingsGatewayDeps) {
+        this.#settings = deps.settings;
+        this.#eventEmitter = deps.eventEmitter;
+        this.#profileRegistry = deps.profileRegistry;
+        this.#logger = deps.logger;
     }
 
     start(): void {
@@ -118,7 +111,7 @@ export class GnomeSettingsGateway implements SettingsGateway {
     // ============================================================================
 
     ensureStorage(): void {
-        void this.#profileRegistry.ensureDefaultProfile();
+        this.#profileRegistry.ensureDefaultProfile();
     }
 
     getProfiles(): ReadonlyArray<Readonly<Profile>> {
@@ -126,7 +119,7 @@ export class GnomeSettingsGateway implements SettingsGateway {
         const profiles: Profile[] = [];
 
         for (const id of profileIds) {
-            const store = this.#profileRegistry.getProfileSettings(id);
+            const store = this.#profileRegistry.getProfileStore(id);
             if (!store) {
                 this.#logger.warn(`Profile not found in profile map: ${id}`);
                 continue;
@@ -150,7 +143,7 @@ export class GnomeSettingsGateway implements SettingsGateway {
 
     getActiveProfile(): Readonly<Profile> {
         const activeId = this.getActiveProfileId();
-        const store = this.#profileRegistry.getProfileSettings(activeId);
+        const store = this.#profileRegistry.getProfileStore(activeId);
 
         if (!store) {
             throw new Error(
@@ -179,7 +172,7 @@ export class GnomeSettingsGateway implements SettingsGateway {
             return DEFAULT_MONITOR_MODE;
         }
 
-        const store = this.#profileRegistry.getProfileSettings(activeId);
+        const store = this.#profileRegistry.getProfileStore(activeId);
 
         if (!store) {
             this.#logger.warn(
@@ -194,7 +187,7 @@ export class GnomeSettingsGateway implements SettingsGateway {
     getMonitorModes(
         profileId: ProfileId,
     ): Readonly<Record<string, MonitorMode>> {
-        const store = this.#profileRegistry.getProfileSettings(profileId);
+        const store = this.#profileRegistry.getProfileStore(profileId);
 
         if (!store) {
             throw new Error(
@@ -214,7 +207,7 @@ export class GnomeSettingsGateway implements SettingsGateway {
 
     setMonitorMode(monitorId: string, mode: MonitorMode): void {
         const activeId = this.getActiveProfileId();
-        const store = this.#profileRegistry.getProfileSettings(activeId);
+        const store = this.#profileRegistry.getProfileStore(activeId);
 
         if (!store) {
             this.#logger.warn(
@@ -224,10 +217,6 @@ export class GnomeSettingsGateway implements SettingsGateway {
         }
 
         store.setMonitorMode(monitorId, mode);
-    }
-
-    switchProfile(profileId: ProfileId): void {
-        this.#profileRegistry.setActiveProfileId(profileId);
     }
 
     // ============================================================================
@@ -332,4 +321,11 @@ export class GnomeSettingsGateway implements SettingsGateway {
             });
         });
     }
+}
+
+interface GnomeSettingsGatewayDeps {
+    settings: Gio.Settings;
+    eventEmitter: PlatformEventEmitter;
+    profileRegistry: ProfileRegistry;
+    logger: Logger;
 }

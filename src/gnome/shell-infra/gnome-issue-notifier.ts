@@ -2,14 +2,10 @@ import Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { GSETTINGS_KEYS } from '../gsettings-schema-keys.js';
 import { buildIssueNotificationText } from '../../util/issue-notification-text.js';
-import type { IssueReport } from '../../util/logger.js';
+import { IssueReport } from '../../util/logger.js';
 
 const MS_PER_SECOND = 1000;
 const ISSUE_NOTIFY_MIN_INTERVAL_SECONDS = 1;
-
-interface GnomeIssueNotifierOptions {
-    readonly settings: Gio.Settings;
-}
 
 /**
  * Handles issue notification dispatch with deduplication.
@@ -19,7 +15,7 @@ export class GnomeIssueNotifier {
     private readonly _settings: Gio.Settings;
     private _lastNotifiedAt: number | undefined;
 
-    constructor({ settings }: GnomeIssueNotifierOptions) {
+    constructor({ settings }: { readonly settings: Gio.Settings }) {
         this._settings = settings;
         this._lastNotifiedAt = undefined;
     }

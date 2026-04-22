@@ -1,12 +1,12 @@
-import type { Overlay } from '../../../ports/index.js';
-import type { Logger } from '../../../util/logger.js';
-import type { MonitorState } from '../../../domain/monitor-state.js';
-import { StateChangedEvent } from '../../services/app-event-bus.js';
+import { Overlay } from '../../../app/ports/overlay.js';
+import { Logger } from '../../../util/logger.js';
+import { MonitorState } from '../../../domain/monitor-state.js';
+import { StateChangedEvent } from '../../app-events.js';
 
-type MonitorOverlayDeps = {
+interface MonitorOverlayDeps {
     overlay: Overlay;
     logger: Logger;
-};
+}
 
 export function handleOverlaySyncStateChanged(
     deps: MonitorOverlayDeps,

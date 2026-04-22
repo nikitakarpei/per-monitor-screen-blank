@@ -4,16 +4,14 @@ import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/
 import { Logger } from '../util/logger.js';
 import { ProfileRegistry } from './shared/profile-registry.js';
 import { IssueReporter } from './prefs/issue-reporter.js';
-import { buildGeneralSettingsGroup } from './prefs/general-settings-group.js';
-import { buildMonitorModesGroup } from './prefs/monitor-modes-group.js';
-import { MonitorIdentityStore } from './shared/monitor-identity-store.js';
-import { buildProfilesGroup } from './prefs/profiles-group.js';
-import { buildDiagnosticsGroup } from './prefs/diagnostics-group.js';
+import { GeneralSettingsGroup } from './prefs/general-settings-group.js';
+import { MonitorModesGroup } from './prefs/monitor-modes-group/monitor-modes-group.js';
+import { GnomeMonitorIdentityStore } from './shared/monitor-identity-store.js';
+import { ProfilesGroup } from './prefs/profiles-group/profiles-group.js';
+import { DiagnosticsGroup } from './prefs/diagnostics-group.js';
 import { GnomePlatformEventBus } from './shared/gnome-platform-event-bus.js';
 import { AppEventBus } from '../app/services/app-event-bus.js';
-
-/** Callback for refreshing UI components */
-type RefreshCallback = () => void;
+import { LogOpener } from './prefs/log-opener/log-opener.js';
 
 /**
  * Per Monitor Screen Blank extension preferences class.
@@ -22,7 +20,90 @@ type RefreshCallback = () => void;
 export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
     #schemaSource: Gio.SettingsSchemaSource | undefined = undefined;
 
-    getSettingsForSchema(schemaIdentifier: string, path: string): Gio.Settings {
+    async fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
+        const settings = this.getSettings();
+        const issueReporter = new IssueReporter(window, settings);
+        const logger = new Logger(this.metadata.uuid, (issue) =>
+            issueReporter.report(issue),
+        );
+        const platformEventBus = new GnomePlatformEventBus(logger);
+        const appEventBus = new AppEventBus({
+            platformBus: platformEventBus,
+            logger,
+        });
+        const profileRegistry = new ProfileRegistry({
+            settings,
+            eventEmitter: platformEventBus,
+            createProfileSettings: (profileId: string) =>
+                this.#getSettingsForSchema(
+                    'org.gnome.shell.extensions.per-monitor-screen-blank.profile',
+                    `/org/gnome/shell/extensions/per-monitor-screen-blank/profiles/${profileId}/`,
+                ),
+        });
+        profileRegistry.start();
+        profileRegistry.ensureDefaultProfile();
+
+        const identityStore = new GnomeMonitorIdentityStore({
+            settings,
+            logger,
+        });
+
+        const page = new Adw.PreferencesPage({ title: 'Settings' });
+
+        const generalSettingsGroup = new GeneralSettingsGroup({
+            settings,
+            window,
+            logger,
+        });
+
+        const monitorModesGroup = new MonitorModesGroup({
+            settings,
+            profileRegistry,
+            logger,
+            identityStore,
+            eventSubscriber: platformEventBus,
+        });
+
+        const profilesGroup = new ProfilesGroup({
+            settings,
+            profileRegistry,
+            window,
+            eventSubscriber: platformEventBus,
+            logger,
+        });
+
+        const logOpener = new LogOpener(window, logger);
+
+        const diagnosticsGroup = new DiagnosticsGroup({
+            logOpener,
+            logger,
+        });
+
+        page.add(monitorModesGroup);
+        page.add(generalSettingsGroup);
+        page.add(diagnosticsGroup);
+        page.add(profilesGroup);
+
+        window.add(page);
+
+        const destroyHandlerId = window.connect('destroy', () => {
+            window.disconnect(destroyHandlerId);
+            issueReporter.destroy();
+            generalSettingsGroup.destroy();
+            monitorModesGroup.destroy();
+            profilesGroup.destroy();
+            diagnosticsGroup.destroy();
+            profileRegistry.destroy();
+            appEventBus.destroy();
+            platformEventBus.destroy();
+            this.#schemaSource = undefined;
+        });
+    }
+
+    #getSettingsForSchema(
+        schemaIdentifier: string,
+        path: string,
+    ): Gio.Settings {
         if (!this.#schemaSource) {
             const schemaDirectory = this.dir.get_child('schemas');
             const schemaDirectoryPath = schemaDirectory.get_path();
@@ -44,108 +125,6 @@ export default class PerMonitorScreenBlankPrefs extends ExtensionPreferences {
             );
         }
         return new Gio.Settings({ settings_schema: schema, path });
-    }
-
-    /**
-     * Fills the preferences window with UI components.
-     * @param window - The Adw preferences window to populate
-     */
-    async fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
-        const settings = this.getSettings();
-        const issueReporter = new IssueReporter();
-        const logger = new Logger(this.metadata.uuid, (issue) =>
-            issueReporter.report(window, settings, issue),
-        );
-        const platformEventBus = new GnomePlatformEventBus(logger);
-        const appEventBus = new AppEventBus(platformEventBus, logger);
-        const profileRegistry = new ProfileRegistry({
-            settings,
-            eventBus: platformEventBus,
-            createProfileSettings: (profileId: string) =>
-                this.getSettingsForSchema(
-                    'org.gnome.shell.extensions.per-monitor-screen-blank.profile',
-                    `/org/gnome/shell/extensions/per-monitor-screen-blank/profiles/${profileId}/`,
-                ),
-        });
-        profileRegistry.start();
-        void profileRegistry.ensureDefaultProfile();
-
-        const identityStore = new MonitorIdentityStore({ settings, logger });
-
-        const page = new Adw.PreferencesPage({ title: 'Settings' });
-
-        const refreshCallbacks: RefreshCallback[] = [];
-        const addRefresh = (callback: RefreshCallback): void => {
-            refreshCallbacks.push(callback);
-        };
-        const refreshAll = (): void => {
-            for (const callback of refreshCallbacks) {
-                callback();
-            }
-        };
-
-        const { group: generalGroup, destroy: destroyGeneral } =
-            buildGeneralSettingsGroup({
-                settings,
-                window,
-                logger,
-            });
-
-        const {
-            group: monitorGroup,
-            refresh: refreshMonitor,
-            destroy: destroyMonitor,
-        } = buildMonitorModesGroup({
-            settings,
-            profileRegistry,
-            logger,
-            identityStore,
-        });
-
-        const {
-            group: profilesGroup,
-            refresh: refreshProfiles,
-            destroy: destroyProfiles,
-        } = buildProfilesGroup({
-            settings,
-            profileRegistry,
-            window,
-            onChanged: refreshAll,
-            addRefresh,
-            logger,
-        });
-
-        const { group: diagnosticsGroup, destroy: destroyDiagnostics } =
-            buildDiagnosticsGroup({
-                window,
-                logger,
-            });
-
-        page.add(monitorGroup);
-        page.add(generalGroup);
-        page.add(diagnosticsGroup);
-        page.add(profilesGroup);
-
-        // Register the refresh callbacks
-        addRefresh(refreshMonitor);
-        addRefresh(refreshProfiles);
-
-        refreshAll();
-
-        window.add(page);
-
-        const destroyHandlerId = window.connect('destroy', () => {
-            window.disconnect(destroyHandlerId);
-            issueReporter.reset();
-            destroyGeneral();
-            destroyMonitor();
-            destroyProfiles();
-            destroyDiagnostics();
-            profileRegistry.destroy();
-            appEventBus.destroy();
-            platformEventBus.destroy();
-            this.#schemaSource = undefined;
-        });
     }
 }
 

@@ -1,11 +1,9 @@
-import type {
-    MonitorDisconnectedEvent,
-    MonitorIdentityPersistence,
-} from '../../../ports/index.js';
-import type { Logger } from '../../../util/logger.js';
+import { MonitorDisconnectedEvent } from '../../../app/ports/platform-events.js';
+import { MonitorIdentityStore } from '../../../app/ports/monitors.js';
+import { Logger } from '../../../util/logger.js';
 
 interface RemoveMonitorIdentityDeps {
-    readonly identityStore: MonitorIdentityPersistence;
+    readonly identityStore: MonitorIdentityStore;
     readonly logger: Logger;
 }
 

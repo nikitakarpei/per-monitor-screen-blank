@@ -1,9 +1,16 @@
 import { buildMonitorLabel } from '../../../domain/monitor-identity.js';
-import type { MonitorIdentityPersistence } from '../../../ports/index.js';
-import type { Logger } from '../../../util/logger.js';
+import { MonitorIdentityStore } from '../../../app/ports/monitors.js';
+import { Logger } from '../../../util/logger.js';
+
+type PersistMonitorIdentityPayload = {
+    monitorId: string;
+    connector: string;
+    vendor?: string;
+    product?: string;
+};
 
 interface PersistMonitorIdentityDeps {
-    readonly identityStore: MonitorIdentityPersistence;
+    readonly identityStore: MonitorIdentityStore;
     readonly logger: Logger;
 }
 
@@ -12,12 +19,7 @@ interface PersistMonitorIdentityDeps {
  */
 export function persistMonitorIdentity(
     deps: PersistMonitorIdentityDeps,
-    payload: {
-        monitorId: string;
-        connector: string;
-        vendor?: string;
-        product?: string;
-    },
+    payload: PersistMonitorIdentityPayload,
 ): void {
     const label = buildMonitorLabel({
         vendor: payload.vendor,

@@ -1,16 +1,16 @@
-import { DeadlineScheduler } from '../../../domain/ports-domain';
-import { StateChangedEvent } from '../../services/app-event-bus';
+import { DeadlineScheduler } from '../../../app/ports/scheduler';
+import { StateChangedEvent } from '../../app-events';
 import { LoggerPort } from '../../../util/logger';
-import { SettingsGateway } from '../../../ports';
+import { SettingsGateway } from '../../../app/ports/settings.js';
 import { DEADLINE_KEYS } from '../../../domain/deadline-keys';
 import { FocusedMonitorService } from '../../services/focused-monitor-service';
 
-type AutoBlackDeadlineControlDeps = {
+interface AutoBlackDeadlineControlDeps {
     focusedMonitorService: FocusedMonitorService;
     deadlineScheduler: DeadlineScheduler;
     settingsGateway: SettingsGateway;
     logger: LoggerPort;
-};
+}
 
 /**
  * Handles the `state-changed` event and controls the auto-black deadline for the monitor.

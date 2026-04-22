@@ -1,25 +1,20 @@
 import Gio from 'gi://Gio';
 import { GSETTINGS_KEYS } from '../gsettings-schema-keys.js';
 import { Logger } from '../../util/logger.js';
-import { MonitorIdentityPersistence } from '../../ports/index.js';
+import { MonitorIdentityStore } from '../../app/ports/monitors.js';
 
 export interface KnownMonitorEntry {
     monitorId: string;
     label: string;
 }
 
-interface MonitorIdentityStoreOptions {
-    settings: Gio.Settings;
-    logger: Logger;
-}
-
-export class MonitorIdentityStore implements MonitorIdentityPersistence {
+export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
     private readonly settings: Gio.Settings;
     private readonly logger: Logger;
 
-    constructor(options: MonitorIdentityStoreOptions) {
-        this.settings = options.settings;
-        this.logger = options.logger;
+    constructor(deps: MonitorIdentityStoreDeps) {
+        this.settings = deps.settings;
+        this.logger = deps.logger;
     }
 
     /** Read all known monitor entries from GSettings */
@@ -84,4 +79,9 @@ export class MonitorIdentityStore implements MonitorIdentityPersistence {
             this.save(filtered);
         }
     }
+}
+
+interface MonitorIdentityStoreDeps {
+    settings: Gio.Settings;
+    logger: Logger;
 }

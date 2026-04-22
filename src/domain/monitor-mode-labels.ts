@@ -1,4 +1,4 @@
-import { type MonitorMode } from './monitor-mode.js';
+import { MonitorMode } from './monitor-mode.js';
 
 const MONITOR_MODE_LABELS: Readonly<Record<MonitorMode, string>> = {
     auto: 'Automatic',

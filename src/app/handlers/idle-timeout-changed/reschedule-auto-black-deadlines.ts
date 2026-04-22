@@ -1,13 +1,13 @@
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type { DeadlineScheduler } from '../../../domain/ports-domain.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { DEADLINE_KEYS } from '../../../domain/deadline-keys.js';
-import type { Logger } from '../../../util/logger.js';
+import { Logger } from '../../../util/logger.js';
 
-type RescheduleAutoBlackDeadlinesDeps = {
+interface RescheduleAutoBlackDeadlinesDeps {
     monitorRegistry: MonitorRegistry;
     deadlineScheduler: DeadlineScheduler;
     logger: Logger;
-};
+}
 
 /**
  * Handles the 'idle-timeout-changed' event by rescheduling the auto-black deadline for every monitor currently in AutoAwake state.

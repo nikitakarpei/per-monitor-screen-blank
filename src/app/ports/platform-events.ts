@@ -1,77 +1,5 @@
-import type {
-    Profile,
-    ProfileId,
-    Deadline,
-    PointerPosition,
-} from '../domain/ports-domain.js';
-import type { MonitorMode } from '../domain/monitor-mode.js';
-
-// =============================================================================
-// Port Interfaces (moved from src/app/app-ports.types.ts)
-// =============================================================================
-
-export interface Overlay {
-    showForMonitor(monitorId: string): void;
-    hideForMonitor(monitorId: string): void;
-    setFadeDuration(milliseconds: number): void;
-    setDimIntensityPercent(percent: number): void;
-}
-
-export interface PointerSource {
-    getPointerPosition(): PointerPosition;
-}
-
-export interface SettingsGateway {
-    getIdleTimeoutSeconds(): number;
-    getKeepAwakeMinutes(): number;
-    shouldMonitorAutoBlackWhenFocused(): boolean;
-    getProfiles(): ReadonlyArray<Readonly<Profile>>;
-    getActiveProfileId(): ProfileId;
-    getActiveProfile(): Readonly<Profile>;
-    setActiveProfile(profileId: ProfileId): void;
-    getMonitorMode(monitorId: string): MonitorMode;
-    getMonitorModes(
-        profileId: ProfileId,
-    ): Readonly<Record<string, MonitorMode>>;
-    setMonitorMode(monitorId: string, mode: MonitorMode): void;
-    switchProfile(profileId: ProfileId): void;
-    ensureStorage(): void;
-}
-
-export interface QuickSettings {
-    initProfiles(
-        profiles: ReadonlyArray<Readonly<Profile>>,
-        activeProfileId: ProfileId,
-    ): void;
-    syncProfiles(
-        profiles: ReadonlyArray<Readonly<Profile>>,
-        activeProfileId: ProfileId,
-    ): void;
-    visible: boolean;
-}
-
-export type ContextMenuItem = {
-    label: string;
-    onActivate: () => void;
-};
-
-export interface PointerContextMenu {
-    open(items: ContextMenuItem[]): void;
-}
-
-export interface PointerMenuKeybindingManager {
-    register(shortcut: string, onShortcut: () => void): void;
-    unregister(): void;
-}
-
-export interface MonitorIdentityPersistence {
-    upsert(entry: { monitorId: string; label: string }): void;
-    remove(monitorId: string): void;
-}
-
-// =============================================================================
-// Platform Events (renamed from PlatformSettingsEvent, enriched)
-// =============================================================================
+import { ProfileId, Deadline } from '../../domain/types.js';
+import { MonitorMode } from '../../domain/monitor-mode.js';
 
 export type ProfileIdsChangedEvent = {
     type: 'profile-ids-changed';
@@ -192,7 +120,7 @@ export interface PlatformEventEmitter {
     emit(event: PlatformEvent): void;
 }
 
-export interface PlatformEventBus extends PlatformEventEmitter {
+export interface PlatformEventSubscriber {
     on<K extends PlatformEvent['type']>(
         eventType: K,
         callback: (

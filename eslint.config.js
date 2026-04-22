@@ -21,6 +21,31 @@ const layeringRules = {
         'error',
         {
             zones: [
+                // src/util/ — innermost cross-cutting layer, must not import from any other layer
+                {
+                    target: './src/util',
+                    from: './src/domain',
+                    message:
+                        'util/ must not import from domain/ — util is cross-cutting infrastructure.',
+                },
+                {
+                    target: './src/util',
+                    from: './src/app',
+                    message:
+                        'util/ must not import from app/ — util is cross-cutting infrastructure.',
+                },
+                {
+                    target: './src/util',
+                    from: './src/gnome',
+                    message:
+                        'util/ must not import from gnome/ — util is cross-cutting infrastructure.',
+                },
+                {
+                    target: './src/util',
+                    from: './src/serialization',
+                    message:
+                        'util/ must not import from serialization/ — util is cross-cutting infrastructure.',
+                },
                 {
                     target: './src/domain',
                     from: './src/serialization',

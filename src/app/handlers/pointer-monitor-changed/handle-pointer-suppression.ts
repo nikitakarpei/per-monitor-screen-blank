@@ -1,17 +1,15 @@
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type { DeadlineScheduler } from '../../../domain/ports-domain.js';
-import type { Logger } from '../../../util/logger.js';
-import type {
-    SettingsGateway,
-    PointerMonitorChangedEvent,
-} from '../../../ports/index.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import { Logger } from '../../../util/logger.js';
+import { PointerMonitorChangedEvent } from '../../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
 
-type HandlePointerMonitorChangedDeps = {
+interface HandlePointerMonitorChangedDeps {
     monitorRegistry: MonitorRegistry;
     deadlineScheduler: DeadlineScheduler;
     logger: Logger;
     settingsGateway: SettingsGateway;
-};
+}
 
 /**
  * Handles the 'pointer-monitor-changed' event by canceling the auto-black deadline for the current monitor and scheduling it for the previous monitor.

@@ -3,10 +3,10 @@ import {
     tryTransition,
     type MonitorState,
 } from '../../domain/monitor-state.js';
-import type { LoggerPort } from '../../util/logger.js';
-import type { AppEventBus } from './app-event-bus.js';
+import { LoggerPort } from '../../util/logger.js';
+import { AppEventBus } from './app-event-bus.js';
 
-interface MonitorRegistryOptions {
+interface MonitorRegistryDeps {
     logger: LoggerPort;
     bus: AppEventBus;
 }
@@ -16,9 +16,9 @@ export class MonitorRegistry {
     private readonly _logger: LoggerPort;
     private readonly _bus: AppEventBus;
 
-    constructor(options: MonitorRegistryOptions) {
-        this._logger = options.logger;
-        this._bus = options.bus;
+    constructor(deps: MonitorRegistryDeps) {
+        this._logger = deps.logger;
+        this._bus = deps.bus;
     }
 
     get(id: string): Readonly<MonitorEntity> {

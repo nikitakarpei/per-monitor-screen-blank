@@ -1,34 +1,32 @@
-import type { Logger } from '../../../util/logger.js';
-import type {
+import { Logger } from '../../../util/logger.js';
+import {
     PointerContextMenu,
-    PointerMenuKeybindingManager,
-    PointerShortcutChangedEvent,
-    SettingsGateway,
-} from '../../../ports/index.js';
+    PointerMenuShortcutManager,
+} from '../../../app/ports/pointer-menu.js';
+import { PointerShortcutChangedEvent } from '../../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
 import { FocusedMonitorService } from '../../services/focused-monitor-service.js';
 import { MONITOR_MODES } from '../../../domain/monitor-mode.js';
 import { getMonitorModeLabel } from '../../../domain/monitor-mode-labels.js';
-
-interface RegisterShortcutDeps {
-    logger: Logger;
-    keybindingManager: PointerMenuKeybindingManager;
-    focusedMonitorService: FocusedMonitorService;
-    settingsGateway: SettingsGateway;
-    pointerContextMenu: PointerContextMenu;
-}
 
 /**
  * Handles the 'pointer-shortcut-changed' event by registering a shortcut for the pointer menu.
  */
 export function registerShortcut(
-    deps: RegisterShortcutDeps,
+    deps: {
+        logger: Logger;
+        shortcutManager: PointerMenuShortcutManager;
+        focusedMonitorService: FocusedMonitorService;
+        settingsGateway: SettingsGateway;
+        pointerContextMenu: PointerContextMenu;
+    },
     payload: PointerShortcutChangedEvent['payload'],
 ): void {
     const shortcut = payload.shortcut[0];
     deps.logger.info(`pointer shortcut changed: ${shortcut ?? 'none'}`);
-    deps.keybindingManager.unregister();
+    deps.shortcutManager.unregister();
     if (shortcut) {
-        deps.keybindingManager.register(shortcut, () => {
+        deps.shortcutManager.register(shortcut, () => {
             const focused = deps.focusedMonitorService.getFocusedMonitor();
             if (!focused) {
                 deps.logger.warn('no focused monitor found');

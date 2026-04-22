@@ -1,9 +1,6 @@
 import Gio from 'gi://Gio';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-import {
-    registerAppEventHandlers,
-    type EventHandlerDeps,
-} from '../app/app-event-handlers.js';
+import { registerAppEventHandlers } from '../app/app-event-handlers.js';
 import { FocusedMonitorService } from '../app/services/focused-monitor-service.js';
 import { ModeStateResolver } from '../app/services/mode-state-resolver.js';
 import { AppEventBus } from '../app/services/app-event-bus.js';
@@ -14,10 +11,10 @@ import { GnomeMonitorTracker } from './shell-infra/gnome-monitor-tracker.js';
 import { GnomeDeadlineScheduler } from './shared/gnome-deadline-scheduler.js';
 import { GnomeSettingsGateway } from './shared/gnome-settings-gateway.js';
 import { ProfileRegistry } from './shared/profile-registry.js';
-import { PointerMenuKeybindingManager } from './shell-infra/pointer-menu-keybinding-manager.js';
+import { GnomePointerMenuShortcutManager } from './shell-infra/pointer-menu-keybinding-manager.js';
 import { GnomeQuickSettings } from './shell-ui/gnome-quick-settings.js';
 import { GnomePointerContextMenu } from './shell-ui/gnome-pointer-context-menu.js';
-import { MonitorIdentityStore } from './shared/monitor-identity-store.js';
+import { GnomeMonitorIdentityStore } from './shared/monitor-identity-store.js';
 import { GnomeIssueNotifier } from './shell-infra/gnome-issue-notifier.js';
 import { GnomePreferencesOpener } from './shell-infra/gnome-preferences-opener.js';
 import { Logger } from '../util/logger.js';
@@ -28,7 +25,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     private _logger: Logger | undefined;
     private _tracker: GnomeMonitorTracker | undefined;
     private _profileRegistry: ProfileRegistry | undefined;
-    private _identityStore: MonitorIdentityStore | undefined;
+    private _identityStore: GnomeMonitorIdentityStore | undefined;
     private _notifier: GnomeIssueNotifier | undefined;
     private _preferencesOpener: GnomePreferencesOpener | undefined;
     #schemaSource: Gio.SettingsSchemaSource | undefined;
@@ -39,7 +36,9 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     private _overlay: GnomeOverlayManager | undefined;
     private _quickSettings: GnomeQuickSettings | undefined;
     private _pointerContextMenu: GnomePointerContextMenu | undefined;
-    private _keybindingManager: PointerMenuKeybindingManager | undefined;
+    private _pointerMenuShortcutManager:
+        | GnomePointerMenuShortcutManager
+        | undefined;
     private _platformBus: GnomePlatformEventBus | undefined;
 
     enable(): void {
@@ -72,7 +71,10 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             this._logger.info('extension enabled');
 
             this._platformBus = new GnomePlatformEventBus(this._logger);
-            this._bus = new AppEventBus(this._platformBus, this._logger);
+            this._bus = new AppEventBus({
+                platformBus: this._platformBus,
+                logger: this._logger,
+            });
 
             const preferencesOpener = new GnomePreferencesOpener({
                 openPreferences: async () => {
@@ -84,7 +86,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             // Create ProfileRegistry for per-profile storage with factory
             this._profileRegistry = new ProfileRegistry({
                 settings,
-                eventBus: this._platformBus,
+                eventEmitter: this._platformBus,
                 createProfileSettings: (profileId: string) =>
                     this.getSettingsForSchema(
                         'org.gnome.shell.extensions.per-monitor-screen-blank.profile',
@@ -114,13 +116,14 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             this._overlay = new GnomeOverlayManager({
                 logger: this._logger,
                 indexResolver: this._tracker,
-                platformBus: this._platformBus,
+                eventSubscriber: this._platformBus,
             });
 
-            this._keybindingManager = new PointerMenuKeybindingManager({
-                settings,
-                logger: this._logger,
-            });
+            this._pointerMenuShortcutManager =
+                new GnomePointerMenuShortcutManager({
+                    settings,
+                    logger: this._logger,
+                });
 
             this._pointerContextMenu = new GnomePointerContextMenu({
                 logger: this._logger,
@@ -153,7 +156,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
                 focusedMonitorService,
             });
 
-            const identityStore = new MonitorIdentityStore({
+            const identityStore = new GnomeMonitorIdentityStore({
                 settings,
                 logger: this._logger,
             });
@@ -163,19 +166,16 @@ export default class PerMonitorScreenBlankExtension extends Extension {
                 bus: this._bus!,
                 logger: this._logger,
                 settingsGateway: this._settingsGateway!,
-                pointerSource: this._pointerSource!,
                 deadlineScheduler: this._deadlineScheduler!,
                 overlay: this._overlay!,
                 pointerContextMenu: this._pointerContextMenu!,
                 indicatorControls: this._quickSettings!,
-                keybindingManager: this._keybindingManager!,
+                pointerMenuShortcutManager: this._pointerMenuShortcutManager!,
                 monitorRegistry: this._monitorRegistry!,
-                indexResolver: this._tracker!,
                 focusedMonitorService,
                 modeStateResolver,
                 identityStore,
-                profileRegistry: this._profileRegistry!,
-            } as EventHandlerDeps);
+            });
 
             this._tracker!.start();
 
@@ -213,7 +213,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         this._overlay?.disable();
         this._quickSettings?.destroy();
         this._pointerContextMenu?.destroy();
-        this._keybindingManager?.unregister();
+        this._pointerMenuShortcutManager?.unregister();
         this._bus?.destroy();
         this._platformBus?.destroy();
 
@@ -225,7 +225,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         this._overlay = undefined;
         this._quickSettings = undefined;
         this._pointerContextMenu = undefined;
-        this._keybindingManager = undefined;
+        this._pointerMenuShortcutManager = undefined;
         this._notifier = undefined;
         this._preferencesOpener = undefined;
 

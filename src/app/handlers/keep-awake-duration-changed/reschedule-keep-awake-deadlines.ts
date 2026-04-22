@@ -1,14 +1,14 @@
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type { DeadlineScheduler } from '../../../domain/ports-domain.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { DEADLINE_KEYS } from '../../../domain/deadline-keys.js';
-import { KeepAwakeDurationChangedEvent } from '../../../ports/index.js';
+import { KeepAwakeDurationChangedEvent } from '../../../app/ports/platform-events.js';
 import { LoggerPort } from '../../../util/logger.js';
 
-type RescheduleKeepAwakeDeadlinesDeps = {
+interface RescheduleKeepAwakeDeadlinesDeps {
     monitorRegistry: MonitorRegistry;
     deadlineScheduler: DeadlineScheduler;
     logger: LoggerPort;
-};
+}
 
 /**
  * Restarts keep-awake expiry timers for monitors in `keep-awake` mode with the new duration.

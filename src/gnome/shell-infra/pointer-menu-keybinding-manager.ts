@@ -2,24 +2,24 @@ import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import type { PointerMenuKeybindingManager as IPointerMenuKeybindingManager } from '../../ports/index.js';
-import type { Logger } from '../../util/logger.js';
+import { PointerMenuShortcutManager } from '../../app/ports/pointer-menu.js';
+import { Logger } from '../../util/logger.js';
 
 const GSETTINGS_KEY = 'pointer-menu-shortcut';
 
-interface PointerMenuKeybindingManagerOptions {
+interface GnomePointerMenuShortcutManagerDeps {
     settings: Gio.Settings;
     logger: Logger;
 }
 
-export class PointerMenuKeybindingManager implements IPointerMenuKeybindingManager {
+export class GnomePointerMenuShortcutManager implements PointerMenuShortcutManager {
     private _settings: Gio.Settings;
     private _logger: Logger;
     private _registered: boolean;
 
-    constructor(options: PointerMenuKeybindingManagerOptions) {
-        this._settings = options.settings;
-        this._logger = options.logger;
+    constructor(deps: GnomePointerMenuShortcutManagerDeps) {
+        this._settings = deps.settings;
+        this._logger = deps.logger;
         this._registered = false;
     }
 

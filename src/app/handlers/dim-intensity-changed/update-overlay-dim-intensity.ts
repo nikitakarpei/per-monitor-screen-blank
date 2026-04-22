@@ -1,8 +1,8 @@
-import type { Overlay } from '../../../ports/index.js';
+import { Overlay } from '../../../app/ports/overlay.js';
 
-type UpdateOverlayDimIntensityDeps = {
+interface UpdateOverlayDimIntensityDeps {
     overlay: Overlay;
-};
+}
 
 /**
  * Handles the 'dim-intensity-changed' event by updating the overlay dim intensity.

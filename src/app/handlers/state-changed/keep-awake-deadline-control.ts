@@ -1,14 +1,14 @@
-import { DEADLINE_KEYS } from '../../../domain/deadline-keys';
-import { DeadlineScheduler } from '../../../domain/ports-domain';
-import { SettingsGateway } from '../../../ports';
-import { LoggerPort } from '../../../util/logger';
-import { StateChangedEvent } from '../../services/app-event-bus';
+import { DEADLINE_KEYS } from '../../../domain/deadline-keys.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
+import { LoggerPort } from '../../../util/logger.js';
+import { StateChangedEvent } from '../../app-events.js';
 
-type KeepAwakeDeadlineControlDeps = {
+interface KeepAwakeDeadlineControlDeps {
     deadlineScheduler: DeadlineScheduler;
     settingsGateway: SettingsGateway;
     logger: LoggerPort;
-};
+}
 
 export function keepAwakeDeadlineControl(
     deps: KeepAwakeDeadlineControlDeps,

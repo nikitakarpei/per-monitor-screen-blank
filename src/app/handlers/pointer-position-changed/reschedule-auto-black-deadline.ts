@@ -1,18 +1,16 @@
 import { DEADLINE_KEYS } from '../../../domain/deadline-keys.js';
-import type { DeadlineScheduler } from '../../../domain/ports-domain.js';
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type {
-    SettingsGateway,
-    PointerPositionChangedEvent,
-} from '../../../ports/index.js';
-import type { Logger } from '../../../util/logger.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { PointerPositionChangedEvent } from '../../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
+import { Logger } from '../../../util/logger.js';
 
-type RescheduleAutoBlackDeadlineDeps = {
+interface RescheduleAutoBlackDeadlineDeps {
     monitorRegistry: MonitorRegistry;
     deadlineScheduler: DeadlineScheduler;
     settingsGateway: SettingsGateway;
     logger: Logger;
-};
+}
 
 /**
  * Reschedules the auto-black deadline for the pointer monitor based on the pointer position and the idle timeout.

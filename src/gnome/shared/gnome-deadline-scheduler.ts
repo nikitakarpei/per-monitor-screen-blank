@@ -1,20 +1,8 @@
 import GLib from 'gi://GLib';
-import type { DeadlineKey } from '../../domain/deadline-keys.js';
-import type { DeadlineScheduler } from '../../domain/ports-domain.js';
-import type { Logger } from '../../util/logger.js';
-import { PlatformEventEmitter } from '../../ports/index.js';
-
-interface ScheduleEntry {
-    readonly sourceId: number;
-    readonly token: number;
-    readonly deadlineKey: DeadlineKey;
-    readonly monitorId: string;
-}
-
-interface GnomeDeadlineSchedulerOptions {
-    eventEmitter: PlatformEventEmitter;
-    logger: Logger;
-}
+import { DeadlineKey } from '../../domain/deadline-keys.js';
+import { DeadlineScheduler } from '../../app/ports/scheduler.js';
+import { Logger } from '../../util/logger.js';
+import { PlatformEventEmitter } from '../../app/ports/platform-events.js';
 
 /**
  * GNOME-specific implementation of DeadlineScheduler using GLib timeouts.
@@ -26,9 +14,9 @@ export class GnomeDeadlineScheduler implements DeadlineScheduler {
     readonly #entries: Map<string, ScheduleEntry> = new Map();
     readonly #tokens: Map<string, number> = new Map();
 
-    constructor(options: GnomeDeadlineSchedulerOptions) {
-        this.#eventEmitter = options.eventEmitter;
-        this.#logger = options.logger;
+    constructor(deps: GnomeDeadlineSchedulerDeps) {
+        this.#eventEmitter = deps.eventEmitter;
+        this.#logger = deps.logger;
     }
 
     schedule(
@@ -136,4 +124,16 @@ export class GnomeDeadlineScheduler implements DeadlineScheduler {
     #buildKey(deadlineKey: DeadlineKey, monitorId: string): string {
         return `${monitorId}:${deadlineKey}`;
     }
+}
+
+type ScheduleEntry = {
+    readonly sourceId: number;
+    readonly token: number;
+    readonly deadlineKey: DeadlineKey;
+    readonly monitorId: string;
+};
+
+interface GnomeDeadlineSchedulerDeps {
+    eventEmitter: PlatformEventEmitter;
+    logger: Logger;
 }

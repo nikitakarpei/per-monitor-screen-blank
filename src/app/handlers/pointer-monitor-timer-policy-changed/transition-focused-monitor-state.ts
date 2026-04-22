@@ -1,5 +1,5 @@
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type { PointerMonitorTimerPolicyChangedEvent } from '../../../ports/index.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { PointerMonitorTimerPolicyChangedEvent } from '../../../app/ports/platform-events.js';
 import { FocusedMonitorService } from '../../services/focused-monitor-service.js';
 import {
     isAutoMonitorState,
@@ -7,7 +7,7 @@ import {
 } from '../../../domain/monitor-state.js';
 import { LoggerPort } from '../../../util/logger.js';
 
-interface RescheduleDeadlinesDeps {
+interface TransitionFocusedMonitorStateDeps {
     focusedMonitorService: FocusedMonitorService;
     monitorRegistry: MonitorRegistry;
     logger: LoggerPort;
@@ -17,7 +17,7 @@ interface RescheduleDeadlinesDeps {
  * Handles the 'pointer-monitor-timer-policy-changed' event by transitioning the focused monitor to AutoPaused or AutoAwake state.
  */
 export function transitionFocusedMonitorState(
-    deps: RescheduleDeadlinesDeps,
+    deps: TransitionFocusedMonitorStateDeps,
     payload: PointerMonitorTimerPolicyChangedEvent['payload'],
 ): void {
     const focused = deps.focusedMonitorService.getFocusedMonitor();

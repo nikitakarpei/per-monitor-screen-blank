@@ -1,14 +1,11 @@
-import { ProfileCreatedEvent, SettingsGateway } from '../../../ports';
-
-interface SetActiveProfileDeps {
-    settingsGateway: SettingsGateway;
-}
+import { ProfileCreatedEvent } from '../../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
 
 /**
  * Handles the 'profile-created' event by setting the active profile.
  */
 export function setActiveProfile(
-    deps: SetActiveProfileDeps,
+    deps: { settingsGateway: SettingsGateway },
     payload: ProfileCreatedEvent['payload'],
 ): void {
     deps.settingsGateway.setActiveProfile(payload.profileId);

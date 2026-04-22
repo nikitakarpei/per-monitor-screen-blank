@@ -1,19 +1,17 @@
-import type { DeadlineScheduler } from '../domain/ports-domain.js';
+import { DeadlineScheduler } from './ports/scheduler.js';
 
-import type {
-    PointerMenuKeybindingManager,
-    Overlay,
+import { SettingsGateway, QuickSettings } from './ports/settings.js';
+import { Overlay } from './ports/overlay.js';
+import {
     PointerContextMenu,
-    PointerSource,
-    QuickSettings,
-    SettingsGateway,
-    MonitorIdentityPersistence,
-} from '../ports/index.js';
+    PointerMenuShortcutManager,
+} from './ports/pointer-menu.js';
+import { MonitorIdentityStore } from './ports/monitors.js';
 
-import type { AppEventBus } from './services/app-event-bus.js';
-import type { MonitorRegistry } from './services/monitor-registry.js';
-import type { FocusedMonitorService } from './services/focused-monitor-service.js';
-import type { Logger } from '../util/logger.js';
+import { AppEventBus } from './services/app-event-bus.js';
+import { MonitorRegistry } from './services/monitor-registry.js';
+import { FocusedMonitorService } from './services/focused-monitor-service.js';
+import { Logger } from '../util/logger.js';
 import { ModeStateResolver } from './services/mode-state-resolver.js';
 
 import { applyModeTransitions } from './handlers/profile-switched/apply-mode-transitions.js';
@@ -43,21 +41,20 @@ import { autoBlackDeadlineControl } from './handlers/state-changed/auto-black-de
 import { setActiveProfile } from './handlers/profile-created/set-active-profile.js';
 import { keepAwakeDeadlineControl } from './handlers/state-changed/keep-awake-deadline-control.js';
 
-export type EventHandlerDeps = {
+interface EventHandlerDeps {
     bus: AppEventBus;
     logger: Logger;
     settingsGateway: SettingsGateway;
-    pointerSource: PointerSource;
     deadlineScheduler: DeadlineScheduler;
     overlay: Overlay;
     indicatorControls: QuickSettings;
     pointerContextMenu: PointerContextMenu;
-    keybindingManager: PointerMenuKeybindingManager;
+    pointerMenuShortcutManager: PointerMenuShortcutManager;
     monitorRegistry: MonitorRegistry;
     focusedMonitorService: FocusedMonitorService;
     modeStateResolver: ModeStateResolver;
-    identityStore: MonitorIdentityPersistence;
-};
+    identityStore: MonitorIdentityStore;
+}
 
 export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('state-changed', (payload) =>
@@ -305,7 +302,7 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
         registerShortcut(
             {
                 logger: deps.logger,
-                keybindingManager: deps.keybindingManager,
+                shortcutManager: deps.pointerMenuShortcutManager,
                 focusedMonitorService: deps.focusedMonitorService,
                 settingsGateway: deps.settingsGateway,
                 pointerContextMenu: deps.pointerContextMenu,

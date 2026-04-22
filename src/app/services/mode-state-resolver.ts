@@ -1,10 +1,12 @@
-import type { SettingsGateway } from '../../ports/index.js';
-import type { FocusedMonitorService } from './focused-monitor-service.js';
-import { modeToInitialState } from '../../domain/monitor-state.js';
-import type { MonitorMode } from '../../domain/monitor-mode.js';
-import type { MonitorState } from '../../domain/monitor-state.js';
+import { SettingsGateway } from '../../app/ports/settings.js';
+import { FocusedMonitorService } from './focused-monitor-service.js';
+import {
+    modeToInitialState,
+    MonitorState,
+} from '../../domain/monitor-state.js';
+import { MonitorMode } from '../../domain/monitor-mode.js';
 
-interface ModeStateResolverOptions {
+interface ModeStateResolverDeps {
     gateway: SettingsGateway;
     focusedMonitorService: FocusedMonitorService;
 }
@@ -13,9 +15,9 @@ export class ModeStateResolver {
     private readonly gateway: SettingsGateway;
     private readonly focusedMonitorService: FocusedMonitorService;
 
-    constructor(options: ModeStateResolverOptions) {
-        this.gateway = options.gateway;
-        this.focusedMonitorService = options.focusedMonitorService;
+    constructor(deps: ModeStateResolverDeps) {
+        this.gateway = deps.gateway;
+        this.focusedMonitorService = deps.focusedMonitorService;
     }
 
     initialStateForMode(mode: MonitorMode, monitorId: string): MonitorState {

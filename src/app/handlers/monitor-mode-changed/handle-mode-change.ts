@@ -1,8 +1,5 @@
-import type {
-    MonitorModeChangedEvent,
-    QuickSettings,
-    SettingsGateway,
-} from '../../../ports/index.js';
+import { MonitorModeChangedEvent } from '../../../app/ports/platform-events.js';
+import { QuickSettings, SettingsGateway } from '../../../app/ports/settings.js';
 import { LoggerPort } from '../../../util/logger.js';
 import { MonitorRegistry } from '../../services/monitor-registry.js';
 import { ModeStateResolver } from '../../services/mode-state-resolver.js';

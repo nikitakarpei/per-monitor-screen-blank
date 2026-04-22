@@ -2,20 +2,13 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import { gobjectConnectObject } from '../shared/gobject-helpers.js';
-import type {
+import {
     QuickSettings as QuickSettingsPort,
     SettingsGateway,
-} from '../../ports/index.js';
-import type { Profile, ProfileId } from '../../domain/ports-domain.js';
-import type { PreferencesOpener } from '../shell-infra/gnome-preferences-opener.js';
-import type { LoggerPort } from '../../util/logger.js';
-
-interface GnomeQuickSettingsOptions {
-    preferencesOpener: PreferencesOpener;
-    settingsGateway: SettingsGateway;
-    logger: LoggerPort;
-}
+} from '../../app/ports/settings.js';
+import { Profile, ProfileId } from '../../domain/types.js';
+import { PreferencesOpener } from '../shell-infra/gnome-preferences-opener.js';
+import { LoggerPort } from '../../util/logger.js';
 
 export class GnomeQuickSettings implements QuickSettingsPort {
     private readonly _preferencesOpener: PreferencesOpener;
@@ -25,10 +18,18 @@ export class GnomeQuickSettings implements QuickSettingsPort {
     private _toggle: QuickSettings.QuickMenuToggle | undefined;
     private _profileSection: PopupMenu.PopupMenuSection | undefined;
 
-    constructor(options: GnomeQuickSettingsOptions) {
-        this._preferencesOpener = options.preferencesOpener;
-        this._settingsGateway = options.settingsGateway;
-        this._logger = options.logger;
+    constructor({
+        preferencesOpener,
+        settingsGateway,
+        logger,
+    }: {
+        preferencesOpener: PreferencesOpener;
+        settingsGateway: SettingsGateway;
+        logger: LoggerPort;
+    }) {
+        this._preferencesOpener = preferencesOpener;
+        this._settingsGateway = settingsGateway;
+        this._logger = logger;
     }
 
     enable(): void {
@@ -120,10 +121,9 @@ export class GnomeQuickSettings implements QuickSettingsPort {
                     ? PopupMenu.Ornament.DOT
                     : PopupMenu.Ornament.NONE,
             );
-            gobjectConnectObject(
-                row,
+            row.connectObject(
                 'activate',
-                () => this._settingsGateway.switchProfile(profile.id),
+                () => this._settingsGateway.setActiveProfile(profile.id),
                 this,
             );
             this._profileSection.addMenuItem(row);

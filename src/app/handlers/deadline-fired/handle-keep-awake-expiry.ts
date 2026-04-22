@@ -1,17 +1,17 @@
-import type { SettingsGateway } from '../../../ports/index.js';
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type { DeadlineScheduler } from '../../../domain/ports-domain.js';
+import { SettingsGateway } from '../../ports/settings.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { DEADLINE_KEYS } from '../../../domain/deadline-keys.js';
 import { Logger } from '../../../util/logger.js';
-import type { AppEventBus } from '../../services/app-event-bus.js';
+import { AppEventBus } from '../../services/app-event-bus.js';
 
-type HandleKeepAwakeExpiryDeps = {
+interface HandleKeepAwakeExpiryDeps {
     logger: Logger;
     monitorRegistry: MonitorRegistry;
     settingsGateway: SettingsGateway;
     deadlineScheduler: DeadlineScheduler;
     bus: AppEventBus;
-};
+}
 
 /**
  * Handles the 'keep-awake-expiry-fired' event by transitioning the monitor to Auto mode.

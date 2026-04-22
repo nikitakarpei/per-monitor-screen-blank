@@ -2,7 +2,10 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import type { PointerContextMenu, ContextMenuItem } from '../../ports/index.js';
+import {
+    PointerContextMenu,
+    ContextMenuItem,
+} from '../../app/ports/pointer-menu.js';
 import { LoggerPort } from '../../util/logger.js';
 
 interface GlobalWithPointer {

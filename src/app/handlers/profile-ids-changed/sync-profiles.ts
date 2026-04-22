@@ -1,8 +1,8 @@
-import type { QuickSettings, SettingsGateway } from '../../../ports/index.js';
+import { QuickSettings, SettingsGateway } from '../../../app/ports/settings.js';
 
 interface SyncProfilesDeps {
-    quickSettings: QuickSettings;
-    gateway: SettingsGateway;
+    readonly quickSettings: QuickSettings;
+    readonly gateway: SettingsGateway;
 }
 
 /**

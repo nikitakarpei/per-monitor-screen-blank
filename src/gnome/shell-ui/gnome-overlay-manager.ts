@@ -6,9 +6,10 @@ import {
     normalizeDimIntensityPercent,
 } from '../../serialization/numeric/dim-intensity.js';
 import { normalizeFadeDurationMs } from '../../serialization/numeric/fade-duration.js';
-import type { LoggerPort } from '../../util/logger.js';
-import type { Overlay, PlatformEventBus } from '../../ports/index.js';
-import type { MonitorIndexResolver } from '../shell-infra/gnome-monitor-tracker.js';
+import { LoggerPort } from '../../util/logger.js';
+import { PlatformEventSubscriber } from '../../app/ports/platform-events.js';
+import { Overlay } from '../../app/ports/overlay.js';
+import { GnomeMonitorIndex } from '../shell-infra/gnome-monitor-index.js';
 
 /** GNOME Shell overlay manager implementing the Overlay port. */
 export class GnomeOverlayManager implements Overlay {
@@ -17,17 +18,17 @@ export class GnomeOverlayManager implements Overlay {
     #fadeDurationMs: number = 0;
     #targetOpacity: number = 0;
     readonly #logger: LoggerPort;
-    readonly #indexResolver: MonitorIndexResolver;
+    readonly #indexResolver: GnomeMonitorIndex;
     readonly #unsubscribeGeometry: () => void;
 
     constructor(options: {
         logger: LoggerPort;
-        indexResolver: MonitorIndexResolver;
-        platformBus: PlatformEventBus;
+        indexResolver: GnomeMonitorIndex;
+        eventSubscriber: PlatformEventSubscriber;
     }) {
         this.#logger = options.logger;
         this.#indexResolver = options.indexResolver;
-        this.#unsubscribeGeometry = options.platformBus.on(
+        this.#unsubscribeGeometry = options.eventSubscriber.on(
             'monitors-geometry-changed',
             () => this.#syncGeometry(),
         );
@@ -203,12 +204,12 @@ export class GnomeOverlayManager implements Overlay {
 }
 
 /** Ease properties for Clutter animations. */
-interface EaseProperties {
+type EaseProperties = {
     opacity: number;
     duration: number;
     mode: Clutter.AnimationMode;
     onComplete?: () => void;
-}
+};
 
 /**
  * Overlay actor type with GNOME Shell animation extensions.

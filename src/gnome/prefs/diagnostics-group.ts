@@ -1,59 +1,49 @@
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
-import {
-    gobjectConnectObject,
-    gobjectDisconnectObject,
-} from '../shared/gobject-helpers.js';
-import { openExtensionLogs } from './log-opener.js';
-import type { LoggerPort } from '../../util/logger.js';
+import GObject from 'gi://GObject';
+import { LogOpener } from './log-opener/log-opener.js';
+import { LoggerPort } from '../../util/logger.js';
 
-interface BuildDiagnosticsGroupParameters {
-    window: Gtk.Window;
+interface DiagnosticsGroupDeps {
     logger: LoggerPort;
+    logOpener: LogOpener;
 }
 
-interface DiagnosticsGroupResult {
-    group: Adw.PreferencesGroup;
-    destroy(): void;
-}
+export class DiagnosticsGroup extends Adw.PreferencesGroup {
+    static {
+        void GObject.registerClass(this);
+    }
 
-export function buildDiagnosticsGroup({
-    window,
-    logger,
-}: BuildDiagnosticsGroupParameters): DiagnosticsGroupResult {
-    const group = new Adw.PreferencesGroup({
-        title: 'Troubleshooting',
-    });
+    _logOpener: LogOpener;
 
-    const row = new Adw.ActionRow({
-        title: 'Open Troubleshooting Logs',
-        subtitle: 'Open a terminal with live extension logs.',
-    });
+    constructor(deps: DiagnosticsGroupDeps) {
+        super({ title: 'Troubleshooting' });
 
-    const button = new Gtk.Button({
-        label: 'Open',
-        valign: Gtk.Align.CENTER,
-    });
+        this._logOpener = deps.logOpener;
 
-    gobjectConnectObject(
-        button,
-        'clicked',
-        () => {
-            openExtensionLogs(window, logger).catch(() => {
-                logger.warn('failed to open extension logs');
+        const row = new Adw.ActionRow({
+            title: 'Open Troubleshooting Logs',
+            subtitle: 'Open a terminal with live extension logs.',
+        });
+
+        const button = new Gtk.Button({
+            label: 'Open',
+            valign: Gtk.Align.CENTER,
+        });
+
+        void button.connect('clicked', () => {
+            this._logOpener.open().catch(() => {
+                deps.logger.warn('failed to open extension logs');
             });
-        },
-        group,
-    );
+        });
 
-    row.add_suffix(button);
-    row.activatable_widget = button;
-    group.add(row);
+        row.add_suffix(button);
+        row.activatable_widget = button;
+        this.add(row);
+    }
 
-    return {
-        group,
-        destroy() {
-            gobjectDisconnectObject(button, group);
-        },
-    };
+    destroy(): void {
+        // Widget signals auto-clean when parent widgets are destroyed
+        // _logOpener has no destroy method currently
+    }
 }

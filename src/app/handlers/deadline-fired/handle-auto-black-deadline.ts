@@ -1,15 +1,15 @@
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type { DeadlineScheduler } from '../../../domain/ports-domain.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { DEADLINE_KEYS } from '../../../domain/deadline-keys.js';
 import { Logger } from '../../../util/logger.js';
-import type { AppEventBus } from '../../services/app-event-bus.js';
+import { AppEventBus } from '../../services/app-event-bus.js';
 
-type HandleAutoBlackDeadlineDeps = {
+interface HandleAutoBlackDeadlineDeps {
     logger: Logger;
     monitorRegistry: MonitorRegistry;
     deadlineScheduler: DeadlineScheduler;
     bus: AppEventBus;
-};
+}
 
 /**
  * Handles the 'auto-black-deadline-fired' event by transitioning the monitor to AutoBlack state.

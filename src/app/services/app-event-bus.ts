@@ -1,28 +1,23 @@
-import { EventBus } from '../../domain/event-bus.js';
-import type { LoggerPort } from '../../util/logger.js';
-import type { MonitorState } from '../../domain/monitor-state.js';
-import type { PlatformEvent, PlatformEventBus } from '../../ports/index.js';
+import { EventBus } from '../../util/event-bus.js';
+import { LoggerPort } from '../../util/logger.js';
+import { AppEvents } from '../app-events.js';
+import {
+    PlatformEventSubscriber,
+    PlatformEvent,
+} from '../../app/ports/platform-events.js';
 
-export type StateChangedEvent = {
-    type: 'state-changed';
-    payload: {
-        monitorId: string;
-        previous: MonitorState | undefined;
-        current: MonitorState;
-        reason: string;
-    };
-};
-
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-type AppEvents = StateChangedEvent;
+interface AppEventBusDeps {
+    platformBus: PlatformEventSubscriber;
+    logger: LoggerPort;
+}
 
 export class AppEventBus {
     readonly #bus: EventBus<PlatformEvent | AppEvents>;
     #platformUnsub: (() => void) | undefined;
 
-    constructor(platformBus: PlatformEventBus, logger: LoggerPort) {
-        this.#bus = new EventBus<PlatformEvent | AppEvents>(logger);
-        this.#platformUnsub = platformBus.onAny((event) => {
+    constructor(deps: AppEventBusDeps) {
+        this.#bus = new EventBus<PlatformEvent | AppEvents>(deps.logger);
+        this.#platformUnsub = deps.platformBus.onAny((event) => {
             this.#bus.emit(event);
         });
     }

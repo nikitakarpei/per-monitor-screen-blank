@@ -1,15 +1,21 @@
-import { EventBus } from '../../domain/event-bus.js';
-import type { PlatformEventBus, PlatformEvent } from '../../ports/index.js';
-import type { LoggerPort } from '../../util/logger.js';
+import { EventBus } from '../../util/event-bus.js';
+import {
+    PlatformEventSubscriber,
+    PlatformEvent,
+    PlatformEventEmitter,
+} from '../../app/ports/platform-events.js';
+import { LoggerPort } from '../../util/logger.js';
 
-export class GnomePlatformEventBus implements PlatformEventBus {
+export class GnomePlatformEventBus
+    implements PlatformEventSubscriber, PlatformEventEmitter
+{
     readonly #bus: EventBus<PlatformEvent>;
 
     constructor(logger: LoggerPort) {
         this.#bus = new EventBus<PlatformEvent>(logger);
     }
 
-    on: PlatformEventBus['on'] = (eventType, callback) => {
+    on: PlatformEventSubscriber['on'] = (eventType, callback) => {
         return this.#bus.on(eventType, callback as (payload: object) => void);
     };
 

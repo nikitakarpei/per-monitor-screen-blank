@@ -1,10 +1,8 @@
-import type { MonitorRegistry } from '../../services/monitor-registry.js';
-import type { Logger } from '../../../util/logger.js';
-import type {
-    SettingsGateway,
-    MonitorConnectedEvent,
-} from '../../../ports/index.js';
-import { type MonitorMode } from '../../../domain/monitor-mode.js';
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { Logger } from '../../../util/logger.js';
+import { MonitorConnectedEvent } from '../../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
+import { MonitorMode } from '../../../domain/monitor-mode.js';
 import { ModeStateResolver } from '../../services/mode-state-resolver.js';
 
 interface SetupMonitorDeps {

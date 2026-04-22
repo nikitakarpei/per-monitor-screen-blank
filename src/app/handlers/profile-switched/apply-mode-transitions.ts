@@ -1,7 +1,5 @@
-import type {
-    ProfileSwitchedEvent,
-    SettingsGateway,
-} from '../../../ports/index.js';
+import { ProfileSwitchedEvent } from '../../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
 import { MonitorRegistry } from '../../services/monitor-registry.js';
 import { resolveMode } from '../../../domain/monitor-mode.js';
 import { LoggerPort } from '../../../util/logger.js';

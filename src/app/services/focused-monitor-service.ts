@@ -1,8 +1,8 @@
-import type { MonitorEntity } from '../../domain/monitor-entity.js';
-import type { PointerSource } from '../../ports/index.js';
-import type { MonitorRegistry } from './monitor-registry.js';
+import { MonitorEntity } from '../../domain/monitor-entity.js';
+import { PointerSource } from '../../app/ports/monitors.js';
+import { MonitorRegistry } from './monitor-registry.js';
 
-interface FocusedMonitorServiceOptions {
+interface FocusedMonitorServiceDeps {
     pointerSource: PointerSource;
     monitorRegistry: MonitorRegistry;
 }
@@ -11,9 +11,9 @@ export class FocusedMonitorService {
     private readonly pointerSource: PointerSource;
     private readonly monitorRegistry: MonitorRegistry;
 
-    constructor(options: FocusedMonitorServiceOptions) {
-        this.pointerSource = options.pointerSource;
-        this.monitorRegistry = options.monitorRegistry;
+    constructor(deps: FocusedMonitorServiceDeps) {
+        this.pointerSource = deps.pointerSource;
+        this.monitorRegistry = deps.monitorRegistry;
     }
 
     getFocusedMonitor(): Readonly<MonitorEntity> | undefined {

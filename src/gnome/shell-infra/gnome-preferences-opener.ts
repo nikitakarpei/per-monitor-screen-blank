@@ -4,10 +4,6 @@ export interface PreferencesOpener {
     openSafely(): void;
 }
 
-interface GnomePreferencesOpenerOptions {
-    readonly openPreferences: () => Promise<void>;
-}
-
 /**
  * Handles opening preferences window safely with proper GLib source cleanup.
  * Defers the open to the next idle iteration to avoid GTK/Clutter loop conflicts.
@@ -16,7 +12,11 @@ export class GnomePreferencesOpener {
     readonly #openPreferences: () => Promise<void>;
     #idleSourceId: number | undefined;
 
-    constructor({ openPreferences }: GnomePreferencesOpenerOptions) {
+    constructor({
+        openPreferences,
+    }: {
+        readonly openPreferences: () => Promise<void>;
+    }) {
         this.#openPreferences = openPreferences;
         this.#idleSourceId = undefined;
     }

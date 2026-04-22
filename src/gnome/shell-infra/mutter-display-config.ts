@@ -1,6 +1,6 @@
 import { buildMonitorIdentity } from '../../serialization/monitors/monitor-identity.js';
-import type { LoggerPort } from '../../util/logger.js';
-import type { MonitorIdentity } from '../../domain/ports-domain.js';
+import { LoggerPort } from '../../util/logger.js';
+import { MonitorIdentity } from '../../domain/types.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 /**

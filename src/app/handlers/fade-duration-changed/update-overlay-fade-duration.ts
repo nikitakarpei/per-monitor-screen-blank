@@ -1,8 +1,8 @@
-import type { Overlay } from '../../../ports/index.js';
+import { Overlay } from '../../../app/ports/overlay.js';
 
-type UpdateOverlayFadeDurationDeps = {
+interface UpdateOverlayFadeDurationDeps {
     overlay: Overlay;
-};
+}
 
 /**
  * Handles the 'fade-duration-changed' event by updating the overlay fade duration.

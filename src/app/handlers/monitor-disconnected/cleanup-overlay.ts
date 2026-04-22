@@ -1,10 +1,8 @@
-import type {
-    MonitorDisconnectedEvent,
-    Overlay,
-} from '../../../ports/index.js';
-import type { LoggerPort } from '../../../util/logger.js';
+import { MonitorDisconnectedEvent } from '../../../app/ports/platform-events.js';
+import { Overlay } from '../../../app/ports/overlay.js';
+import { LoggerPort } from '../../../util/logger.js';
 
-interface OverlayCleanupDeps {
+interface CleanupOverlayDeps {
     readonly overlay: Overlay;
     readonly logger: LoggerPort;
 }
@@ -13,7 +11,7 @@ interface OverlayCleanupDeps {
  * Handles the 'monitor-disconnected' event by cleaning up the overlay.
  */
 export function cleanupOverlay(
-    deps: OverlayCleanupDeps,
+    deps: CleanupOverlayDeps,
     payload: MonitorDisconnectedEvent['payload'],
 ): void {
     deps.overlay.hideForMonitor(payload.monitorId);

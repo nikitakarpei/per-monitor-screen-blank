@@ -1,5 +1,5 @@
-import type { DeadlineKey } from './deadline-keys.js';
-import type { MonitorMode } from './monitor-mode.js';
+import { DeadlineKey } from './deadline-keys.js';
+import { MonitorMode } from './monitor-mode.js';
 
 // ProfileId is a string type alias for type safety in profile-related functions
 // eslint-disable-next-line sonarjs/redundant-type-aliases -- Intentional type alias for domain clarity
@@ -31,9 +31,3 @@ export interface Deadline {
     readonly token: number;
     readonly deadlineMs: number;
 }
-
-export type DeadlineScheduler = {
-    cancel(key: DeadlineKey, monitorId: string): void;
-    cancelMonitor(monitorId: string): void;
-    schedule(key: DeadlineKey, monitorId: string, deadlineMs: number): void;
-};

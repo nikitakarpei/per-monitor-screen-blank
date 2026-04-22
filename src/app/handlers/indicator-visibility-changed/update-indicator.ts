@@ -1,13 +1,11 @@
-import type {
-    IndicatorVisibilityChangedEvent,
-    QuickSettings,
-} from '../../../ports/index.js';
+import { IndicatorVisibilityChangedEvent } from '../../../app/ports/platform-events.js';
+import { QuickSettings } from '../../../app/ports/settings.js';
 import { LoggerPort } from '../../../util/logger.js';
 
-type UpdateIndicatorDeps = {
+interface UpdateIndicatorDeps {
     indicatorControls: QuickSettings;
     logger: LoggerPort;
-};
+}
 
 /**
  * Handles the 'indicator-visibility-changed' event by updating the indicator visibility.
