@@ -1,6 +1,9 @@
 // Side-effect imports for prefs process and shared code
 // These types are safe for both extension.js and prefs.js processes
 
+// GNOME Shell ExtensionPreferences ambient (resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js)
+import '@girs/gnome-shell/extensions/prefs/ambient';
+
 // GTK4 and Adwaita types for preferences dialog
 import '@girs/gtk-4.0';
 import '@girs/adw-1';

@@ -4,6 +4,7 @@
         "noEmit": true
     },
     "include": [
+        "src/gnome/prefs.ts",
         "src/gnome/prefs/**/*.ts",
         "src/gnome/shared/**/*.ts",
         "types/prefs-ambient.d.ts"
