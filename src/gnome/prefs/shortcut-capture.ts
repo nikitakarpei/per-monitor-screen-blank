@@ -2,7 +2,10 @@ import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
-import { GSETTINGS_KEYS } from '../gsettings-schema-keys.js';
+import {
+    GSETTINGS_KEYS,
+    gsettingsChangedSignal,
+} from '../gsettings-schema-keys.js';
 import { LoggerPort } from '../../util/logger.js';
 import { ShortcutCaptureDialog } from './shortcut-capture-dialog.js';
 
@@ -16,6 +19,7 @@ export class ShortcutCaptureRow extends Adw.ActionRow {
     _logger: LoggerPort;
     _shortcutLabel: Adw.ShortcutLabel;
     _dialog: ShortcutCaptureDialog | undefined;
+    _shortcutChangedId: number | undefined;
 
     constructor(
         settings: Gio.Settings,
@@ -55,11 +59,14 @@ export class ShortcutCaptureRow extends Adw.ActionRow {
             this._dialog.present();
         });
 
-        this._settings.bind(
-            GSETTINGS_KEYS.pointerMenuShortcut,
-            this._shortcutLabel as GObject.Object,
-            'accelerator',
-            Gio.SettingsBindFlags.DEFAULT,
+        this._shortcutChangedId = this._settings.connect(
+            gsettingsChangedSignal(GSETTINGS_KEYS.pointerMenuShortcut),
+            () => {
+                this._shortcutLabel.accelerator =
+                    this._settings.get_strv(
+                        GSETTINGS_KEYS.pointerMenuShortcut,
+                    )?.[0] ?? '';
+            },
         );
 
         this.add_suffix(this._shortcutLabel);
@@ -67,6 +74,10 @@ export class ShortcutCaptureRow extends Adw.ActionRow {
     }
 
     destroy(): void {
+        if (this._shortcutChangedId !== undefined) {
+            this._settings.disconnect(this._shortcutChangedId);
+            this._shortcutChangedId = undefined;
+        }
         this._dialog?.destroy();
         this._dialog = undefined;
     }
