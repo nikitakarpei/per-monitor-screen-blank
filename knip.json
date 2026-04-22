@@ -1,5 +1,5 @@
 {
-    "ignoreDependencies": ["^gi$", "^resource$", "^ts-api-utils$", "^esbuild$"],
+    "ignoreDependencies": ["^gi$", "^resource$", "^ts-api-utils$", "^esbuild$", "^semver$"],
     "entry": [
         "src/gnome/extension.ts",
         "src/gnome/prefs.ts",
