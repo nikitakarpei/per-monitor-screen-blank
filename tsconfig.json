@@ -1,24 +1,7 @@
 {
-    "compilerOptions": {
-        "allowJs": true,
-        "checkJs": true,
-        "noEmit": true,
-        "target": "esnext",
-        "module": "esnext",
-        "moduleResolution": "bundler",
-        "strictNullChecks": true,
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "types": [],
-        "skipLibCheck": true,
-        "useUnknownInCatchVariables": false
-    },
-    "include": [
-        "src/**/*.js",
-        "src/**/*.ts",
-        "types/**/*.d.ts",
-        "types/girs-ambient.ts"
-    ],
-    "exclude": ["node_modules", "dist"]
+    "files": [],
+    "references": [
+        { "path": "./tsconfig.shell.json" },
+        { "path": "./tsconfig.prefs.json" }
+    ]
 }
