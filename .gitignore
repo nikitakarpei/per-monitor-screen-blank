@@ -1,4 +1,5 @@
 **/dist/
 **/node_modules/
 **/schemas/gschemas.compiled
-venv/
+**/venv/
+**/package-lock.json
