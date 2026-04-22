@@ -1,6 +1,7 @@
 import ts from "typescript";
-import type { Rule } from "eslint";
-import { ESLintUtils } from "@typescript-eslint/utils";
+import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import type { RuleContext } from "@typescript-eslint/utils/ts-eslint";
+import type { ParserServicesWithTypeInformation } from "@typescript-eslint/typescript-estree";
 
 const { RuleCreator, getParserServices } = ESLintUtils;
 
@@ -9,10 +10,8 @@ const createRule = RuleCreator(
     `https://github.com/your-org/eslint-plugin-must-use/blob/main/docs/${ruleName}.md`
 );
 
-// Structured logging utility - disabled by default
 const log = {
   debug: (...args: unknown[]) => {
-    // Disabled by default; enable via DEBUG env var for troubleshooting
     if (process.env.DEBUG?.includes("eslint-plugin-must-use")) {
       console.debug("[no-ignored-return]", ...args);
     }
@@ -20,9 +19,6 @@ const log = {
 } as const;
 
 function isThenable(checker: ts.TypeChecker, type: ts.Type): boolean {
-  // A type is thenable (Promise-like) if it has a callable `then` method.
-  // This catches Promise, Thenable, and custom promise implementations
-  // that the string-prefix check would miss.
   const thenProperty = type.getProperty("then");
   if (!thenProperty) return false;
   const thenType = checker.getTypeOfSymbol(thenProperty);
@@ -39,9 +35,6 @@ function isVoidLike(type: ts.Type): boolean {
   return false;
 }
 
-// Methods on stdlib collection types whose return values are idiomatically ignored.
-// These APIs return `this` or metadata (length, boolean) for chaining — callers
-// never need the value, and the signatures can't be changed.
 const STDLIB_COLLECTION_EXEMPT: Readonly<Record<string, ReadonlySet<string>>> = {
   Array: new Set(["push", "unshift", "splice", "fill", "copyWithin", "sort", "reverse"]),
   Map: new Set(["set", "delete", "clear"]),
@@ -50,28 +43,23 @@ const STDLIB_COLLECTION_EXEMPT: Readonly<Record<string, ReadonlySet<string>>> = 
   WeakSet: new Set(["add", "delete"]),
 };
 
-// Type for the parser services - extracted from context to match actual runtime type
-type ParserServices = ReturnType<typeof getParserServices>;
+type NodeMap = ParserServicesWithTypeInformation["esTreeNodeToTSNodeMap"];
 
 function isStdlibCollectionCall(
-  node: Rule.Node,
+  node: TSESTree.CallExpression,
   program: ts.Program,
   checker: ts.TypeChecker,
-  esTreeNodeToTSNodeMap: ParserServices['esTreeNodeToTSNodeMap'],
+  esTreeNodeToTSNodeMap: NodeMap,
 ): boolean {
-  // Type assertions needed because Rule.Node lacks ESTree-specific properties under Node16
-  const callNode = node as { callee: { type: string; property: { type: string; name: string }; object: unknown } };
-  const callee = callNode.callee;
-  if (callee.type !== "MemberExpression") return false;
-  if (callee.property.type !== "Identifier") return false;
-  const methodName = callee.property.name;
+  if (node.callee.type !== "MemberExpression") return false;
+  if (node.callee.property.type !== "Identifier") return false;
+  const methodName = node.callee.property.name;
 
-  const receiverTsNode = esTreeNodeToTSNodeMap.get(callee.object);
+  const receiverTsNode = esTreeNodeToTSNodeMap.get(node.callee.object);
   if (!receiverTsNode) return false;
 
   let receiverType = checker.getTypeAtLocation(receiverTsNode);
 
-  // Optional chains produce T | undefined — unwrap to check the real receiver type
   if (receiverType.isUnion()) {
     const nonNullish = receiverType.types.filter(
       (t) => !(t.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null))
@@ -92,10 +80,12 @@ function isStdlibCollectionCall(
   const exemptMethods = STDLIB_COLLECTION_EXEMPT[symbol.getName()];
   if (!exemptMethods?.has(methodName)) return false;
 
-  // Confirm the type comes from TypeScript's own lib, not a project class named "Map"
   const declarations = symbol.getDeclarations();
   return declarations?.some((d) => program.isSourceFileDefaultLibrary(d.getSourceFile())) ?? false;
 }
+
+type MessageIds = "ignoredReturn";
+type Options = readonly [];
 
 export const noIgnoredReturn = createRule({
   name: "no-ignored-return",
@@ -112,14 +102,12 @@ export const noIgnoredReturn = createRule({
     },
   },
   defaultOptions: [] as const,
-  create(context: { report: (options: { node: Rule.Node; messageId: string; data: { type: string } }) => void }) {
-    const services = getParserServices(context as Parameters<ReturnType<typeof RuleCreator>>[0]);
+  create(context: Readonly<RuleContext<MessageIds, Options>>) {
+    const services = getParserServices(context);
     const checker = services.program.getTypeChecker();
 
-    function checkCall(node: Rule.Node) {
-      // Skip super() calls — the return value is always `this` which is already bound
-      const callNode = node as { callee?: { type: string } };
-      if (callNode.callee?.type === "Super") return;
+    function checkCall(node: TSESTree.CallExpression) {
+      if (node.callee.type === "Super") return;
 
       if (isStdlibCollectionCall(node, services.program, checker, services.esTreeNodeToTSNodeMap)) return;
 
@@ -128,7 +116,6 @@ export const noIgnoredReturn = createRule({
 
       const returnType = checker.getReturnTypeOfSignature(signature);
 
-      // Skip thenables — no-floating-promises handles those
       if (isThenable(checker, returnType)) return;
 
       if (!isVoidLike(returnType)) {
@@ -141,12 +128,10 @@ export const noIgnoredReturn = createRule({
     }
 
     return {
-      // foo()  ← bare call as expression statement
-      "ExpressionStatement > CallExpression"(node: Rule.Node) {
+      "ExpressionStatement > CallExpression"(node: TSESTree.CallExpression) {
         checkCall(node);
       },
-      // foo?.()  ← optional call as expression statement
-      "ExpressionStatement > ChainExpression > CallExpression"(node: Rule.Node) {
+      "ExpressionStatement > ChainExpression > CallExpression"(node: TSESTree.CallExpression) {
         checkCall(node);
       },
     };

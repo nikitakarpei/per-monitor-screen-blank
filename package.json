@@ -2,6 +2,7 @@
     "name": "per-monitor-screen-blank",
     "private": true,
     "type": "module",
+    "workspaces": ["local-plugins/*"],
     "scripts": {
         "lint": "eslint src",
         "lint:js": "eslint src",
