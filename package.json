@@ -11,7 +11,7 @@
         "lint:dead-code": "knip --reporter compact",
         "format": "prettier --write src",
         "format:check": "prettier --check src",
-        "typecheck": "tsc",
+        "typecheck": "tsc --build",
         "test": "vitest",
         "prepare": "simple-git-hooks"
     },

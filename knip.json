@@ -1,9 +1,26 @@
 {
-    "ignoreDependencies": ["^gi$", "^resource$", "^ts-api-utils$", "^esbuild$", "^semver$"],
+    "ignoreDependencies": [
+        "^gi$",
+        "^resource$",
+        "^ts-api-utils$",
+        "^esbuild$",
+        "^semver$",
+        "^@girs/gnome-shell$",
+        "^@girs/gtk-4\\.0$",
+        "^@girs/adw-1$",
+        "^@girs/gdk-4\\.0$",
+        "^@girs/glib-2\\.0$",
+        "^@girs/gobject-2\\.0$",
+        "^@girs/gio-2\\.0$",
+        "^@girs/gmodule-2\\.0$",
+        "^@girs/pango-1\\.0$",
+        "^@girs/pangocairo-1\\.0$"
+    ],
     "entry": [
         "src/gnome/extension.ts",
         "src/gnome/prefs.ts",
-        "types/girs-ambient.ts"
+        "types/shell-ambient.d.ts",
+        "types/prefs-ambient.d.ts"
     ],
     "project": [
         "src/**/*.ts"

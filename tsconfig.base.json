@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "noEmit": true,
+        "target": "esnext",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "types": [],
+        "skipLibCheck": true,
+        "useUnknownInCatchVariables": false
+    },
+    "exclude": ["node_modules", "dist"]
+}

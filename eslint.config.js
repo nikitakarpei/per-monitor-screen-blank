@@ -158,7 +158,7 @@ export default [
                     extensions: ['.js', '.ts'],
                 },
                 typescript: {
-                    project: './tsconfig.json',
+                    project: './tsconfig.eslint.json',
                 },
             },
         },
@@ -182,7 +182,7 @@ export default [
                     extensions: ['.js', '.ts'],
                 },
                 typescript: {
-                    project: './tsconfig.json',
+                    project: './tsconfig.eslint.json',
                 },
             },
         },
@@ -199,7 +199,7 @@ export default [
             globals: gjsGlobals,
             parser: tseslint.parser,
             parserOptions: {
-                project: './tsconfig.json',
+                project: './tsconfig.eslint.json',
             },
         },
         rules: {
@@ -300,6 +300,53 @@ export default [
                             name: 'gi://St',
                             message:
                                 'prefs.js must stay out of the GNOME Shell process boundary.',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
+        files: ['src/gnome/prefs/**/*.ts', 'src/gnome/shared/**/*.ts'],
+        rules: {
+            '@typescript-eslint/no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        {
+                            name: '@girs/gnome-shell',
+                            message:
+                                'prefs/ and shared/ must not import @girs/gnome-shell — Shell types are not available in prefs process.',
+                        },
+                        {
+                            name: '@girs/gnome-shell/ambient',
+                            message:
+                                'prefs/ and shared/ must not import @girs/gnome-shell/ambient — Shell ambient types pollute global scope with Shell-only methods like connectObject.',
+                        },
+                        {
+                            name: '@girs/gnome-shell/extensions/global',
+                            message:
+                                'prefs/ and shared/ must not import @girs/gnome-shell/extensions/global — adds Shell-only methods to GObject.Object.',
+                        },
+                        {
+                            name: 'gi://Clutter',
+                            message:
+                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
+                        },
+                        {
+                            name: 'gi://Meta',
+                            message:
+                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
+                        },
+                        {
+                            name: 'gi://Shell',
+                            message:
+                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
+                        },
+                        {
+                            name: 'gi://St',
+                            message:
+                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
                         },
                     ],
                 },

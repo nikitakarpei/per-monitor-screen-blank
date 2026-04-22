@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true
+    },
+    "include": [
+        "src/gnome/prefs/**/*.ts",
+        "src/gnome/shared/**/*.ts",
+        "types/prefs-ambient.d.ts"
+    ],
+    "exclude": ["node_modules", "dist", "src/gnome/shell-ui", "src/gnome/shell-infra", "src/gnome/extension.ts"]
+}
