@@ -20,7 +20,7 @@ interface ProfilesGroupDeps {
 
 export class ProfilesGroup extends Adw.PreferencesGroup {
     static {
-        void GObject.registerClass(this);
+        void GObject.registerClass({ GTypeName: 'ProfilesGroup' }, this);
     }
 
     _rowManager: ProfilesRowManager;

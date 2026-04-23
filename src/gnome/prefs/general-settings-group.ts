@@ -14,7 +14,7 @@ interface GeneralSettingsGroupDeps {
 
 export class GeneralSettingsGroup extends Adw.PreferencesGroup {
     static {
-        void GObject.registerClass(this);
+        void GObject.registerClass({ GTypeName: 'GeneralSettingsGroup' }, this);
     }
 
     _settings: Gio.Settings;

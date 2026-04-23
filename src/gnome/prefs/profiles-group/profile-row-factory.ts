@@ -13,7 +13,7 @@ interface ProfileRowCallbacks {
 
 export class ProfileRow extends Adw.ActionRow {
     static {
-        void GObject.registerClass(this);
+        void GObject.registerClass({ GTypeName: 'ProfileRow' }, this);
     }
 
     _popover: ProfileMenuPopover;

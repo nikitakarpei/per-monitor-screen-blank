@@ -52,7 +52,6 @@ export class GnomeQuickSettings implements QuickSettingsPort {
             Main.panel.closeQuickSettings();
             this._preferencesOpener.openSafely();
         });
-        // Runtime: SystemIndicator works, but GNOME types expect Button
         Main.panel.statusArea.quickSettings?.addExternalIndicator?.(
             this._indicator as object as PanelMenu.Button,
         );
@@ -68,11 +67,12 @@ export class GnomeQuickSettings implements QuickSettingsPort {
     }
 
     destroy(): void {
+        this._profileSection?.destroy();
+        this._profileSection = undefined;
         this._toggle?.destroy();
+        this._toggle = undefined;
         this._indicator?.destroy();
         this._indicator = undefined;
-        this._toggle = undefined;
-        this._profileSection = undefined;
     }
 
     initProfiles(

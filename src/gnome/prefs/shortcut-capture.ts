@@ -11,7 +11,7 @@ import { ShortcutCaptureDialog } from './shortcut-capture-dialog.js';
 
 export class ShortcutCaptureRow extends Adw.ActionRow {
     static {
-        void GObject.registerClass(this);
+        void GObject.registerClass({ GTypeName: 'ShortcutCaptureRow' }, this);
     }
 
     _settings: Gio.Settings;

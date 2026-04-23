@@ -10,7 +10,7 @@ interface ProfileMenuPopoverCallbacks {
 
 export class ProfileMenuPopover extends Gtk.MenuButton {
     static {
-        void GObject.registerClass(this);
+        void GObject.registerClass({ GTypeName: 'ProfileMenuPopover' }, this);
     }
 
     _signalIds: number[] = [];

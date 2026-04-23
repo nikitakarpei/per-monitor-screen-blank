@@ -11,7 +11,7 @@ interface DiagnosticsGroupDeps {
 
 export class DiagnosticsGroup extends Adw.PreferencesGroup {
     static {
-        void GObject.registerClass(this);
+        void GObject.registerClass({ GTypeName: 'DiagnosticsGroup' }, this);
     }
 
     _logOpener: LogOpener;

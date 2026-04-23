@@ -21,7 +21,7 @@ interface MonitorModesGroupDeps {
 
 export class MonitorModesGroup extends Adw.PreferencesGroup {
     static {
-        void GObject.registerClass(this);
+        void GObject.registerClass({ GTypeName: 'MonitorModesGroup' }, this);
     }
 
     _settings: Gio.Settings;
