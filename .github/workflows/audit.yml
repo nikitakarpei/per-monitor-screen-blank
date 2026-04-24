@@ -1,6 +1,12 @@
 name: Dependency audit
 
 on:
+  push:
+    paths:
+      - package-lock.json
+  pull_request:
+    paths:
+      - package-lock.json
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
