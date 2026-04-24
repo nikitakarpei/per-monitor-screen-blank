@@ -19,6 +19,7 @@ AI assistance was used during development. All generated code was reviewed and t
 ## Compatibility
 
 Tested on **Ubuntu 25.10**, **GNOME 49**, **Wayland**.
+Tested on **Ubuntu 26.04**, **GNOME 50**, **Wayland**.
 
 ## Monitor modes
 

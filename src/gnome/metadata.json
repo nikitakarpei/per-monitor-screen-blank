@@ -4,5 +4,5 @@
     "description": "Blank individual monitors after pointer idle time.",
     "url": "https://github.com/nikitakarpei/per-monitor-screen-blank",
     "settings-schema": "org.gnome.shell.extensions.per-monitor-screen-blank",
-    "shell-version": ["49"]
+    "shell-version": ["49", "50"]
 }
