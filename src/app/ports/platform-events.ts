@@ -1,4 +1,8 @@
-import { ProfileId, Deadline } from '../../domain/types.js';
+import {
+    ProfileId,
+    Deadline,
+    PhysicalMonitorInfo,
+} from '../../domain/types.js';
 import { MonitorMode } from '../../domain/monitor-mode.js';
 
 export type ProfileIdsChangedEvent = {
@@ -60,9 +64,7 @@ export type MonitorConnectedEvent = {
     type: 'monitor-connected';
     payload: {
         monitorId: string;
-        connector: string;
-        vendor?: string;
-        product?: string;
+        physicalMonitors: readonly PhysicalMonitorInfo[];
     };
 };
 

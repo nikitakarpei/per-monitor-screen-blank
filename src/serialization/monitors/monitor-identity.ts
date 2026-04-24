@@ -1,17 +1,11 @@
-export function buildMonitorIdentity({
-    vendor,
-    product,
-    serial,
-}: {
-    vendor: string;
-    product: string;
-    serial: string;
-}): string {
-    const vendorKey = canonicalizeIdentityPart(vendor);
-    const productKey = canonicalizeIdentityPart(product);
-    const serialKey = canonicalizeIdentityPart(serial);
-
-    return `monitor:${encodeIdentityPart(vendorKey)}:${encodeIdentityPart(productKey)}:${encodeIdentityPart(serialKey)}`;
+export function buildLogicalMonitorIdentity(
+    connectors: readonly string[],
+): string {
+    const sorted = [...connectors].toSorted((a, b) => a.localeCompare(b));
+    const key = sorted
+        .map((c) => encodeIdentityPart(canonicalizeIdentityPart(c)))
+        .join('+');
+    return `logical-monitor:${key}`;
 }
 
 function canonicalizeIdentityPart(value: string): string {

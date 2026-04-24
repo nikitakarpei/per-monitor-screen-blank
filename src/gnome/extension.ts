@@ -19,6 +19,7 @@ import { GnomeIssueNotifier } from './shell-infra/gnome-issue-notifier.js';
 import { GnomePreferencesOpener } from './shell-infra/gnome-preferences-opener.js';
 import { Logger } from '../util/logger.js';
 import { GnomePlatformEventBus } from './shared/gnome-platform-event-bus.js';
+import { GnomeMonitorQuery } from './shell-infra/gnome-monitor-query.js';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     private _bus: AppEventBus | undefined;
@@ -102,9 +103,20 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             });
             this._settingsGateway.ensureStorage();
 
+            this._identityStore = new GnomeMonitorIdentityStore({
+                settings,
+                logger: this._logger,
+            });
+
+            const monitorQuery = new GnomeMonitorQuery({
+                logger: this._logger,
+            });
+
             this._tracker = new GnomeMonitorTracker({
                 logger: this._logger,
                 eventEmitter: this._platformBus,
+                identityStore: this._identityStore!,
+                monitorQuery,
             });
 
             this._pointerSource = new GnomePointerSource({
@@ -156,12 +168,6 @@ export default class PerMonitorScreenBlankExtension extends Extension {
                 focusedMonitorService,
             });
 
-            const identityStore = new GnomeMonitorIdentityStore({
-                settings,
-                logger: this._logger,
-            });
-            this._identityStore = identityStore;
-
             registerAppEventHandlers({
                 bus: this._bus!,
                 logger: this._logger,
@@ -174,7 +180,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
                 monitorRegistry: this._monitorRegistry!,
                 focusedMonitorService,
                 modeStateResolver,
-                identityStore,
+                identityStore: this._identityStore!,
             });
 
             this._tracker!.start();

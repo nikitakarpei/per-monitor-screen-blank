@@ -11,12 +11,16 @@ export interface Profile {
     readonly monitorModes: Record<string, MonitorMode>;
 }
 
-export interface MonitorIdentity {
+export interface PhysicalMonitorInfo {
+    readonly connector: string;
+    readonly vendor: string;
+    readonly product: string;
+}
+
+export interface LogicalMonitorIdentity {
     readonly index: number;
     readonly monitorId: string;
-    readonly connector: string;
-    readonly vendor?: string;
-    readonly product?: string;
+    readonly physicalMonitors: readonly PhysicalMonitorInfo[];
 }
 
 export interface PointerPosition {

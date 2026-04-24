@@ -7,4 +7,5 @@ export interface PointerSource {
 export interface MonitorIdentityStore {
     upsert(entry: { monitorId: string; label: string }): void;
     remove(monitorId: string): void;
+    listIds(): readonly string[];
 }

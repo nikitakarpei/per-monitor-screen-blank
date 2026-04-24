@@ -1,25 +1,31 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { listCurrentMonitorIdentities } from './mutter-display-config.js';
+import { GnomeMonitorQuery } from './gnome-monitor-query.js';
 import { LoggerPort } from '../../util/logger.js';
 import { PlatformEventEmitter } from '../../app/ports/platform-events.js';
 import { GnomeMonitorIndex } from './gnome-monitor-index.js';
-import { MonitorIdentity } from '../../domain/types.js';
+import { MonitorIdentityStore } from '../../app/ports/monitors.js';
+import { LogicalMonitorIdentity } from '../../domain/types.js';
+
+interface GnomeMonitorTrackerDeps {
+    readonly logger: LoggerPort;
+    readonly eventEmitter: PlatformEventEmitter;
+    readonly identityStore: MonitorIdentityStore;
+    readonly monitorQuery: GnomeMonitorQuery;
+}
 
 export class GnomeMonitorTracker implements GnomeMonitorIndex {
     readonly #logger: LoggerPort;
     readonly #eventEmitter: PlatformEventEmitter;
+    readonly #identityStore: MonitorIdentityStore;
+    readonly #monitorQuery: GnomeMonitorQuery;
     readonly #knownMonitorIds: Set<string>;
     readonly #indexById: Map<string, number>;
 
-    constructor({
-        logger,
-        eventEmitter,
-    }: {
-        readonly logger: LoggerPort;
-        readonly eventEmitter: PlatformEventEmitter;
-    }) {
-        this.#logger = logger;
-        this.#eventEmitter = eventEmitter;
+    constructor(deps: GnomeMonitorTrackerDeps) {
+        this.#logger = deps.logger;
+        this.#eventEmitter = deps.eventEmitter;
+        this.#identityStore = deps.identityStore;
+        this.#monitorQuery = deps.monitorQuery;
         this.#knownMonitorIds = new Set();
         this.#indexById = new Map();
     }
@@ -31,7 +37,8 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex {
             this,
         );
 
-        const currentMonitors = listCurrentMonitorIdentities(this.#logger);
+        const currentMonitors =
+            this.#monitorQuery.listCurrentMonitorIdentities();
         this.#rebuildIndexById(currentMonitors);
 
         for (const monitor of currentMonitors) {
@@ -40,22 +47,26 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex {
     }
 
     emitInitialState(): void {
-        const currentMonitors = listCurrentMonitorIdentities(this.#logger);
+        const persistedMonitorIds = this.#identityStore.listIds();
+        for (const monitorId of persistedMonitorIds) {
+            if (!this.#knownMonitorIds.has(monitorId)) {
+                this.#emitMonitorDisconnected(monitorId);
+            }
+        }
 
+        const currentMonitors =
+            this.#monitorQuery.listCurrentMonitorIdentities();
         for (const monitor of currentMonitors) {
-            this.#eventEmitter.emit({
-                type: 'monitor-connected',
-                payload: this.#buildConnectedPayload(monitor),
-            });
+            this.#emitMonitorConnected(monitor);
         }
     }
 
-    #rebuildIndexById(identities: readonly MonitorIdentity[]): void {
+    #rebuildIndexById(monitors: readonly LogicalMonitorIdentity[]): void {
         this.#indexById.clear();
-        for (const identity of identities) {
-            this.#indexById.set(identity.monitorId, identity.index);
+        for (const monitor of monitors) {
+            this.#indexById.set(monitor.monitorId, monitor.index);
             this.#logger.info(
-                `monitor ${identity.monitorId} now has index ${identity.index}`,
+                `monitor ${monitor.monitorId} now has index ${monitor.index}`,
             );
         }
         this.#logger.info(`monitor index map rebuilt`);
@@ -74,12 +85,15 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex {
 
     #onMonitorsChanged(): void {
         try {
-            const currentMonitors = listCurrentMonitorIdentities(this.#logger);
-            const currentIds = new Set(currentMonitors.map((m) => m.monitorId));
+            const currentMonitors =
+                this.#monitorQuery.listCurrentMonitorIdentities();
+            const currentMonitorIds = new Set(
+                currentMonitors.map((m) => m.monitorId),
+            );
 
             this.#rebuildIndexById(currentMonitors);
             this.#processNewAndChangedMonitors(currentMonitors);
-            this.#processDisconnectedMonitors(currentIds);
+            this.#processDisconnectedMonitors(currentMonitorIds);
             this.#eventEmitter.emit({
                 type: 'monitors-geometry-changed',
                 payload: {},
@@ -90,32 +104,37 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex {
     }
 
     #processNewAndChangedMonitors(
-        currentMonitors: readonly MonitorIdentity[],
+        currentMonitors: LogicalMonitorIdentity[],
     ): void {
         for (const monitor of currentMonitors) {
             this.#handleNewMonitor(monitor);
         }
     }
 
-    #buildConnectedPayload(monitor: MonitorIdentity) {
-        return {
-            monitorId: monitor.monitorId,
-            connector: monitor.connector,
-            vendor: monitor.vendor,
-            product: monitor.product,
-        };
+    #emitMonitorConnected(monitor: LogicalMonitorIdentity): void {
+        this.#eventEmitter.emit({
+            type: 'monitor-connected',
+            payload: {
+                monitorId: monitor.monitorId,
+                physicalMonitors: monitor.physicalMonitors,
+            },
+        });
     }
 
-    #handleNewMonitor(monitor: MonitorIdentity): void {
+    #emitMonitorDisconnected(monitorId: string): void {
+        this.#eventEmitter.emit({
+            type: 'monitor-disconnected',
+            payload: { monitorId },
+        });
+    }
+
+    #handleNewMonitor(monitor: LogicalMonitorIdentity): void {
         if (this.#knownMonitorIds.has(monitor.monitorId)) {
             return;
         }
 
         this.#knownMonitorIds.add(monitor.monitorId);
-        this.#eventEmitter.emit({
-            type: 'monitor-connected',
-            payload: this.#buildConnectedPayload(monitor),
-        });
+        this.#emitMonitorConnected(monitor);
     }
 
     #processDisconnectedMonitors(currentIds: ReadonlySet<string>): void {

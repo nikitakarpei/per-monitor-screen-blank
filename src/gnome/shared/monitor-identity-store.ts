@@ -3,6 +3,11 @@ import { GSETTINGS_KEYS } from '../gsettings-schema-keys.js';
 import { Logger } from '../../util/logger.js';
 import { MonitorIdentityStore } from '../../app/ports/monitors.js';
 
+interface MonitorIdentityStoreDeps {
+    settings: Gio.Settings;
+    logger: Logger;
+}
+
 export interface KnownMonitorEntry {
     monitorId: string;
     label: string;
@@ -17,7 +22,6 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
         this.logger = deps.logger;
     }
 
-    /** Read all known monitor entries from GSettings */
     load(): KnownMonitorEntry[] {
         try {
             const jsonString = this.settings.get_string(
@@ -42,7 +46,6 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
         }
     }
 
-    /** Write all known monitor entries to GSettings */
     save(entries: KnownMonitorEntry[]): void {
         const jsonString = JSON.stringify(entries);
         const saved = this.settings.set_string(
@@ -54,7 +57,6 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
         }
     }
 
-    /** Add or update a single monitor entry (upsert by monitorId) */
     upsert(entry: KnownMonitorEntry): void {
         const entries = this.load();
         const existingIndex = entries.findIndex(
@@ -69,7 +71,10 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
         this.save(entries);
     }
 
-    /** Remove a monitor entry by monitorId */
+    listIds(): readonly string[] {
+        return this.load().map((entry) => entry.monitorId);
+    }
+
     remove(monitorId: string): void {
         const entries = this.load();
         const filtered = entries.filter(
@@ -79,9 +84,4 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
             this.save(filtered);
         }
     }
-}
-
-interface MonitorIdentityStoreDeps {
-    settings: Gio.Settings;
-    logger: Logger;
 }

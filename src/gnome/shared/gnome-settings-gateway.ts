@@ -13,12 +13,13 @@ import {
 } from '../gsettings-schema-keys.js';
 import { ProfileRegistry } from './profile-registry.js';
 
-/**
- * Pure facade for GSettings access.
- * - Delegates ALL profile operations to ProfileRegistry and ProfileStore
- * - Does NOT subscribe to ProfileRegistry/ProfileStore events (they emit directly)
- * - Only handles scalar settings wiring and emits through PlatformEventEmitter
- */
+interface GnomeSettingsGatewayDeps {
+    settings: Gio.Settings;
+    eventEmitter: PlatformEventEmitter;
+    profileRegistry: ProfileRegistry;
+    logger: Logger;
+}
+
 export class GnomeSettingsGateway implements SettingsGateway {
     readonly #settings: Gio.Settings;
     readonly #eventEmitter: PlatformEventEmitter;
@@ -321,11 +322,4 @@ export class GnomeSettingsGateway implements SettingsGateway {
             });
         });
     }
-}
-
-interface GnomeSettingsGatewayDeps {
-    settings: Gio.Settings;
-    eventEmitter: PlatformEventEmitter;
-    profileRegistry: ProfileRegistry;
-    logger: Logger;
 }
