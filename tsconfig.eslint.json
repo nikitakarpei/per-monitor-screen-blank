@@ -1,11 +1,18 @@
 {
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
-        "noEmit": true
+        "noEmit": true,
+        "paths": {
+            "@pmsb/core": ["./packages/core/src/index.ts"],
+            "@pmsb/application": ["./packages/application/src/index.ts"],
+            "@pmsb/infrastructure-gnome": ["./packages/infrastructure-gnome/src/index.ts"],
+            "@pmsb/host-gnome-shell": ["./packages/host-gnome-shell/src/index.ts"],
+            "@pmsb/host-gnome-prefs": ["./packages/host-gnome-prefs/src/index.ts"]
+        }
     },
     "include": [
         "src/**/*.ts",
-        "types/**/*.d.ts"
-    ],
-    "exclude": ["node_modules", "dist"]
+        "packages/*/src/**/*.ts",
+        "packages/*/src/**/*.d.ts"
+    ]
 }

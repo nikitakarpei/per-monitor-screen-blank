@@ -29,9 +29,15 @@ npx esbuild \
   --external:gi://* \
   --external:resource://* \
   --sourcemap \
+  --entry-names=[name] \
   --outdir="$OUT" \
-  "$repo_root/src/gnome/extension.ts" \
-  "$repo_root/src/gnome/prefs.ts"
+  --alias:@pmsb/core="$repo_root/packages/core/src/index.ts" \
+  --alias:@pmsb/application="$repo_root/packages/application/src/index.ts" \
+  --alias:@pmsb/infrastructure-gnome="$repo_root/packages/infrastructure-gnome/src/index.ts" \
+  --alias:@pmsb/host-gnome-shell="$repo_root/packages/host-gnome-shell/src/index.ts" \
+  --alias:@pmsb/host-gnome-prefs="$repo_root/packages/host-gnome-prefs/src/index.ts" \
+  "$repo_root/packages/host-gnome-shell/src/extension.ts" \
+  "$repo_root/packages/host-gnome-prefs/src/prefs.ts"
 
 if command -v glib-compile-schemas >/dev/null 2>&1; then
   glib-compile-schemas "$OUT/schemas"

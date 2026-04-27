@@ -1,4 +1,55 @@
 {
+    "workspaces": {
+        ".": {
+            "entry": [
+                "types/shell-ambient.d.ts",
+                "types/prefs-ambient.d.ts"
+            ],
+            "project": [
+                "src/**/*.ts"
+            ]
+        },
+        "packages/application": {
+            "entry": [
+                "src/index.ts"
+            ],
+            "project": [
+                "src/**/*.ts"
+            ]
+        },
+        "packages/core": {
+            "entry": [
+                "src/index.ts"
+            ],
+            "project": [
+                "src/**/*.ts"
+            ]
+        },
+        "packages/host-gnome-prefs": {
+            "entry": [
+                "src/prefs.ts"
+            ],
+            "project": [
+                "src/**/*.ts"
+            ]
+        },
+        "packages/host-gnome-shell": {
+            "entry": [
+                "src/extension.ts"
+            ],
+            "project": [
+                "src/**/*.ts"
+            ]
+        },
+        "packages/infrastructure-gnome": {
+            "entry": [
+                "src/index.ts"
+            ],
+            "project": [
+                "src/**/*.ts"
+            ]
+        }
+    },
     "ignoreDependencies": [
         "^gi$",
         "^resource$",
@@ -14,15 +65,7 @@
         "^@girs/gio-2\\.0$",
         "^@girs/gmodule-2\\.0$",
         "^@girs/pango-1\\.0$",
-        "^@girs/pangocairo-1\\.0$"
-    ],
-    "entry": [
-        "src/gnome/extension.ts",
-        "src/gnome/prefs.ts",
-        "types/shell-ambient.d.ts",
-        "types/prefs-ambient.d.ts"
-    ],
-    "project": [
-        "src/**/*.ts"
+        "^@girs/pangocairo-1\\.0$",
+        "^@girs/gjs$"
     ]
 }

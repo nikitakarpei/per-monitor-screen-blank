@@ -6,142 +6,46 @@ import unicorn from 'eslint-plugin-unicorn';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 import mustUse from './local-plugins/eslint-plugin-must-use/dist/index.js';
+import boundaries from 'eslint-plugin-boundaries';
+import { strict as boundariesStrict } from 'eslint-plugin-boundaries/config';
 
-const gjsGlobals = {
-    ...globals.es2024,
-    global: 'readonly',
-    globalThis: 'readonly',
-    imports: 'readonly',
-    log: 'readonly',
-    logError: 'readonly',
-};
+// =============================================================================
+// Boundaries Configuration
+// Define element types for each package and enforce dependency rules.
+// =============================================================================
+const boundariesElements = [
+    { type: 'core', pattern: 'packages/core/src/**' },
+    { type: 'application', pattern: 'packages/application/src/**' },
+    { type: 'infrastructure-gnome', pattern: 'packages/infrastructure-gnome/src/**' },
+    { type: 'host-gnome-shell', pattern: 'packages/host-gnome-shell/src/**' },
+    { type: 'host-gnome-prefs', pattern: 'packages/host-gnome-prefs/src/**' },
+];
 
-const layeringRules = {
-    'import-x/no-restricted-paths': [
-        'error',
-        {
-            zones: [
-                // src/util/ — innermost cross-cutting layer, must not import from any other layer
-                {
-                    target: './src/util',
-                    from: './src/domain',
-                    message:
-                        'util/ must not import from domain/ — util is cross-cutting infrastructure.',
-                },
-                {
-                    target: './src/util',
-                    from: './src/app',
-                    message:
-                        'util/ must not import from app/ — util is cross-cutting infrastructure.',
-                },
-                {
-                    target: './src/util',
-                    from: './src/gnome',
-                    message:
-                        'util/ must not import from gnome/ — util is cross-cutting infrastructure.',
-                },
-                {
-                    target: './src/util',
-                    from: './src/serialization',
-                    message:
-                        'util/ must not import from serialization/ — util is cross-cutting infrastructure.',
-                },
-                {
-                    target: './src/domain',
-                    from: './src/serialization',
-                    message:
-                        'domain/ must not import from serialization/ — parse at boundaries only.',
-                },
-                {
-                    target: './src/domain',
-                    from: './src/app',
-                    message:
-                        'domain/ must not import from app/ — core model stays platform-agnostic.',
-                },
-                {
-                    target: './src/domain',
-                    from: './src/gnome',
-                    message:
-                        'domain/ must not import from gnome/ — core model stays platform-agnostic.',
-                },
-                {
-                    target: './src/serialization',
-                    from: './src/gnome',
-                    message:
-                        'serialization/ must not import from gnome/ — keep wire parsers platform-agnostic.',
-                },
-                {
-                    target: './src/serialization',
-                    from: './src/app',
-                    message:
-                        'serialization/ must not import from app/ — wire parsers stay below application layer.',
-                },
-                {
-                    target: './src/app',
-                    from: './src/gnome',
-                    message:
-                        'app/ must not import from gnome/ — keep the application layer platform-agnostic.',
-                },
-                // src/gnome/ layer boundaries — shared/ is process-safe, importable from both processes
-                {
-                    target: './src/gnome/shared',
-                    from: './src/gnome/shell-infra',
-                    message:
-                        'shared/ must not import from shell-infra/ — shared code must stay process-safe and not depend on Shell infrastructure.',
-                },
-                {
-                    target: './src/gnome/shared',
-                    from: './src/gnome/shell-ui',
-                    message:
-                        'shared/ must not import from shell-ui/ — shared code must stay process-safe and not depend on Shell UI.',
-                },
-                {
-                    target: './src/gnome/shared',
-                    from: './src/gnome/prefs',
-                    message:
-                        'shared/ must not import from prefs/ — shared code must stay process-safe and not depend on prefs-process code.',
-                },
-                // prefs/ — prefs-process only, can import shared/
-                {
-                    target: './src/gnome/prefs',
-                    from: './src/gnome/shell-infra',
-                    message:
-                        'prefs/ must not import from shell-infra/ — prefs code must stay out of the Shell process boundary.',
-                },
-                {
-                    target: './src/gnome/prefs',
-                    from: './src/gnome/shell-ui',
-                    message:
-                        'prefs/ must not import from shell-ui/ — prefs code must stay out of the Shell process boundary.',
-                },
-                // shell-ui/ — Shell-process UI only, can import shell-infra/ and shared/
-                {
-                    target: './src/gnome/shell-ui',
-                    from: './src/gnome/prefs',
-                    message:
-                        'shell-ui/ must not import from prefs/ — shell code must stay out of the prefs-process layer.',
-                },
-                // shell-infra/ — Shell-process infrastructure, can import shared/
-                {
-                    target: './src/gnome/shell-infra',
-                    from: './src/gnome/shell-ui',
-                    message:
-                        'shell-infra/ must not import from shell-ui/ — infrastructure layer must stay below the Shell UI layer.',
-                },
-                {
-                    target: './src/gnome/shell-infra',
-                    from: './src/gnome/prefs',
-                    message:
-                        'shell-infra/ must not import from prefs/ — infrastructure layer must stay out of the prefs-process layer.',
-                },
-            ],
-        },
+const boundariesRules = {
+    default: 'disallow',
+    rules: [
+        { from: { type: 'core' }, allow: { to: { type: 'core' } } },
+        { from: { type: 'application' }, allow: { to: { type: ['core', 'application'] } } },
+        { from: { type: 'infrastructure-gnome' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome'] } } },
+        { from: { type: 'host-gnome-shell' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome', 'host-gnome-shell'] } } },
+        { from: { type: 'host-gnome-prefs' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome', 'host-gnome-prefs'] } } },
     ],
 };
 
+const importResolver = {
+    node: {
+        extensions: ['.js', '.ts'],
+    },
+    typescript: {
+        project: './tsconfig.eslint.json',
+    },
+};
+
+// =============================================================================
+// Shared Rules
+// =============================================================================
 const sharedRules = {
     ...js.configs.recommended.rules,
-    ...importPlugin.flatConfigs.recommended.rules,
     ...sonarjs.configs.recommended.rules,
     ...unicorn.configs.recommended.rules,
     'array-callback-return': 'error',
@@ -165,51 +69,25 @@ const sharedRules = {
     'no-use-before-define': ['error', { classes: false, functions: false }],
     'no-var': 'error',
     'object-shorthand': ['error', 'always'],
-    'import-x/no-unresolved': ['error', { ignore: ['^gi://', '^resource:///'] }],
     'prefer-arrow-callback': ['error', { allowNamedFunctions: true }],
     'prefer-const': ['error', { destructuring: 'all' }],
     'prefer-template': 'error',
 };
 
-export default [
+// =============================================================================
+// Main Config
+// =============================================================================
+export default tseslint.config(
     {
         ignores: ['dist/**', 'node_modules/**'],
     },
     {
-        files: ['src/**/*.js'],
+        files: ['packages/**/*.ts'],
         settings: {
-            'import-x/resolver': {
-                node: {
-                    extensions: ['.js', '.ts'],
-                },
-                typescript: {
-                    project: './tsconfig.eslint.json',
-                },
-            },
-        },
-        plugins: {
-            'import-x': importPlugin,
-            sonarjs,
-            unicorn,
-        },
-        languageOptions: {
-            ecmaVersion: 'latest',
-            sourceType: 'module',
-            globals: gjsGlobals,
-        },
-        rules: { ...sharedRules, ...layeringRules },
-    },
-    {
-        files: ['src/**/*.ts', 'src/gnome/**/*.ts'],
-        settings: {
-            'import-x/resolver': {
-                node: {
-                    extensions: ['.js', '.ts'],
-                },
-                typescript: {
-                    project: './tsconfig.eslint.json',
-                },
-            },
+            ...boundariesStrict.settings,
+            'boundaries/elements': boundariesElements,
+            'import/resolver': importResolver,
+            'import-x/resolver': importResolver,
         },
         plugins: {
             'import-x': importPlugin,
@@ -217,23 +95,29 @@ export default [
             unicorn,
             '@typescript-eslint': tseslint.plugin,
             'must-use': mustUse,
+            boundaries,
         },
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
-            globals: gjsGlobals,
+            globals: {
+                ...globals.es2024,
+                global: 'readonly',
+                globalThis: 'readonly',
+                imports: 'readonly',
+                log: 'readonly',
+                logError: 'readonly',
+            },
             parser: tseslint.parser,
             parserOptions: {
                 project: './tsconfig.eslint.json',
             },
         },
         rules: {
+            ...boundariesStrict.rules,
             ...sharedRules,
-            ...layeringRules,
-            // Disable base rules that don't understand TypeScript
             'no-unused-vars': 'off',
             'no-redeclare': 'off',
-            // Use TypeScript-aware versions
             '@typescript-eslint/no-unused-vars': [
                 'error',
                 {
@@ -257,132 +141,24 @@ export default [
             ],
             'must-use/no-ignored-return': 'error',
             '@typescript-eslint/no-floating-promises': 'error',
-            // These rules conflict with must-use/no-ignored-return which requires
-            // explicit `void` prefix to acknowledge discarded return values
             '@typescript-eslint/no-meaningless-void-operator': 'off',
             'sonarjs/void-use': 'off',
+            'boundaries/dependencies': ['error', boundariesRules],
+            'import-x/no-relative-packages': 'error',
+            'import-x/no-duplicates': 'warn',
         },
     },
     {
-        files: ['src/**/*.test.ts'],
+        files: ['packages/**/*.test.ts'],
         rules: {
-            // Test files use vitest describe/it which return SuiteCollector.
-            // Disable must-use since test file patterns don't require acknowledgment.
             'must-use/no-ignored-return': 'off',
         },
     },
-
     {
-        files: ['src/gnome/extension.js'],
-        rules: {
-            'no-restricted-imports': [
-                'error',
-                {
-                    paths: [
-                        {
-                            name: 'gi://Gdk',
-                            message:
-                                'extension.js must stay out of the GTK/GDK/Adwaita process boundary.',
-                        },
-                        {
-                            name: 'gi://Gtk',
-                            message:
-                                'extension.js must stay out of the GTK/GDK/Adwaita process boundary.',
-                        },
-                        {
-                            name: 'gi://Adw',
-                            message:
-                                'extension.js must stay out of the GTK/GDK/Adwaita process boundary.',
-                        },
-                    ],
-                },
-            ],
-        },
-    },
-    {
-        files: ['src/gnome/prefs.js'],
-        rules: {
-            'no-restricted-imports': [
-                'error',
-                {
-                    paths: [
-                        {
-                            name: 'gi://Clutter',
-                            message:
-                                'prefs.js must stay out of the GNOME Shell process boundary.',
-                        },
-                        {
-                            name: 'gi://Meta',
-                            message:
-                                'prefs.js must stay out of the GNOME Shell process boundary.',
-                        },
-                        {
-                            name: 'gi://Shell',
-                            message:
-                                'prefs.js must stay out of the GNOME Shell process boundary.',
-                        },
-                        {
-                            name: 'gi://St',
-                            message:
-                                'prefs.js must stay out of the GNOME Shell process boundary.',
-                        },
-                    ],
-                },
-            ],
-        },
-    },
-    {
-        files: ['src/gnome/prefs/**/*.ts', 'src/gnome/shared/**/*.ts'],
-        rules: {
-            '@typescript-eslint/no-restricted-imports': [
-                'error',
-                {
-                    paths: [
-                        {
-                            name: '@girs/gnome-shell',
-                            message:
-                                'prefs/ and shared/ must not import @girs/gnome-shell — Shell types are not available in prefs process.',
-                        },
-                        {
-                            name: '@girs/gnome-shell/ambient',
-                            message:
-                                'prefs/ and shared/ must not import @girs/gnome-shell/ambient — Shell ambient types pollute global scope with Shell-only methods like connectObject.',
-                        },
-                        {
-                            name: '@girs/gnome-shell/extensions/global',
-                            message:
-                                'prefs/ and shared/ must not import @girs/gnome-shell/extensions/global — adds Shell-only methods to GObject.Object.',
-                        },
-                        {
-                            name: 'gi://Clutter',
-                            message:
-                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
-                        },
-                        {
-                            name: 'gi://Meta',
-                            message:
-                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
-                        },
-                        {
-                            name: 'gi://Shell',
-                            message:
-                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
-                        },
-                        {
-                            name: 'gi://St',
-                            message:
-                                'prefs/ and shared/ must stay out of the GNOME Shell process boundary.',
-                        },
-                    ],
-                },
-            ],
-        },
-    },
-    {
-        files: ['src/gnome/**/*.ts'],
+        files: ['packages/host-gnome-shell/src/**/*.ts', 'packages/host-gnome-prefs/src/**/*.ts', 'packages/infrastructure-gnome/src/**/*.ts'],
         rules: {
             'unicorn/prefer-global-this': 'off',
         },
     },
     eslintConfigPrettier,
-];
+);

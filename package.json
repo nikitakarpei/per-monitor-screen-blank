@@ -3,11 +3,12 @@
     "private": true,
     "type": "module",
     "workspaces": [
-        "local-plugins/*"
+        "local-plugins/*",
+        "packages/*"
     ],
     "scripts": {
-        "lint": "eslint src",
-        "lint:js": "eslint src",
+        "lint": "eslint packages/*/src",
+        "lint:js": "eslint packages/*/src",
         "lint:dead-code": "knip --reporter compact",
         "format": "prettier --write src",
         "format:check": "prettier --check src",
@@ -20,7 +21,7 @@
         "pre-push": "npm run lint:dead-code && npm run typecheck"
     },
     "lint-staged": {
-        "src/**/*.{js,ts}": [
+        "packages/**/*.{js,ts}": [
             "prettier --write",
             "eslint"
         ]
@@ -51,6 +52,7 @@
         "eslint": "^10.2.1",
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.4",
+        "eslint-plugin-boundaries": "^6.0.2",
         "eslint-plugin-import-x": "^4.0.0",
         "eslint-plugin-sonarjs": "^4.0.3",
         "eslint-plugin-unicorn": "^64.0.0",

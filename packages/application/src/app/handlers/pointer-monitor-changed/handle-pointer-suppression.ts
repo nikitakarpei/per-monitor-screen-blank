@@ -1,0 +1,49 @@
+import { MonitorRegistry } from '../../services/monitor-registry.js';
+import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import { type LoggerPort } from '../../../util/logger.js';
+import { PointerMonitorChangedEvent } from '../../../app/ports/platform-events.js';
+import { SettingsGateway } from '../../../app/ports/settings.js';
+
+interface HandlePointerMonitorChangedDeps {
+    monitorRegistry: MonitorRegistry;
+    deadlineScheduler: DeadlineScheduler;
+    logger: LoggerPort;
+    settingsGateway: SettingsGateway;
+}
+
+/**
+ * Handles the 'pointer-monitor-changed' event by canceling the auto-black deadline for the current monitor and scheduling it for the previous monitor.
+ */
+export function handlePointerSuppression(
+    deps: HandlePointerMonitorChangedDeps,
+    payload: PointerMonitorChangedEvent['payload'],
+): void {
+    if (deps.settingsGateway.shouldMonitorAutoBlackWhenFocused()) {
+        return;
+    }
+
+    const currentMonitor = deps.monitorRegistry.get(payload.monitorId);
+    if (
+        currentMonitor.state === 'AutoAwake' ||
+        currentMonitor.state === 'AutoBlack'
+    ) {
+        void deps.monitorRegistry.transitionState(
+            payload.monitorId,
+            'AutoPaused',
+            'pointer-monitor-changed',
+        );
+    }
+
+    if (payload.previousMonitorId) {
+        const previousMonitor = deps.monitorRegistry.get(
+            payload.previousMonitorId,
+        );
+        if (previousMonitor.state === 'AutoPaused') {
+            void deps.monitorRegistry.transitionState(
+                payload.previousMonitorId,
+                'AutoAwake',
+                'pointer-monitor-changed',
+            );
+        }
+    }
+}
