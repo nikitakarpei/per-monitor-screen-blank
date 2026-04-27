@@ -50,7 +50,7 @@ When **Show quick settings menu** is enabled, Quick Settings adds a menu entry f
 From the repository root:
 
 ```sh
-sh ./scripts/install.sh
+sh ./platforms/gnome/scripts/install.sh
 ```
 
 Then reload GNOME Shell if needed and enable **Per-Monitor Screen Blank** in the Extensions app.
@@ -58,19 +58,19 @@ Then reload GNOME Shell if needed and enable **Per-Monitor Screen Blank** in the
 To remove the installed copy:
 
 ```sh
-sh ./scripts/uninstall.sh
+sh ./platforms/gnome/scripts/uninstall.sh
 ```
 
 To remove the installed copy and all persisted extension settings data:
 
 ```sh
-sh ./scripts/uninstall.sh --remove-data
+sh ./platforms/gnome/scripts/uninstall.sh --remove-data
 ```
 
 ## Development Notes
 
 - `npm run lint` runs ESLint as the JS harness for this extension. It uses ESLint core rules plus `eslint-plugin-sonarjs` for maintainability smells, `eslint-plugin-unicorn` for modern JS correctness rules, and `eslint-plugin-import` for import hygiene.
-- `ego-lint` runs during `sh ./scripts/package-ego-zip.sh` against the built extension/package output before upload.
-- `sh ./scripts/nested-shell-smoke.sh` runs a nested GNOME Shell smoke workflow (requires `dbus-run-session`, `gnome-shell`, `gsettings`, `rg`, and an existing graphical Wayland session).
-- `sh ./scripts/package-ego-zip.sh` writes `dist/per-monitor-screen-blank@nikitakarpei.github.io.zip` for [extensions.gnome.org](https://extensions.gnome.org/) (extension files at zip root; requires `zip` and `glib-compile-schemas`).
+- `ego-lint` runs during `sh ./platforms/gnome/scripts/package-ego-zip.sh` against the built extension/package output before upload.
+- `sh ./platforms/gnome/scripts/nested-shell-smoke.sh` runs a nested GNOME Shell smoke workflow (requires `dbus-run-session`, `gnome-shell`, `gsettings`, `rg`, and an existing graphical Wayland session).
+- `sh ./platforms/gnome/scripts/package-ego-zip.sh` writes `platforms/gnome/dist/per-monitor-screen-blank@nikitakarpei.github.io.zip` for [extensions.gnome.org](https://extensions.gnome.org/) (extension files at zip root; requires `zip` and `glib-compile-schemas`).
 - Runtime logs are prefixed with `[per-monitor-screen-blank]` in `journalctl` (Preferences can open a filtered follow stream via `journalctl --user -f --no-pager -g per-monitor-screen-blank`).

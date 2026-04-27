@@ -3,16 +3,17 @@
     "compilerOptions": {
         "noEmit": true,
         "paths": {
-            "@pmsb/core": ["./packages/core/src/index.ts"],
-            "@pmsb/application": ["./packages/application/src/index.ts"],
-            "@pmsb/infrastructure-gnome": ["./packages/infrastructure-gnome/src/index.ts"],
-            "@pmsb/host-gnome-shell": ["./packages/host-gnome-shell/src/index.ts"],
-            "@pmsb/host-gnome-prefs": ["./packages/host-gnome-prefs/src/index.ts"]
+            "@pmsb/domain": ["./core/packages/domain/src/index.ts"],
+            "@pmsb/application": ["./core/packages/application/src/index.ts"],
+            "@pmsb/infrastructure-gnome": ["./platforms/gnome/packages/infrastructure-gnome/src/index.ts"],
+            "@pmsb/host-gnome-shell": ["./platforms/gnome/packages/host-gnome-shell/src/index.ts"],
+            "@pmsb/host-gnome-prefs": ["./platforms/gnome/packages/host-gnome-prefs/src/index.ts"]
         }
     },
     "include": [
-        "src/**/*.ts",
-        "packages/*/src/**/*.ts",
-        "packages/*/src/**/*.d.ts"
+        "core/packages/*/src/**/*.ts",
+        "core/packages/*/src/**/*.d.ts",
+        "platforms/*/packages/*/src/**/*.ts",
+        "platforms/*/packages/*/src/**/*.d.ts"
     ]
 }

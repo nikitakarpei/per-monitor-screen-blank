@@ -1,10 +1,10 @@
 {
     "files": [],
     "references": [
-        { "path": "./packages/core/tsconfig.json" },
-        { "path": "./packages/application/tsconfig.json" },
-        { "path": "./packages/infrastructure-gnome/tsconfig.json" },
-        { "path": "./packages/host-gnome-shell/tsconfig.json" },
-        { "path": "./packages/host-gnome-prefs/tsconfig.json" }
+        { "path": "./core/packages/domain/tsconfig.json" },
+        { "path": "./core/packages/application/tsconfig.json" },
+        { "path": "./platforms/gnome/packages/infrastructure-gnome/tsconfig.json" },
+        { "path": "./platforms/gnome/packages/host-gnome-shell/tsconfig.json" },
+        { "path": "./platforms/gnome/packages/host-gnome-prefs/tsconfig.json" }
     ]
 }

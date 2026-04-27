@@ -14,17 +14,17 @@ import { strict as boundariesStrict } from 'eslint-plugin-boundaries/config';
 // Define element types for each package and enforce dependency rules.
 // =============================================================================
 const boundariesElements = [
-    { type: 'core', pattern: 'packages/core/src/**' },
-    { type: 'application', pattern: 'packages/application/src/**' },
-    { type: 'infrastructure-gnome', pattern: 'packages/infrastructure-gnome/src/**' },
-    { type: 'host-gnome-shell', pattern: 'packages/host-gnome-shell/src/**' },
-    { type: 'host-gnome-prefs', pattern: 'packages/host-gnome-prefs/src/**' },
+    { type: 'domain', pattern: 'core/packages/domain/src/**' },
+    { type: 'application', pattern: 'core/packages/application/src/**' },
+    { type: 'infrastructure-gnome', pattern: 'platforms/gnome/packages/infrastructure-gnome/src/**' },
+    { type: 'host-gnome-shell', pattern: 'platforms/gnome/packages/host-gnome-shell/src/**' },
+    { type: 'host-gnome-prefs', pattern: 'platforms/gnome/packages/host-gnome-prefs/src/**' },
 ];
 
 const boundariesRules = {
     default: 'disallow',
     rules: [
-        { from: { type: 'core' }, allow: { to: { type: 'core' } } },
+        { from: { type: 'domain' }, allow: { to: { type: 'domain' } } },
         { from: { type: 'application' }, allow: { to: { type: ['core', 'application'] } } },
         { from: { type: 'infrastructure-gnome' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome'] } } },
         { from: { type: 'host-gnome-shell' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome', 'host-gnome-shell'] } } },
@@ -82,7 +82,7 @@ export default tseslint.config(
         ignores: ['dist/**', 'node_modules/**'],
     },
     {
-        files: ['packages/**/*.ts'],
+        files: ['core/packages/**/*.ts', 'platforms/*/packages/**/*.ts'],
         settings: {
             ...boundariesStrict.settings,
             'boundaries/elements': boundariesElements,
@@ -149,13 +149,13 @@ export default tseslint.config(
         },
     },
     {
-        files: ['packages/**/*.test.ts'],
+        files: ['core/packages/**/*.test.ts', 'platforms/*/packages/**/*.test.ts'],
         rules: {
             'must-use/no-ignored-return': 'off',
         },
     },
     {
-        files: ['packages/host-gnome-shell/src/**/*.ts', 'packages/host-gnome-prefs/src/**/*.ts', 'packages/infrastructure-gnome/src/**/*.ts'],
+        files: ['platforms/gnome/packages/host-gnome-shell/src/**/*.ts', 'platforms/gnome/packages/host-gnome-prefs/src/**/*.ts', 'platforms/gnome/packages/infrastructure-gnome/src/**/*.ts'],
         rules: {
             'unicorn/prefer-global-this': 'off',
         },

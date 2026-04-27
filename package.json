@@ -4,14 +4,15 @@
     "type": "module",
     "workspaces": [
         "local-plugins/*",
-        "packages/*"
+        "core/packages/*",
+        "platforms/*/packages/*"
     ],
     "scripts": {
-        "lint": "eslint packages/*/src",
-        "lint:js": "eslint packages/*/src",
+        "lint": "eslint core/packages/*/src platforms/*/packages/*/src",
+        "lint:js": "eslint core/packages/*/src platforms/*/packages/*/src",
         "lint:dead-code": "knip --reporter compact",
-        "format": "prettier --write src",
-        "format:check": "prettier --check src",
+        "format": "prettier --write core/packages/*/src platforms/*/packages/*/src",
+        "format:check": "prettier --check core/packages/*/src platforms/*/packages/*/src",
         "typecheck": "tsc --build",
         "test": "vitest",
         "prepare": "simple-git-hooks"
