@@ -182,8 +182,6 @@ export default class PerMonitorScreenBlankExtension extends Extension {
                 quickSettings,
             });
 
-            quickSettings.syncProfiles();
-
             platformBus.emit({
                 type: 'application-bootstrap-requested',
                 payload: {},

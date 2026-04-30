@@ -34,7 +34,6 @@ import { bootstrapConnectedIdentities } from './handlers/application-bootstrap-r
 import { pruneDisconnectedIdentities } from './handlers/application-bootstrap-requested/prune-disconnected-identities.js';
 import { bootstrapGeneralSettings } from './handlers/application-bootstrap-requested/bootstrap-general-settings.js';
 import { applyProfileModesToMonitors } from './use-cases/apply-profile-modes-to-monitors.js';
-import { syncQuickSettingsProfiles } from './use-cases/sync-quick-settings-profiles.js';
 import { persistMonitorIdentity } from './use-cases/persist-monitor-identity.js';
 import { applyIdleTimeoutToAutoAwakeMonitors } from './use-cases/apply-idle-timeout-to-auto-awake-monitors.js';
 import { applyKeepAwakeDurationToKeepAwakeMonitors } from './use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
@@ -86,17 +85,14 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('profile-switched', (payload) =>
         applyProfileModesToMonitors(deps, payload.profileId),
     );
-    void deps.bus.on('profile-switched', (payload) =>
-        deps.quickSettings.syncProfiles(
-            deps.profileSettings.getProfiles(),
-            payload.profileId,
-        ),
+    void deps.bus.on('profile-switched', (_payload) =>
+        deps.quickSettings.syncProfiles(),
     );
     void deps.bus.on('profile-ids-changed', (_payload) =>
-        syncQuickSettingsProfiles(deps, 'profile-ids-changed'),
+        deps.quickSettings.syncProfiles(),
     );
     void deps.bus.on('profile-name-changed', (_payload) =>
-        syncQuickSettingsProfiles(deps, 'profile-name-changed'),
+        deps.quickSettings.syncProfiles(),
     );
     void deps.bus.on('profile-created', (payload) =>
         deps.profileSettings.setActiveProfile(payload.profileId),
@@ -154,7 +150,7 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
         pruneDisconnectedIdentities(deps, _payload),
     );
     void deps.bus.on('application-bootstrap-requested', (_payload) =>
-        syncQuickSettingsProfiles(deps, 'bootstrap'),
+        deps.quickSettings.syncProfiles(),
     );
     void deps.bus.on('application-bootstrap-requested', (_payload) =>
         bootstrapGeneralSettings(deps, _payload),

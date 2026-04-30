@@ -20,9 +20,6 @@ export interface SettingsGateway {
 }
 
 export interface QuickSettings {
-    syncProfiles(
-        profiles: ReadonlyArray<Readonly<Profile>>,
-        activeProfileId: ProfileId,
-    ): void;
+    syncProfiles(): void;
     visible: boolean;
 }
