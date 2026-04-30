@@ -62,7 +62,7 @@ export class EventBus<TEvent extends { type: string; payload: object }> {
         }
     }
 
-    destroy(): void {
+    dispose(): void {
         for (const listeners of this.#listeners.values()) {
             listeners.clear();
         }

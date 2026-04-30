@@ -1,24 +1,20 @@
 import { MonitorEntity, tryTransition, type MonitorState } from '@pmsb/domain';
+import type { Disposable } from '@pmsb/lifecycle';
 import { LoggerPort } from '../../util/logger.js';
 import { AppEventBus } from './app-event-bus.js';
 
-interface MonitorRegistryDeps {
-    logger: LoggerPort;
-    bus: AppEventBus;
-}
+export class MonitorRegistry implements Disposable {
+    readonly #logger: LoggerPort;
+    readonly #bus: AppEventBus;
+    readonly #entries = new Map<string, MonitorEntity>();
 
-export class MonitorRegistry {
-    private _entries = new Map<string, MonitorEntity>();
-    private readonly _logger: LoggerPort;
-    private readonly _bus: AppEventBus;
-
-    constructor(deps: MonitorRegistryDeps) {
-        this._logger = deps.logger;
-        this._bus = deps.bus;
+    constructor(logger: LoggerPort, bus: AppEventBus) {
+        this.#logger = logger;
+        this.#bus = bus;
     }
 
     get(id: string): Readonly<MonitorEntity> {
-        const entry = this._entries.get(id);
+        const entry = this.#entries.get(id);
         if (!entry) {
             throw new Error(`MonitorRegistry: no entry for monitor "${id}"`);
         }
@@ -26,15 +22,15 @@ export class MonitorRegistry {
     }
 
     tryGet(id: string): Readonly<MonitorEntity> | undefined {
-        return this._entries.get(id);
+        return this.#entries.get(id);
     }
 
     has(id: string): boolean {
-        return this._entries.has(id);
+        return this.#entries.has(id);
     }
 
     create(id: string): void {
-        const existing = this._entries.get(id);
+        const existing = this.#entries.get(id);
         if (existing) {
             throw new Error(
                 `monitor registry create failed: entry already exists (id=${id})`,
@@ -42,7 +38,7 @@ export class MonitorRegistry {
         }
 
         const entry = new MonitorEntity(id, undefined);
-        void this._entries.set(id, entry);
+        void this.#entries.set(id, entry);
     }
 
     transitionState(
@@ -50,7 +46,7 @@ export class MonitorRegistry {
         newState: MonitorState,
         reason: string,
     ): Readonly<MonitorEntity> {
-        const entity = this._entries.get(monitorId);
+        const entity = this.#entries.get(monitorId);
         if (!entity) {
             throw new Error(
                 `MonitorRegistry: no entry for monitor "${monitorId}"`,
@@ -59,7 +55,7 @@ export class MonitorRegistry {
 
         const transition = tryTransition(entity.state, newState);
         if (transition === undefined) {
-            this._logger.info(
+            this.#logger.info(
                 `monitor registry skipped no-op transition (id=${monitorId}, state=${entity.state}, reason=${reason})`,
             );
             return entity;
@@ -67,11 +63,7 @@ export class MonitorRegistry {
 
         entity.state = transition.current;
 
-        this._logger.info(
-            `monitor registry transitioned state (id=${monitorId}, previous=${transition.previous}, current=${transition.current}, reason=${reason})`,
-        );
-
-        this._bus.emit({
+        this.#bus.emit({
             type: 'state-changed',
             payload: {
                 monitorId,
@@ -85,14 +77,14 @@ export class MonitorRegistry {
     }
 
     remove(id: string): void {
-        this._entries.delete(id);
+        this.#entries.delete(id);
     }
 
-    clear(): void {
-        this._entries.clear();
+    dispose(): void {
+        this.#entries.clear();
     }
 
     getAll(): MonitorEntity[] {
-        return [...this._entries.values()];
+        return [...this.#entries.values()];
     }
 }

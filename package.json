@@ -8,9 +8,7 @@
         "platforms/*/packages/*"
     ],
     "scripts": {
-        "lint": "eslint core/packages/*/src platforms/*/packages/*/src",
-        "lint:js": "eslint core/packages/*/src platforms/*/packages/*/src",
-        "lint:dead-code": "knip --reporter compact",
+        "lint": "eslint core/packages/*/src platforms/*/packages/*/src && knip --reporter compact",
         "format": "prettier --write core/packages/*/src platforms/*/packages/*/src",
         "format:check": "prettier --check core/packages/*/src platforms/*/packages/*/src",
         "typecheck": "tsc --build",
@@ -19,10 +17,14 @@
     },
     "simple-git-hooks": {
         "pre-commit": "npx lint-staged",
-        "pre-push": "npm run lint:dead-code && npm run typecheck"
+        "pre-push": "npm run typecheck"
     },
     "lint-staged": {
-        "packages/**/*.{js,ts}": [
+        "core/**/*.ts": [
+            "prettier --write",
+            "eslint"
+        ],
+        "platforms/**/*.ts": [
             "prettier --write",
             "eslint"
         ]

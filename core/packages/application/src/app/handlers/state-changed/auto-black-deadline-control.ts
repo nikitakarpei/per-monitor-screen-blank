@@ -1,14 +1,14 @@
 import { DeadlineScheduler } from '../../../app/ports/scheduler';
 import { StateChangedEvent } from '../../app-events';
 import { LoggerPort } from '../../../util/logger';
-import { SettingsGateway } from '../../../app/ports/settings.js';
+import { GeneralSettings } from '../../../app/ports/general-settings.js';
 import { DEADLINE_KEYS } from '@pmsb/domain';
 import { FocusedMonitorService } from '../../services/focused-monitor-service';
 
 interface AutoBlackDeadlineControlDeps {
     focusedMonitorService: FocusedMonitorService;
     deadlineScheduler: DeadlineScheduler;
-    settingsGateway: SettingsGateway;
+    generalSettings: GeneralSettings;
     logger: LoggerPort;
 }
 
@@ -22,7 +22,7 @@ export function autoBlackDeadlineControl(
     if (payload.current === 'AutoAwake') {
         deps.deadlineScheduler.cancelMonitor(payload.monitorId);
         const deadlineMs =
-            Date.now() + deps.settingsGateway.getIdleTimeoutSeconds() * 1000;
+            Date.now() + deps.generalSettings.getIdleTimeout() * 1000;
         deps.deadlineScheduler.schedule(
             DEADLINE_KEYS.autoBlack,
             payload.monitorId,

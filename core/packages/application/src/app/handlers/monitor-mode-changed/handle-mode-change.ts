@@ -1,11 +1,12 @@
 import { MonitorModeChangedEvent } from '../../../app/ports/platform-events.js';
-import { QuickSettings, SettingsGateway } from '../../../app/ports/settings.js';
+import { QuickSettings } from '../../../app/ports/settings.js';
+import { ProfileSettings } from '../../../app/ports/profile-settings.js';
 import { LoggerPort } from '../../../util/logger.js';
 import { MonitorRegistry } from '../../services/monitor-registry.js';
 import { ModeStateResolver } from '../../services/mode-state-resolver.js';
 
 interface HandleModeChangeDeps {
-    gateway: SettingsGateway;
+    profileSettings: ProfileSettings;
     monitorRegistry: MonitorRegistry;
     quickSettings: QuickSettings;
     logger: LoggerPort;
@@ -19,7 +20,12 @@ export function handleModeChange(
     deps: HandleModeChangeDeps,
     payload: MonitorModeChangedEvent['payload'],
 ): void {
-    const activeProfileId = deps.gateway.getActiveProfileId();
+    const activeProfile = deps.profileSettings.getActiveProfile();
+    if (!activeProfile) {
+        deps.logger.warn(`monitor-mode-changed: no active profile found`);
+        return;
+    }
+    const activeProfileId = activeProfile.id;
 
     if (payload.profileId !== activeProfileId) {
         deps.logger.info(

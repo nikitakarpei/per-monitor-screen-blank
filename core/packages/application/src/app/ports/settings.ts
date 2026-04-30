@@ -1,5 +1,8 @@
 import { type Profile, type ProfileId, type MonitorMode } from '@pmsb/domain';
 
+/**
+ * @deprecated Use GeneralSettings and ProfileSettings instead.
+ */
 export interface SettingsGateway {
     getIdleTimeoutSeconds(): number;
     getKeepAwakeMinutes(): number;
@@ -17,10 +20,6 @@ export interface SettingsGateway {
 }
 
 export interface QuickSettings {
-    initProfiles(
-        profiles: ReadonlyArray<Readonly<Profile>>,
-        activeProfileId: ProfileId,
-    ): void;
     syncProfiles(
         profiles: ReadonlyArray<Readonly<Profile>>,
         activeProfileId: ProfileId,

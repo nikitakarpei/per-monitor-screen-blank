@@ -8,6 +8,6 @@ export interface PointerContextMenu {
 }
 
 export interface PointerMenuShortcutManager {
-    register(shortcut: string, onShortcut: () => void): void;
+    register(onShortcut: () => void): void;
     unregister(): void;
 }

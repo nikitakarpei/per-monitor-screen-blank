@@ -9,8 +9,8 @@ export default defineConfig({
             '@pmsb/domain': `${repoRoot}core/packages/domain/src/index.ts`,
             '@pmsb/application': `${repoRoot}core/packages/application/src/index.ts`,
             '@pmsb/infrastructure-gnome': `${repoRoot}platforms/gnome/packages/infrastructure-gnome/src/index.ts`,
-            '@pmsb/host-gnome-shell': `${repoRoot}platforms/gnome/packages/host-gnome-shell/src/index.ts`,
-            '@pmsb/host-gnome-prefs': `${repoRoot}platforms/gnome/packages/host-gnome-prefs/src/index.ts`,
+            '@pmsb/gnome-shell': `${repoRoot}platforms/gnome/packages/gnome-shell/src/index.ts`,
+            '@pmsb/gnome-prefs': `${repoRoot}platforms/gnome/packages/gnome-prefs/src/index.ts`,
         },
     },
     test: {

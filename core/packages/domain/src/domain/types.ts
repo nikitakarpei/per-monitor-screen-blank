@@ -32,6 +32,10 @@ export interface PointerPosition {
 export interface Deadline {
     readonly deadlineKey: DeadlineKey;
     readonly monitorId: string;
-    readonly token: number;
-    readonly deadlineMs: number;
+    readonly token: string;
+}
+
+export interface KnownMonitorEntry {
+    monitorId: string;
+    label: string;
 }

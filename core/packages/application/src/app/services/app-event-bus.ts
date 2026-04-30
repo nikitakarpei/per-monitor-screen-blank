@@ -1,3 +1,4 @@
+import type { Disposable } from '@pmsb/lifecycle';
 import { EventBus } from '../../util/event-bus.js';
 import { LoggerPort } from '../../util/logger.js';
 import { AppEvents } from '../app-events.js';
@@ -6,18 +7,14 @@ import {
     PlatformEvent,
 } from '../../app/ports/platform-events.js';
 
-interface AppEventBusDeps {
-    platformBus: PlatformEventSubscriber;
-    logger: LoggerPort;
-}
-
-export class AppEventBus {
+export class AppEventBus implements Disposable {
     readonly #bus: EventBus<PlatformEvent | AppEvents>;
     #platformUnsub: (() => void) | undefined;
+    #disposed = false;
 
-    constructor(deps: AppEventBusDeps) {
-        this.#bus = new EventBus<PlatformEvent | AppEvents>(deps.logger);
-        this.#platformUnsub = deps.platformBus.onAny((event) => {
+    constructor(logger: LoggerPort, platformBus: PlatformEventSubscriber) {
+        this.#bus = new EventBus<PlatformEvent | AppEvents>(logger);
+        this.#platformUnsub = platformBus.onAny((event) => {
             this.#bus.emit(event);
         });
     }
@@ -40,9 +37,13 @@ export class AppEventBus {
         this.#bus.emit(event);
     }
 
-    destroy(): void {
+    dispose(): void {
+        if (this.#disposed) {
+            return;
+        }
+        this.#disposed = true;
         this.#platformUnsub?.();
         this.#platformUnsub = undefined;
-        this.#bus.destroy();
+        this.#bus.dispose();
     }
 }

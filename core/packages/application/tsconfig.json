@@ -5,9 +5,13 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "paths": {
-            "@pmsb/domain": ["../domain/dist/index.d.ts"]
+            "@pmsb/domain": ["../domain/dist/index.d.ts"],
+            "@pmsb/lifecycle": ["../lifecycle/dist/index.d.ts"]
         }
     },
     "include": ["src/**/*.ts"],
-    "references": [{ "path": "../domain/tsconfig.json" }]
+    "references": [
+        { "path": "../domain/tsconfig.json" },
+        { "path": "../lifecycle/tsconfig.json" }
+    ]
 }

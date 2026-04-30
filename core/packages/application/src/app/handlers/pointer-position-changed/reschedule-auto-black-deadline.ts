@@ -2,13 +2,13 @@ import { DEADLINE_KEYS } from '@pmsb/domain';
 import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { MonitorRegistry } from '../../services/monitor-registry.js';
 import { PointerPositionChangedEvent } from '../../../app/ports/platform-events.js';
-import { SettingsGateway } from '../../../app/ports/settings.js';
+import { GeneralSettings } from '../../../app/ports/general-settings.js';
 import { type LoggerPort } from '../../../util/logger.js';
 
 interface RescheduleAutoBlackDeadlineDeps {
     monitorRegistry: MonitorRegistry;
     deadlineScheduler: DeadlineScheduler;
-    settingsGateway: SettingsGateway;
+    generalSettings: GeneralSettings;
     logger: LoggerPort;
 }
 
@@ -27,7 +27,7 @@ export function rescheduleAutoBlackDeadline(
     deps.deadlineScheduler.cancel(DEADLINE_KEYS.autoBlack, entity.id);
 
     const deadlineMs =
-        Date.now() + deps.settingsGateway.getIdleTimeoutSeconds() * 1000;
+        Date.now() + deps.generalSettings.getIdleTimeout() * 1000;
     deps.deadlineScheduler.schedule(
         DEADLINE_KEYS.autoBlack,
         entity.id,

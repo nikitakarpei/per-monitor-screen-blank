@@ -23,6 +23,8 @@ export {
     type PlatformEventSubscriber,
 } from './app/ports/platform-events.js';
 export { type DeadlineScheduler } from './app/ports/scheduler.js';
+export { type GeneralSettings } from './app/ports/general-settings.js';
+export { type ProfileSettings } from './app/ports/profile-settings.js';
 export {
     type SettingsGateway,
     type QuickSettings,
@@ -30,6 +32,7 @@ export {
 export {
     type PointerSource,
     type MonitorIdentityStore,
+    type ConnectedMonitorsQuery,
 } from './app/ports/monitors.js';
 export {
     type ContextMenuItem,
@@ -42,4 +45,7 @@ export { FocusedMonitorService } from './app/services/focused-monitor-service.js
 export { MonitorRegistry } from './app/services/monitor-registry.js';
 export { AppEventBus } from './app/services/app-event-bus.js';
 export { EventBus } from './util/event-bus.js';
-export { type IssueReport, type LoggerPort } from './util/logger.js';
+export { type LoggerPort } from './util/logger.js';
+export { type UserNotifications } from './util/user-notifications.js';
+export { DeduplicatingUserNotifications } from './util/deduplicating-user-notifications.js';
+export { IssueReportingLogger } from './util/issue-reporting-logger.js';

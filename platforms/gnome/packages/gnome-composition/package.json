@@ -1,0 +1,22 @@
+{
+    "name": "@pmsb/gnome-composition",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./src/index.ts"
+        }
+    },
+    "scripts": {
+        "typecheck": "tsc --build"
+    },
+    "dependencies": {
+        "@pmsb/application": "*",
+        "@pmsb/infrastructure-gnome": "*",
+        "@pmsb/gnome-shell": "*",
+        "@pmsb/gnome-prefs": "*",
+        "@pmsb/lifecycle": "*"
+    }
+}

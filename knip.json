@@ -2,8 +2,8 @@
     "workspaces": {
         ".": {
             "entry": [
-                "platforms/gnome/packages/host-gnome-shell/src/shell-ambient.d.ts",
-                "platforms/gnome/packages/host-gnome-prefs/src/prefs-ambient.d.ts"
+                "platforms/gnome/packages/gnome-shell/src/shell-ambient.d.ts",
+                "platforms/gnome/packages/gnome-prefs/src/prefs-ambient.d.ts"
             ],
             "project": [
                 "core/packages/*/src/**/*.ts",
@@ -26,17 +26,25 @@
                 "src/**/*.ts"
             ]
         },
-        "platforms/gnome/packages/host-gnome-prefs": {
+        "platforms/gnome/packages/gnome-composition": {
             "entry": [
-                "src/prefs.ts"
+                "src/index.ts"
             ],
             "project": [
                 "src/**/*.ts"
             ]
         },
-        "platforms/gnome/packages/host-gnome-shell": {
+        "platforms/gnome/packages/gnome-prefs": {
             "entry": [
-                "src/extension.ts"
+                "src/index.ts"
+            ],
+            "project": [
+                "src/**/*.ts"
+            ]
+        },
+        "platforms/gnome/packages/gnome-shell": {
+            "entry": [
+                "src/index.ts"
             ],
             "project": [
                 "src/**/*.ts"

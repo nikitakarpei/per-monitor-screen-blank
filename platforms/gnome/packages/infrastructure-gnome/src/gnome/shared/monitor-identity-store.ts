@@ -1,30 +1,47 @@
 import Gio from 'gi://Gio';
+import { type Disposable } from '@pmsb/lifecycle';
 import { GSETTINGS_KEYS } from '../gsettings-schema-keys.js';
 import { type MonitorIdentityStore } from '@pmsb/application';
-import { GjsLogger } from '../../gjs-logger.js';
+import { gsettingsChangedSignal } from '../internal/gsettings-signals.js';
+import { KnownMonitorEntry } from '@pmsb/domain';
 
-interface MonitorIdentityStoreDeps {
-    settings: Gio.Settings;
-    logger: GjsLogger;
-}
-
-export interface KnownMonitorEntry {
-    monitorId: string;
-    label: string;
-}
+type KnownMonitorsChange = readonly KnownMonitorEntry[];
 
 export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
-    private readonly settings: Gio.Settings;
-    private readonly logger: GjsLogger;
+    readonly #settings: Gio.Settings;
 
-    constructor(deps: MonitorIdentityStoreDeps) {
-        this.settings = deps.settings;
-        this.logger = deps.logger;
+    constructor(settings: Gio.Settings) {
+        this.#settings = settings;
     }
 
     load(): KnownMonitorEntry[] {
+        return this.#readKnownMonitors();
+    }
+
+    observeKnownMonitorsChanged(
+        callback: (knownMonitors: KnownMonitorsChange) => void,
+    ): Disposable {
+        const connectionId = this.#settings.connect(
+            gsettingsChangedSignal(GSETTINGS_KEYS.knownMonitors),
+            () => callback(this.#readKnownMonitors()),
+        );
+
+        let disposed = false;
+        return {
+            dispose: () => {
+                if (disposed) {
+                    return;
+                }
+
+                disposed = true;
+                this.#settings.disconnect(connectionId);
+            },
+        };
+    }
+
+    #readKnownMonitors(): KnownMonitorEntry[] {
         try {
-            const jsonString = this.settings.get_string(
+            const jsonString = this.#settings.get_string(
                 GSETTINGS_KEYS.knownMonitors,
             );
             if (!jsonString || jsonString === '') {
@@ -32,28 +49,22 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
             }
             const parsed = JSON.parse(jsonString);
             if (!Array.isArray(parsed)) {
-                this.logger.warn(
-                    'known-monitors value is not an array, returning empty',
-                );
-                return [];
+                throw new TypeError('known-monitors value is not an array');
             }
             return parsed as KnownMonitorEntry[];
-        } catch (parseError) {
-            this.logger.warn(
-                `Failed to parse known-monitors: ${String(parseError)}`,
-            );
-            return [];
+        } catch (error) {
+            throw new Error(`Failed to parse known-monitors`, { cause: error });
         }
     }
 
     save(entries: KnownMonitorEntry[]): void {
         const jsonString = JSON.stringify(entries);
-        const saved = this.settings.set_string(
+        const saved = this.#settings.set_string(
             GSETTINGS_KEYS.knownMonitors,
             jsonString,
         );
         if (!saved) {
-            this.logger.warn('failed to save known-monitors to gsettings');
+            throw new Error('failed to save known-monitors to gsettings');
         }
     }
 
@@ -73,6 +84,10 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
 
     listIds(): readonly string[] {
         return this.load().map((entry) => entry.monitorId);
+    }
+
+    list(): readonly KnownMonitorEntry[] {
+        return this.load();
     }
 
     remove(monitorId: string): void {

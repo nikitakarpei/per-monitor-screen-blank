@@ -1,7 +1,7 @@
 import {
     type ProfileId,
     type Deadline,
-    type PhysicalMonitorInfo,
+    type LogicalMonitorIdentity,
     type MonitorMode,
 } from '@pmsb/domain';
 
@@ -60,12 +60,14 @@ export type PointerShortcutChangedEvent = {
     payload: { shortcut: string[] };
 };
 
+type ShowIssueNotificationsChangedEvent = {
+    type: 'show-issue-notifications-changed';
+    payload: { showIssueNotifications: boolean };
+};
+
 export type MonitorConnectedEvent = {
     type: 'monitor-connected';
-    payload: {
-        monitorId: string;
-        physicalMonitors: readonly PhysicalMonitorInfo[];
-    };
+    payload: LogicalMonitorIdentity;
 };
 
 export type MonitorDisconnectedEvent = {
@@ -98,6 +100,16 @@ export type MonitorsGeometryChangedEvent = {
     payload: Record<string, never>;
 };
 
+type KnownMonitorsChangedEvent = {
+    type: 'known-monitors-changed';
+    payload: Record<string, never>;
+};
+
+type ApplicationBootstrapRequestedEvent = {
+    type: 'application-bootstrap-requested';
+    payload: Record<string, never>;
+};
+
 export type PlatformEvent =
     | ProfileIdsChangedEvent
     | ProfileSwitchedEvent
@@ -111,12 +123,15 @@ export type PlatformEvent =
     | IndicatorVisibilityChangedEvent
     | PointerMonitorTimerPolicyChangedEvent
     | PointerShortcutChangedEvent
+    | ShowIssueNotificationsChangedEvent
     | MonitorConnectedEvent
     | MonitorDisconnectedEvent
     | PointerMonitorChangedEvent
     | PointerPositionChangedEvent
     | DeadlineFiredEvent
-    | MonitorsGeometryChangedEvent;
+    | MonitorsGeometryChangedEvent
+    | KnownMonitorsChangedEvent
+    | ApplicationBootstrapRequestedEvent;
 
 export interface PlatformEventEmitter {
     emit(event: PlatformEvent): void;

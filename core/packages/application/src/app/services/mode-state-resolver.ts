@@ -1,4 +1,4 @@
-import { SettingsGateway } from '../../app/ports/settings.js';
+import { type GeneralSettings } from '../../app/ports/general-settings.js';
 import { FocusedMonitorService } from './focused-monitor-service.js';
 import {
     modeToInitialState,
@@ -6,27 +6,23 @@ import {
     type MonitorMode,
 } from '@pmsb/domain';
 
-interface ModeStateResolverDeps {
-    gateway: SettingsGateway;
-    focusedMonitorService: FocusedMonitorService;
-}
-
 export class ModeStateResolver {
-    private readonly gateway: SettingsGateway;
-    private readonly focusedMonitorService: FocusedMonitorService;
+    readonly #generalSettings: GeneralSettings;
+    readonly #focusedMonitorService: FocusedMonitorService;
 
-    constructor(deps: ModeStateResolverDeps) {
-        this.gateway = deps.gateway;
-        this.focusedMonitorService = deps.focusedMonitorService;
+    constructor(
+        generalSettings: GeneralSettings,
+        focusedMonitorService: FocusedMonitorService,
+    ) {
+        this.#generalSettings = generalSettings;
+        this.#focusedMonitorService = focusedMonitorService;
     }
 
     initialStateForMode(mode: MonitorMode, monitorId: string): MonitorState {
         const isFocused =
-            this.focusedMonitorService.getFocusedMonitor()?.id === monitorId;
-        return modeToInitialState(
-            mode,
-            this.gateway.shouldMonitorAutoBlackWhenFocused(),
-            isFocused,
-        );
+            this.#focusedMonitorService.getFocusedMonitor()?.id === monitorId;
+        const shouldAutoBlackWhenFocused =
+            !this.#generalSettings.getDisableAutoTimerOnPointerMonitor();
+        return modeToInitialState(mode, shouldAutoBlackWhenFocused, isFocused);
     }
 }

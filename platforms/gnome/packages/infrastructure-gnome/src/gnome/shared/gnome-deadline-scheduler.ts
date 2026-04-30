@@ -1,24 +1,20 @@
 import GLib from 'gi://GLib';
+import { type Disposable } from '@pmsb/lifecycle';
 import { type DeadlineKey } from '@pmsb/domain';
 import {
     type DeadlineScheduler,
+    type LoggerPort,
     type PlatformEventEmitter,
 } from '@pmsb/application';
-import { GjsLogger } from '../../gjs-logger.js';
 
-/**
- * GNOME-specific implementation of DeadlineScheduler using GLib timeouts.
- * Implements token-based stale callback filtering and proper cleanup.
- */
-export class GnomeDeadlineScheduler implements DeadlineScheduler {
+export class GnomeDeadlineScheduler implements DeadlineScheduler, Disposable {
     readonly #eventEmitter: PlatformEventEmitter;
-    readonly #logger: GjsLogger;
+    readonly #logger: LoggerPort;
     readonly #entries: Map<string, ScheduleEntry> = new Map();
-    readonly #tokens: Map<string, number> = new Map();
 
-    constructor(deps: GnomeDeadlineSchedulerDeps) {
-        this.#eventEmitter = deps.eventEmitter;
-        this.#logger = deps.logger;
+    constructor(eventEmitter: PlatformEventEmitter, logger: LoggerPort) {
+        this.#eventEmitter = eventEmitter;
+        this.#logger = logger;
     }
 
     schedule(
@@ -26,99 +22,64 @@ export class GnomeDeadlineScheduler implements DeadlineScheduler {
         monitorId: string,
         deadlineMs: number,
     ): void {
-        this.#scheduleEntry(deadlineKey, monitorId, deadlineMs);
+        const key = this.#buildKey(deadlineKey, monitorId);
+        if (this.#entries.has(key)) {
+            this.#removeEntry(key);
+        }
+
+        const token = GLib.uuid_string_random();
+        const sourceId = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            deadlineMs,
+            () => {
+                try {
+                    this.#handleTimeout(key, token);
+                } catch (error) {
+                    this.#logger.error(
+                        `failed to handle monitor deadline timeout: ${error}`,
+                    );
+                }
+                return GLib.SOURCE_REMOVE;
+            },
+        );
+
+        this.#entries.set(key, { sourceId, token, deadlineKey, monitorId });
     }
 
     cancel(deadlineKey: DeadlineKey, monitorId: string): void {
         this.#removeEntry(this.#buildKey(deadlineKey, monitorId));
-        this.#logger.info(
-            `cancelled deadline (deadlineKey=${deadlineKey}, monitorId=${monitorId})`,
-        );
     }
 
     cancelMonitor(monitorId: string): void {
         const keys = this.#entries
             .entries()
             .filter(([_, entry]) => entry.monitorId === monitorId)
-            .map(([key]) => key);
+            .map(([key]) => key)
+            .toArray();
         for (const key of keys) {
             this.#removeEntry(key);
         }
-        this.#logger.info(
-            `cancelled all deadlines for monitor (monitorId=${monitorId})`,
-        );
     }
 
-    cancelAll(): void {
-        for (const key of this.#entries.keys()) {
+    dispose(): void {
+        const keys = this.#entries.keys().toArray();
+        for (const key of keys) {
             this.#removeEntry(key);
         }
-        this.#logger.info(`cancelled all deadlines`);
-    }
-
-    #scheduleEntry(
-        deadlineKey: DeadlineKey,
-        monitorId: string,
-        deadlineMs: number,
-    ): void {
-        const key = this.#buildKey(deadlineKey, monitorId);
-        this.#removeEntry(key);
-        const token = (this.#tokens.get(key) ?? 0) + 1;
-        this.#tokens.set(key, token);
-        const delayMs = Math.max(0, Math.ceil(deadlineMs - Date.now()));
-        const sourceId = GLib.timeout_add(
-            GLib.PRIORITY_DEFAULT,
-            delayMs,
-            () => {
-                const latestToken = this.#tokens.get(key);
-                if (latestToken !== token) {
-                    this.#logger.warn(
-                        'ignored stale monitor deadline callback',
-                    );
-                    return GLib.SOURCE_REMOVE;
-                }
-                this.#entries.delete(key);
-                this.#tokens.delete(key);
-                this.#eventEmitter.emit({
-                    type: 'deadline-fired',
-                    payload: {
-                        deadlineKey,
-                        monitorId,
-                        token,
-                        deadlineMs,
-                    },
-                });
-                return GLib.SOURCE_REMOVE;
-            },
-        );
-        if (!sourceId) {
-            this.#tokens.delete(key);
-            this.#logger.warn(
-                'monitor deadline schedule skipped: no GLib source id',
-            );
-            return;
-        }
-        this.#entries.set(key, { sourceId, token, deadlineKey, monitorId });
-        this.#logger.info(
-            `scheduled deadline (deadlineKey=${deadlineKey}, monitorId=${monitorId})`,
-        );
     }
 
     #removeEntry(key: string): void {
         const entry = this.#entries.get(key);
-        if (!entry) return;
+        if (!entry) {
+            throw new Error(
+                `failed to remove monitor deadline entry: entry not found (key=${key})`,
+            );
+        }
         this.#entries.delete(key);
-        this.#tokens.delete(key);
-        try {
-            const removed = GLib.Source.remove(entry.sourceId);
-            if (!removed) {
-                this.#logger.warn(
-                    'failed to remove monitor deadline source: invalid source id',
-                );
-            }
-        } catch {
-            this.#logger.warn(
-                'failed to remove monitor deadline source: exception',
+        const removed = GLib.Source.remove(entry.sourceId);
+        if (!removed) {
+            throw new Error(
+                'failed to remove monitor deadline source: invalid source id',
             );
         }
     }
@@ -126,16 +87,35 @@ export class GnomeDeadlineScheduler implements DeadlineScheduler {
     #buildKey(deadlineKey: DeadlineKey, monitorId: string): string {
         return `${monitorId}:${deadlineKey}`;
     }
+
+    #handleTimeout(key: string, token: string): void {
+        const entry = this.#entries.get(key);
+        if (!entry) {
+            this.#logger.warn(
+                `failed to handle monitor deadline timeout: entry not found (key=${key})`,
+            );
+            return;
+        }
+        if (entry.token !== token) {
+            this.#logger.info('ignored stale monitor deadline callback');
+            return;
+        }
+        this.#entries.delete(key);
+
+        this.#eventEmitter.emit({
+            type: 'deadline-fired',
+            payload: {
+                deadlineKey: entry.deadlineKey,
+                monitorId: entry.monitorId,
+                token,
+            },
+        });
+    }
 }
 
 type ScheduleEntry = {
     readonly sourceId: number;
-    readonly token: number;
+    readonly token: string;
     readonly deadlineKey: DeadlineKey;
     readonly monitorId: string;
 };
-
-interface GnomeDeadlineSchedulerDeps {
-    eventEmitter: PlatformEventEmitter;
-    logger: GjsLogger;
-}

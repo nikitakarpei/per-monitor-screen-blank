@@ -1,12 +1,7 @@
-import { type IssueReport, type LoggerPort } from '@pmsb/application';
-
-type IssueReporter = (issue: IssueReport) => void;
+import { type LoggerPort } from '@pmsb/application';
 
 export class GjsLogger implements LoggerPort {
-    constructor(
-        private readonly prefix: string,
-        private readonly issueReporter?: IssueReporter,
-    ) {}
+    constructor(private readonly prefix: string) {}
 
     info(message: string) {
         log(`${this.prefix} INFO: ${message}`);
@@ -14,23 +9,9 @@ export class GjsLogger implements LoggerPort {
 
     warn(message: string) {
         log(`${this.prefix} WARN: ${message}`);
-
-        if (this.issueReporter) {
-            this.issueReporter({
-                level: 'warn',
-                message,
-            });
-        }
     }
 
     error(message: string) {
         logError(new Error(`${this.prefix} ERROR: ${message}`));
-
-        if (this.issueReporter) {
-            this.issueReporter({
-                level: 'error',
-                message,
-            });
-        }
     }
 }

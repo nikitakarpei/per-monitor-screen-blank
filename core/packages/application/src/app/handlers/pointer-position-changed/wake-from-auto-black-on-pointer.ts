@@ -1,12 +1,10 @@
 import { MonitorRegistry } from '../../services/monitor-registry.js';
 import { PointerPositionChangedEvent } from '../../../app/ports/platform-events.js';
-import { SettingsGateway } from '../../../app/ports/settings.js';
 import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { type LoggerPort } from '../../../util/logger.js';
 
 interface WakeFromAutoBlackOnPointerDeps {
     monitorRegistry: MonitorRegistry;
-    settingsGateway: SettingsGateway;
     deadlineScheduler: DeadlineScheduler;
     logger: LoggerPort;
 }

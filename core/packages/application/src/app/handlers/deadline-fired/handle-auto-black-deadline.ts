@@ -3,6 +3,7 @@ import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { DEADLINE_KEYS } from '@pmsb/domain';
 import { type LoggerPort } from '../../../util/logger.js';
 import { AppEventBus } from '../../services/app-event-bus.js';
+import { DeadlineFiredEvent } from '../../ports/platform-events.js';
 
 interface HandleAutoBlackDeadlineDeps {
     logger: LoggerPort;
@@ -16,12 +17,7 @@ interface HandleAutoBlackDeadlineDeps {
  */
 export function handleAutoBlackDeadline(
     deps: HandleAutoBlackDeadlineDeps,
-    payload: {
-        monitorId: string;
-        deadlineKey: string;
-        token: number;
-        deadlineMs: number;
-    },
+    payload: DeadlineFiredEvent['payload'],
 ): void {
     if (payload.deadlineKey !== DEADLINE_KEYS.autoBlack) {
         return;

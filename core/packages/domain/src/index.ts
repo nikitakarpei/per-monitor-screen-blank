@@ -22,4 +22,15 @@ export {
     type LogicalMonitorIdentity,
     type PointerPosition,
     type Deadline,
+    type KnownMonitorEntry,
 } from './domain/types.js';
+export {
+    normalizeDimIntensityPercent,
+    dimIntensityPercentToOpacity,
+} from './domain/dim-intensity.js';
+export { normalizeFadeDurationMs } from './domain/fade-duration.js';
+export { buildLogicalMonitorIdentity } from './domain/monitor-identity-utilities.js';
+export {
+    buildIssueNotificationText,
+    type IssueNotificationText,
+} from './domain/issue-notification.js';

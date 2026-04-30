@@ -1,14 +1,15 @@
-import { SettingsGateway } from '../../ports/settings.js';
+import { ProfileSettings } from '../../ports/profile-settings.js';
 import { MonitorRegistry } from '../../services/monitor-registry.js';
 import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { DEADLINE_KEYS } from '@pmsb/domain';
 import { type LoggerPort } from '../../../util/logger.js';
 import { AppEventBus } from '../../services/app-event-bus.js';
+import { DeadlineFiredEvent } from '../../ports/platform-events.js';
 
 interface HandleKeepAwakeExpiryDeps {
     logger: LoggerPort;
     monitorRegistry: MonitorRegistry;
-    settingsGateway: SettingsGateway;
+    profileSettings: ProfileSettings;
     deadlineScheduler: DeadlineScheduler;
     bus: AppEventBus;
 }
@@ -18,12 +19,7 @@ interface HandleKeepAwakeExpiryDeps {
  */
 export function handleKeepAwakeExpiry(
     deps: HandleKeepAwakeExpiryDeps,
-    payload: {
-        monitorId: string;
-        deadlineKey: string;
-        token: number;
-        deadlineMs: number;
-    },
+    payload: DeadlineFiredEvent['payload'],
 ): void {
     if (payload.deadlineKey !== DEADLINE_KEYS.keepAwakeExpiry) {
         return;
@@ -38,5 +34,17 @@ export function handleKeepAwakeExpiry(
         return;
     }
 
-    deps.settingsGateway.setMonitorMode(payload.monitorId, 'auto');
+    const activeProfile = deps.profileSettings.getActiveProfile();
+    if (activeProfile === null) {
+        deps.logger.warn(
+            `keep-awake expiry skipped: no active profile | monitorId=${payload.monitorId}`,
+        );
+        return;
+    }
+
+    deps.profileSettings.setMonitorMode(
+        activeProfile.id,
+        payload.monitorId,
+        'auto',
+    );
 }

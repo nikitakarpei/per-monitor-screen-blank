@@ -2,13 +2,15 @@ import { MonitorRegistry } from '../../services/monitor-registry.js';
 import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { type LoggerPort } from '../../../util/logger.js';
 import { PointerMonitorChangedEvent } from '../../../app/ports/platform-events.js';
-import { SettingsGateway } from '../../../app/ports/settings.js';
+import { type GeneralSettings } from '../../../app/ports/general-settings.js';
+import { type ProfileSettings } from '../../../app/ports/profile-settings.js';
 
 interface HandlePointerMonitorChangedDeps {
     monitorRegistry: MonitorRegistry;
     deadlineScheduler: DeadlineScheduler;
     logger: LoggerPort;
-    settingsGateway: SettingsGateway;
+    generalSettings: GeneralSettings;
+    profileSettings: ProfileSettings;
 }
 
 /**
@@ -18,7 +20,7 @@ export function handlePointerSuppression(
     deps: HandlePointerMonitorChangedDeps,
     payload: PointerMonitorChangedEvent['payload'],
 ): void {
-    if (deps.settingsGateway.shouldMonitorAutoBlackWhenFocused()) {
+    if (deps.generalSettings.getDisableAutoTimerOnPointerMonitor()) {
         return;
     }
 

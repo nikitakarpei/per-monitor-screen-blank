@@ -31,13 +31,14 @@ npx esbuild \
   --sourcemap \
   --entry-names=[name] \
   --outdir="$OUT" \
+  --alias:@pmsb/lifecycle="$repo_root/core/packages/lifecycle/src/index.ts" \
   --alias:@pmsb/domain="$repo_root/core/packages/domain/src/index.ts" \
   --alias:@pmsb/application="$repo_root/core/packages/application/src/index.ts" \
   --alias:@pmsb/infrastructure-gnome="$repo_root/platforms/gnome/packages/infrastructure-gnome/src/index.ts" \
-  --alias:@pmsb/host-gnome-shell="$repo_root/platforms/gnome/packages/host-gnome-shell/src/index.ts" \
-  --alias:@pmsb/host-gnome-prefs="$repo_root/platforms/gnome/packages/host-gnome-prefs/src/index.ts" \
-  "$repo_root/platforms/gnome/packages/host-gnome-shell/src/extension.ts" \
-  "$repo_root/platforms/gnome/packages/host-gnome-prefs/src/prefs.ts"
+  --alias:@pmsb/gnome-shell="$repo_root/platforms/gnome/packages/gnome-shell/src/index.ts" \
+  --alias:@pmsb/gnome-prefs="$repo_root/platforms/gnome/packages/gnome-prefs/src/index.ts" \
+  "$repo_root/platforms/gnome/packages/gnome-composition/src/extension.ts" \
+  "$repo_root/platforms/gnome/packages/gnome-composition/src/prefs.ts"
 
 if command -v glib-compile-schemas >/dev/null 2>&1; then
   glib-compile-schemas "$OUT/schemas"

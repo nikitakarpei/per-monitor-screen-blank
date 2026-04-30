@@ -1,3 +1,4 @@
+import { type Disposable } from '@pmsb/lifecycle';
 import {
     EventBus,
     type PlatformEventSubscriber,
@@ -7,7 +8,7 @@ import {
 } from '@pmsb/application';
 
 export class GnomePlatformEventBus
-    implements PlatformEventSubscriber, PlatformEventEmitter
+    implements PlatformEventSubscriber, PlatformEventEmitter, Disposable
 {
     readonly #bus: EventBus<PlatformEvent>;
 
@@ -27,7 +28,7 @@ export class GnomePlatformEventBus
         return this.#bus.onAny(callback);
     }
 
-    destroy(): void {
-        this.#bus.destroy();
+    dispose(): void {
+        this.#bus.dispose();
     }
 }

@@ -16,19 +16,79 @@ import { strict as boundariesStrict } from 'eslint-plugin-boundaries/config';
 const boundariesElements = [
     { type: 'domain', pattern: 'core/packages/domain/src/**' },
     { type: 'application', pattern: 'core/packages/application/src/**' },
-    { type: 'infrastructure-gnome', pattern: 'platforms/gnome/packages/infrastructure-gnome/src/**' },
-    { type: 'host-gnome-shell', pattern: 'platforms/gnome/packages/host-gnome-shell/src/**' },
-    { type: 'host-gnome-prefs', pattern: 'platforms/gnome/packages/host-gnome-prefs/src/**' },
+    { type: 'lifecycle', pattern: 'core/packages/lifecycle/src/**' },
+    {
+        type: 'infrastructure-gnome',
+        pattern: 'platforms/gnome/packages/infrastructure-gnome/src/**',
+    },
+    {
+        type: 'gnome-shell',
+        pattern: 'platforms/gnome/packages/gnome-shell/src/**',
+    },
+    {
+        type: 'gnome-prefs',
+        pattern: 'platforms/gnome/packages/gnome-prefs/src/**',
+    },
+    {
+        type: 'gnome-composition',
+        pattern: 'platforms/gnome/packages/gnome-composition/src/**',
+    },
 ];
 
 const boundariesRules = {
     default: 'disallow',
     rules: [
         { from: { type: 'domain' }, allow: { to: { type: 'domain' } } },
-        { from: { type: 'application' }, allow: { to: { type: ['core', 'application'] } } },
-        { from: { type: 'infrastructure-gnome' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome'] } } },
-        { from: { type: 'host-gnome-shell' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome', 'host-gnome-shell'] } } },
-        { from: { type: 'host-gnome-prefs' }, allow: { to: { type: ['core', 'application', 'infrastructure-gnome', 'host-gnome-prefs'] } } },
+        {
+            from: { type: 'application' },
+            allow: { to: { type: ['domain', 'application', 'lifecycle'] } },
+        },
+        { from: { type: 'lifecycle' }, allow: { to: { type: ['lifecycle'] } } },
+        {
+            from: { type: 'infrastructure-gnome' },
+            allow: {
+                to: {
+                    type: [
+                        'domain',
+                        'application',
+                        'lifecycle',
+                        'infrastructure-gnome',
+                    ],
+                },
+            },
+        },
+        {
+            from: { type: 'gnome-shell' },
+            allow: {
+                to: {
+                    type: ['domain', 'application', 'lifecycle', 'gnome-shell'],
+                },
+            },
+        },
+        {
+            from: { type: 'gnome-prefs' },
+            allow: {
+                to: {
+                    type: ['domain', 'application', 'lifecycle', 'gnome-prefs'],
+                },
+            },
+        },
+        {
+            from: { type: 'gnome-composition' },
+            allow: {
+                to: {
+                    type: [
+                        'domain',
+                        'application',
+                        'lifecycle',
+                        'infrastructure-gnome',
+                        'gnome-shell',
+                        'gnome-prefs',
+                        'gnome-composition',
+                    ],
+                },
+            },
+        },
     ],
 };
 
@@ -149,15 +209,24 @@ export default tseslint.config(
         },
     },
     {
-        files: ['core/packages/**/*.test.ts', 'platforms/*/packages/**/*.test.ts'],
+        files: [
+            'core/packages/**/*.test.ts',
+            'platforms/*/packages/**/*.test.ts',
+        ],
         rules: {
             'must-use/no-ignored-return': 'off',
         },
     },
     {
-        files: ['platforms/gnome/packages/host-gnome-shell/src/**/*.ts', 'platforms/gnome/packages/host-gnome-prefs/src/**/*.ts', 'platforms/gnome/packages/infrastructure-gnome/src/**/*.ts'],
+        files: [
+            'platforms/gnome/packages/gnome-shell/src/**/*.ts',
+            'platforms/gnome/packages/gnome-prefs/src/**/*.ts',
+            'platforms/gnome/packages/gnome-composition/src/**/*.ts',
+            'platforms/gnome/packages/infrastructure-gnome/src/**/*.ts',
+        ],
         rules: {
             'unicorn/prefer-global-this': 'off',
+            'unicorn/no-null': 'off',
         },
     },
     eslintConfigPrettier,

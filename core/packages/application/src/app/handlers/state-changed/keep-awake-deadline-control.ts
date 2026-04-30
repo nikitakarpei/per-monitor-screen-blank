@@ -1,12 +1,12 @@
 import { DEADLINE_KEYS } from '@pmsb/domain';
 import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
-import { SettingsGateway } from '../../../app/ports/settings.js';
+import { GeneralSettings } from '../../../app/ports/general-settings.js';
 import { LoggerPort } from '../../../util/logger.js';
 import { StateChangedEvent } from '../../app-events.js';
 
 interface KeepAwakeDeadlineControlDeps {
     deadlineScheduler: DeadlineScheduler;
-    settingsGateway: SettingsGateway;
+    generalSettings: GeneralSettings;
     logger: LoggerPort;
 }
 
@@ -17,7 +17,7 @@ export function keepAwakeDeadlineControl(
     if (payload.current === 'KeepAwake') {
         deps.deadlineScheduler.cancelMonitor(payload.monitorId);
         const deadlineMs =
-            Date.now() + deps.settingsGateway.getKeepAwakeMinutes() * 60 * 1000;
+            Date.now() + deps.generalSettings.getKeepAwakeMinutes() * 60 * 1000;
         deps.deadlineScheduler.schedule(
             DEADLINE_KEYS.keepAwakeExpiry,
             payload.monitorId,

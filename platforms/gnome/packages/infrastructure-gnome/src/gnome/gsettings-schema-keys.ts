@@ -21,14 +21,3 @@ export const PROFILE_GSETTINGS_KEYS = {
     name: 'name',
     monitorModes: 'monitor-modes',
 } as const;
-
-/** `connect('changed::…')` for a specific schema key. */
-export function gsettingsChangedSignal(
-    key: (typeof GSETTINGS_KEYS)[keyof typeof GSETTINGS_KEYS],
-): string;
-export function gsettingsChangedSignal(
-    key: (typeof PROFILE_GSETTINGS_KEYS)[keyof typeof PROFILE_GSETTINGS_KEYS],
-): string;
-export function gsettingsChangedSignal(key: string): string {
-    return `changed::${key}`;
-}
