@@ -16,6 +16,8 @@ import {
     GnomeMonitorIdentityStore,
     GnomeMonitorIdentityWatcher,
     GnomePlatformEventBus,
+    GnomeSettingsProvider,
+    type ProfileGioSettingsFactory,
 } from '@pmsb/infrastructure-gnome';
 import {
     GeneralSettingsGroup,
@@ -39,9 +41,13 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
         });
 
         try {
-            const generalSettings = new GnomeGeneralSettings(
-                this.getSettings(),
+            const settingsProvider = new GnomeSettingsProvider(
+                this.path ?? this.dir,
+                logger,
             );
+            const settings = settingsProvider.createMainSettings();
+
+            const generalSettings = new GnomeGeneralSettings(settings);
 
             const adwNotifications = new AdwNotifications(window);
             rootScope.add(adwNotifications);
@@ -65,8 +71,12 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
             );
             rootScope.add(generalSettingsWatcher);
 
+            const createProfileSettings: ProfileGioSettingsFactory =
+                settingsProvider.createProfileSettings.bind(settingsProvider);
+
             const profileSettings = new GnomeProfileSettings(
-                this.getSettings(),
+                settings,
+                createProfileSettings,
             );
 
             const profileSettingsWatcher = new GnomeProfileSettingsWatcher(
@@ -77,7 +87,7 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
             rootScope.add(profileSettingsWatcher);
 
             const monitorIdentityStore = new GnomeMonitorIdentityStore(
-                this.getSettings(),
+                settings,
             );
 
             const monitorIdentityWatcher = new GnomeMonitorIdentityWatcher(

@@ -3,12 +3,10 @@ import GLib from 'gi://GLib';
 import { type ProfileSettings } from '@pmsb/application';
 import { type Profile, type ProfileId, type MonitorMode } from '@pmsb/domain';
 import { type Disposable } from '@pmsb/lifecycle';
-import {
-    GSETTINGS_PROFILE_PATH_PREFIX,
-    GSETTINGS_PROFILE_SCHEMA_ID,
-} from './gsettings-schema-constants.js';
 import { GSETTINGS_KEYS } from './gsettings-schema-keys.js';
 import { ProfileSettingsStore } from './profile-settings-store.js';
+
+export type ProfileGioSettingsFactory = (profileId: ProfileId) => Gio.Settings;
 
 export type ProfileIdsChange = {
     createdProfileIds: readonly ProfileId[];
@@ -17,9 +15,14 @@ export type ProfileIdsChange = {
 
 export class GnomeProfileSettings implements ProfileSettings {
     readonly #settings: Gio.Settings;
+    readonly #createProfileSettings: ProfileGioSettingsFactory;
 
-    constructor(settings: Gio.Settings) {
+    constructor(
+        settings: Gio.Settings,
+        createProfileSettings: ProfileGioSettingsFactory,
+    ) {
         this.#settings = settings;
+        this.#createProfileSettings = createProfileSettings;
     }
 
     getProfileIds(): readonly ProfileId[] {
@@ -224,10 +227,7 @@ export class GnomeProfileSettings implements ProfileSettings {
 
     #createProfileStore(profileId: ProfileId): ProfileSettingsStore {
         this.#throwIfProfileNotExists(profileId);
-        const settings = new Gio.Settings({
-            schema_id: GSETTINGS_PROFILE_SCHEMA_ID,
-            path: `${GSETTINGS_PROFILE_PATH_PREFIX}${profileId}/`,
-        });
+        const settings = this.#createProfileSettings(profileId);
         return new ProfileSettingsStore(profileId, settings);
     }
 

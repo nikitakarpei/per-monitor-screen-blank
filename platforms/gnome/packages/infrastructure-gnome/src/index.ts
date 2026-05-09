@@ -11,7 +11,11 @@ export {
 export { GnomeDeadlineScheduler } from './gnome/shared/gnome-deadline-scheduler.js';
 export { GnomeGeneralSettings } from './gnome/gnome-general-settings.js';
 export { GnomeGeneralSettingsWatcher } from './gnome/gnome-general-settings-watcher.js';
-export { GnomeProfileSettings } from './gnome/gnome-profile-settings.js';
+export { GnomeSettingsProvider } from './gnome/gnome-settings-provider.js';
+export {
+    GnomeProfileSettings,
+    type ProfileGioSettingsFactory,
+} from './gnome/gnome-profile-settings.js';
 export { GnomeProfileSettingsWatcher } from './gnome/gnome-profile-settings-watcher.js';
 export { GnomeMonitorIdentityWatcher } from './gnome/gnome-monitor-identity-watcher.js';
 export { GnomePlatformEventBus } from './gnome/shared/gnome-platform-event-bus.js';
