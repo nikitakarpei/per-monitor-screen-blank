@@ -28,9 +28,10 @@ export class GnomeDeadlineScheduler implements DeadlineScheduler, Disposable {
         }
 
         const token = GLib.uuid_string_random();
+        const delayMs = Math.max(0, Math.ceil(deadlineMs - Date.now()));
         const sourceId = GLib.timeout_add(
             GLib.PRIORITY_DEFAULT,
-            deadlineMs,
+            delayMs,
             () => {
                 try {
                     this.#handleTimeout(key, token);
