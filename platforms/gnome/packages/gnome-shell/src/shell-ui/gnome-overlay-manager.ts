@@ -18,7 +18,7 @@ import { GnomeMonitorIndex } from '../shell-infra/gnome-monitor-index.js';
 export class GnomeOverlayManager implements Overlay, Disposable {
     readonly #logger: LoggerPort;
     readonly #indexResolver: GnomeMonitorIndex;
-    readonly #actors = new Map<string, OverlayActor>();
+    readonly #actors = new Map<string, OverlayRecord>();
     readonly #visibleMonitors = new Set<string>();
     #fadeDurationMs = 0;
     #targetOpacity = 0;
@@ -39,23 +39,16 @@ export class GnomeOverlayManager implements Overlay, Disposable {
 
     dispose(): void {
         this.#unsubscribeGeometry();
-        for (const [monitorId, actor] of this.#actors) {
-            try {
-                Main.layoutManager.removeChrome(actor);
-                actor.destroy();
-            } catch {
-                this.#logger.error(
-                    `failed to remove overlay chrome on dispose: ${monitorId}`,
-                );
-            }
+        for (const [monitorId, overlayRecord] of this.#actors) {
+            this.#destroyOverlayRecord(monitorId, overlayRecord);
         }
         this.#actors.clear();
         this.#visibleMonitors.clear();
     }
 
     showForMonitor(monitorId: string): void {
-        const actor = this.#ensureActor(monitorId);
-        this.#showMonitor(monitorId, actor);
+        const overlayRecord = this.#ensureActor(monitorId);
+        this.#showMonitor(monitorId, overlayRecord);
     }
 
     hideForMonitor(monitorId: string): void {
@@ -78,9 +71,9 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             normalizeDimIntensityPercent(percent),
         );
         for (const monitorId of this.#visibleMonitors) {
-            const actor = this.#actors.get(monitorId);
-            if (!actor) continue;
-            actor.ease({
+            const overlayRecord = this.#actors.get(monitorId);
+            if (!overlayRecord) continue;
+            overlayRecord.actor.ease({
                 opacity: this.#targetOpacity,
                 duration: this.#fadeDurationMs,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -88,7 +81,8 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         }
     }
 
-    #showMonitor(monitorId: string, actor: OverlayActor): void {
+    #showMonitor(monitorId: string, overlayRecord: OverlayRecord): void {
+        const { actor } = overlayRecord;
         if (this.#visibleMonitors.has(monitorId)) {
             this.#logger.info(
                 `show requested for already visible monitor: ${monitorId}`,
@@ -106,8 +100,8 @@ export class GnomeOverlayManager implements Overlay, Disposable {
     }
 
     #hideMonitor(monitorId: string): void {
-        const actor = this.#actors.get(monitorId);
-        if (!actor) {
+        const overlayRecord = this.#actors.get(monitorId);
+        if (!overlayRecord) {
             this.#logger.info(
                 `hide requested for unknown monitor, skipping: ${monitorId}`,
             );
@@ -120,30 +114,23 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             return;
         }
         this.#visibleMonitors.delete(monitorId);
+        const { actor } = overlayRecord;
         actor.ease({
             opacity: 0,
             duration: this.#fadeDurationMs,
             mode: Clutter.AnimationMode.EASE_IN_QUAD,
             onComplete: () => {
                 if (this.#visibleMonitors.has(monitorId)) return;
-                actor.hide();
-                try {
-                    Main.layoutManager.removeChrome(actor);
-                } catch {
-                    this.#logger.warn(
-                        `failed to remove overlay chrome: ${monitorId}`,
-                    );
-                }
-                actor.destroy();
-                this.#actors.delete(monitorId);
+                this.#destroyOverlayRecord(monitorId, overlayRecord);
             },
         });
     }
 
     #syncGeometry(): void {
         for (const monitorId of this.#visibleMonitors) {
-            const actor = this.#actors.get(monitorId);
-            if (actor) this.#syncGeometryForMonitor(monitorId, actor);
+            const overlayRecord = this.#actors.get(monitorId);
+            if (overlayRecord)
+                this.#syncGeometryForMonitor(monitorId, overlayRecord.actor);
         }
     }
 
@@ -168,7 +155,7 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         actor.set_size(monitor.width, monitor.height);
     }
 
-    #ensureActor(monitorId: string): OverlayActor {
+    #ensureActor(monitorId: string): OverlayRecord {
         const existing = this.#actors.get(monitorId);
         if (existing) return existing;
 
@@ -198,10 +185,47 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         }
         Main.layoutManager.addTopChrome(actor, chromeParameters);
         this.#logger.info(`added overlay chrome: ${monitorId}`);
-        this.#actors.set(monitorId, actor);
+        const overlayRecord: OverlayRecord = {
+            actor,
+            monitorConstraint: null,
+        };
+        this.#actors.set(monitorId, overlayRecord);
         this.#syncGeometryForMonitor(monitorId, actor);
 
-        return actor;
+        return overlayRecord;
+    }
+
+    #destroyOverlayRecord(
+        monitorId: string,
+        overlayRecord: OverlayRecord,
+    ): void {
+        if (overlayRecord.monitorConstraint) {
+            try {
+                overlayRecord.actor.remove_constraint(
+                    overlayRecord.monitorConstraint,
+                );
+            } catch {
+                this.#logger.warn(
+                    `failed to remove overlay constraint: ${monitorId}`,
+                );
+            } finally {
+                overlayRecord.monitorConstraint = null;
+            }
+        }
+
+        try {
+            Main.layoutManager.removeChrome(overlayRecord.actor);
+        } catch {
+            this.#logger.warn(`failed to remove overlay chrome: ${monitorId}`);
+        }
+
+        try {
+            overlayRecord.actor.hide();
+            overlayRecord.actor.destroy();
+        } catch {
+            this.#logger.error(`failed to destroy overlay actor: ${monitorId}`);
+        }
+        this.#actors.delete(monitorId);
     }
 }
 
@@ -226,4 +250,9 @@ type OverlayActor = Clutter.Actor & {
         target: T,
         properties: EaseProperties,
     ): void;
+};
+
+type OverlayRecord = {
+    actor: OverlayActor;
+    monitorConstraint: Clutter.Constraint | null;
 };
