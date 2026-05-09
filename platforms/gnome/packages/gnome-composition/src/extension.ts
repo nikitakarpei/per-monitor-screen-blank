@@ -22,6 +22,8 @@ import {
     GnomeMonitorIdentityStore,
     GnomeMonitorIdentityWatcher,
     GnomePlatformEventBus,
+    GSETTINGS_MAIN_ROOT_PATH,
+    GSETTINGS_SCHEMA_ID,
 } from '@pmsb/infrastructure-gnome';
 import {
     GnomeOverlayManager,
@@ -54,8 +56,8 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             this.#initializeSchemaSource();
 
             const gioSettings = this.#getSettingsForSchema(
-                'org.gnome.shell.extensions.per-monitor-screen-blank',
-                '/org/gnome/shell/extensions/per-monitor-screen-blank/',
+                GSETTINGS_SCHEMA_ID,
+                GSETTINGS_MAIN_ROOT_PATH,
             );
 
             const generalSettings = new GnomeGeneralSettings(gioSettings);

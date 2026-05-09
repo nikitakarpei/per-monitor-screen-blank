@@ -3,6 +3,10 @@ import GLib from 'gi://GLib';
 import { type ProfileSettings } from '@pmsb/application';
 import { type Profile, type ProfileId, type MonitorMode } from '@pmsb/domain';
 import { type Disposable } from '@pmsb/lifecycle';
+import {
+    GSETTINGS_PROFILE_PATH_PREFIX,
+    GSETTINGS_PROFILE_SCHEMA_ID,
+} from './gsettings-schema-constants.js';
 import { GSETTINGS_KEYS } from './gsettings-schema-keys.js';
 import { ProfileSettingsStore } from './profile-settings-store.js';
 
@@ -221,9 +225,8 @@ export class GnomeProfileSettings implements ProfileSettings {
     #createProfileStore(profileId: ProfileId): ProfileSettingsStore {
         this.#throwIfProfileNotExists(profileId);
         const settings = new Gio.Settings({
-            schema_id:
-                'org.gnome.shell.extensions.per-monitor-screen-blank.profile',
-            path: `/org/gnome/shell/extensions/per-monitor-screen-blank/profiles/${profileId}/`,
+            schema_id: GSETTINGS_PROFILE_SCHEMA_ID,
+            path: `${GSETTINGS_PROFILE_PATH_PREFIX}${profileId}/`,
         });
         return new ProfileSettingsStore(profileId, settings);
     }
