@@ -13,12 +13,14 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-repo_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$GNOME_SCRIPTS_DIR/_paths.sh"
+
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
-out_dir="$repo_root/dist"
+out_dir="$GNOME_DIST_DIR"
 zip_path="$out_dir/${uuid}.zip"
 
-sh "$repo_root/platforms/gnome/scripts/build-gnome.sh"
+sh "$GNOME_SCRIPTS_DIR/build-gnome.sh"
 
 src="$out_dir/$uuid"
 
@@ -27,7 +29,7 @@ if [ ! -f "$src/metadata.json" ]; then
   exit 1
 fi
 
-sh "$repo_root/platforms/gnome/scripts/ego-lint.sh" "$src"
+sh "$GNOME_SCRIPTS_DIR/ego-lint.sh" "$src"
 
 if ! command -v zip >/dev/null 2>&1; then
   printf 'ERROR: zip command not found.\n' >&2

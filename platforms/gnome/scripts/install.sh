@@ -2,14 +2,16 @@
 
 set -eu
 
-repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$GNOME_SCRIPTS_DIR/_paths.sh"
+
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
 dest="$HOME/.local/share/gnome-shell/extensions/$uuid"
 
-sh "$repo_root/platforms/gnome/scripts/build-gnome.sh"
+sh "$GNOME_SCRIPTS_DIR/build-gnome.sh"
 
 mkdir -p "$dest"
-cp -R "$repo_root/dist/$uuid/." "$dest/"
+cp -R "$GNOME_DIST_DIR/$uuid/." "$dest/"
 
 if command -v gnome-extensions >/dev/null 2>&1; then
   gnome-extensions enable "$uuid" >/dev/null 2>&1 || true

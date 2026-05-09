@@ -2,7 +2,9 @@
 
 set -eu
 
-repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$GNOME_SCRIPTS_DIR/_paths.sh"
+
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
 dest="$HOME/.local/share/gnome-shell/extensions/$uuid"
 settings_schema="org.gnome.shell.extensions.per-monitor-screen-blank"
@@ -42,7 +44,7 @@ reset_settings_data() {
     return
   fi
 
-  for schema_dir in "$repo_root/platforms/gnome/dist/$uuid/schemas" "$repo_root/platforms/gnome/assets/schemas"; do
+  for schema_dir in "$GNOME_DIST_DIR/$uuid/schemas" "$GNOME_PLATFORM_ROOT/assets/schemas"; do
     if [ -f "$schema_dir/gschemas.compiled" ] &&
       gsettings --schemadir "$schema_dir" writable "$settings_schema" active-profile-id >/dev/null 2>&1; then
       gsettings --schemadir "$schema_dir" reset-recursively "$settings_schema"

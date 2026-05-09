@@ -2,8 +2,8 @@
 
 set -eu
 
-repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)
-cd "$repo_root"
+GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$GNOME_SCRIPTS_DIR/_paths.sh"
 
 for cmd in dbus-run-session gnome-shell gsettings rg; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -29,8 +29,8 @@ nested_log=$(mktemp)
 extension_context_log=$(mktemp)
 trap 'rm -f "$nested_log" "$extension_context_log"' EXIT
 
-sh "$repo_root/platforms/gnome/scripts/build-gnome.sh"
-src_extension_dir="$repo_root/dist/$uuid"
+sh "$GNOME_SCRIPTS_DIR/build-gnome.sh"
+src_extension_dir="$GNOME_DIST_DIR/$uuid"
 # Avoid bare "ERROR:" — it matches notifyError body text ("error: Per-Monitor ...") in nested logs.
 error_pattern='JS ERROR|TypeError|SyntaxError|ReferenceError|No signal|GType|Argument string may not be null|Unhandled promise rejection|CRITICAL|GLib-CRITICAL|Gjs-CRITICAL|\[per-monitor-screen-blank\] ERROR:'
 
