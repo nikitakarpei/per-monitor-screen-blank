@@ -38,7 +38,6 @@ import {
 import { createDisposableStore, type DisposableStore } from '@pmsb/lifecycle';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
-    #settingsProvider: GnomeSettingsProvider | undefined;
     private _rootScope: DisposableStore | undefined;
 
     enable(): void {
@@ -51,9 +50,9 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             );
         });
 
-        this.#settingsProvider = new GnomeSettingsProvider(this.dir, logger);
+        const settingsProvider = new GnomeSettingsProvider(this.dir, logger);
 
-        const gioSettings = this.#settingsProvider.createMainSettings();
+        const gioSettings = settingsProvider.createMainSettings();
 
         const generalSettings = new GnomeGeneralSettings(gioSettings);
 
@@ -87,9 +86,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         this._rootScope.add(preferencesOpener);
 
         const createProfileSettings: ProfileGioSettingsFactory =
-            this.#settingsProvider.createProfileSettings.bind(
-                this.#settingsProvider,
-            );
+            settingsProvider.createProfileSettings.bind(settingsProvider);
 
         const profileSettings = new GnomeProfileSettings(
             gioSettings,
@@ -191,6 +188,5 @@ export default class PerMonitorScreenBlankExtension extends Extension {
     disable(): void {
         this._rootScope?.dispose();
         this._rootScope = undefined;
-        this.#settingsProvider = undefined;
     }
 }
