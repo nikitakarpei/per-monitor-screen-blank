@@ -20,7 +20,7 @@ export function handlePointerSuppression(
     deps: HandlePointerMonitorChangedDeps,
     payload: PointerMonitorChangedEvent['payload'],
 ): void {
-    if (deps.generalSettings.getDisableAutoTimerOnPointerMonitor()) {
+    if (!deps.generalSettings.getDisableAutoTimerOnPointerMonitor()) {
         return;
     }
 
