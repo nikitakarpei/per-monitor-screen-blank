@@ -99,7 +99,7 @@ export class GnomeOverlayManager implements Overlay, Disposable {
     #showMonitor(monitorId: string, overlayRecord: OverlayRecord): void {
         const { actor } = overlayRecord;
         if (this.#visibleMonitors.has(monitorId)) {
-            this.#logger.info(
+            this.#logger.warn(
                 `show requested for already visible monitor: ${monitorId}`,
             );
             return;
@@ -116,13 +116,13 @@ export class GnomeOverlayManager implements Overlay, Disposable {
     #hideMonitor(monitorId: string): void {
         const overlayRecord = this.#actors.get(monitorId);
         if (!overlayRecord) {
-            this.#logger.info(
+            this.#logger.warn(
                 `hide requested for unknown monitor, skipping: ${monitorId}`,
             );
             return;
         }
         if (!this.#visibleMonitors.has(monitorId)) {
-            this.#logger.info(
+            this.#logger.warn(
                 `hide requested for already hidden monitor: ${monitorId}`,
             );
             return;
@@ -159,20 +159,23 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             opacity: 0,
         }) as OverlayActor;
         actor.hide();
-        // trackFullscreen:false keeps the overlay visible over fullscreen
-        // windows by suppressing Mutter's unredirect optimization.
-        const chromeParameters: Record<string, boolean> = {
+        // trackFullscreen:false keeps Shell from treating the chrome as
+        // fullscreen-tracking chrome; this manager owns overlay visibility.
+        const chromeParameters: {
+            trackFullscreen: boolean;
+            affectsStruts: boolean;
+            affectsInputRegion?: boolean;
+        } = {
             trackFullscreen: false,
             affectsStruts: false,
         };
         // affectsInputRegion:false prevents the overlay from absorbing pointer
         // events. GNOME 50's addTopChrome/shared chromeParameters path removed
-        // this parameter, so only pass it on GNOME 49 where it is still recognized.
+        // this parameter, so only pass it on GNOME 49 where it is still recognized
         if (Number.parseInt(Config.PACKAGE_VERSION) < 50) {
             chromeParameters.affectsInputRegion = false;
         }
         Main.layoutManager.addTopChrome(actor, chromeParameters);
-        this.#logger.info(`added overlay chrome: ${monitorId}`);
 
         const monitorIndex =
             this.#indexResolver.tryGetIndexByMonitorId(monitorId);
@@ -189,19 +192,23 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             return overlayRecord;
         }
 
-        const monitorConstraint = new Layout.MonitorConstraint({
-            index: monitorIndex,
-        });
-        actor.add_constraint(monitorConstraint);
-        this.#logger.info(
-            `added overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
-        );
-
         const overlayRecord: OverlayRecord = {
             actor,
-            monitorConstraint,
+            monitorConstraint: null,
             monitorIndex,
         };
+        try {
+            const monitorConstraint = new Layout.MonitorConstraint({
+                index: monitorIndex,
+            });
+            actor.add_constraint(monitorConstraint);
+            overlayRecord.monitorConstraint = monitorConstraint;
+        } catch {
+            this.#logger.warn(
+                `failed to assign overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
+            );
+        }
+
         this.#actors.set(monitorId, overlayRecord);
         return overlayRecord;
     }
@@ -255,15 +262,18 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             }
         }
 
-        const monitorConstraint = new Layout.MonitorConstraint({
-            index: monitorIndex,
-        });
-        overlayRecord.actor.add_constraint(monitorConstraint);
-        overlayRecord.monitorConstraint = monitorConstraint;
-        overlayRecord.monitorIndex = monitorIndex;
-        this.#logger.info(
-            `refreshed overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
-        );
+        try {
+            const monitorConstraint = new Layout.MonitorConstraint({
+                index: monitorIndex,
+            });
+            overlayRecord.actor.add_constraint(monitorConstraint);
+            overlayRecord.monitorConstraint = monitorConstraint;
+            overlayRecord.monitorIndex = monitorIndex;
+        } catch {
+            this.#logger.warn(
+                `failed to refresh overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
+            );
+        }
     }
 
     #destroyOverlayRecord(
