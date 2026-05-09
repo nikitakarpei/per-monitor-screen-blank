@@ -1,6 +1,5 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
-import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     type LoggerPort,
@@ -184,19 +183,11 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             opacity: 0,
         }) as OverlayActor;
         actor.hide();
-        // trackFullscreen:false keeps the overlay visible over fullscreen
-        // windows by suppressing Mutter's unredirect optimization.
         const chromeParameters: Record<string, boolean> = {
             trackFullscreen: false,
             affectsStruts: false,
         };
-        // affectsInputRegion:false prevents the overlay from absorbing pointer
-        // events. GNOME 50 removed this parameter from addChrome, so only
-        // pass it on GNOME 49 where it is still recognized.
-        if (Number.parseInt(Config.PACKAGE_VERSION) < 50) {
-            chromeParameters.affectsInputRegion = false;
-        }
-        Main.layoutManager.addChrome(actor, chromeParameters);
+        Main.layoutManager.addTopChrome(actor, chromeParameters);
         this.#logger.info(`added overlay chrome: ${monitorId}`);
         this.#actors.set(monitorId, actor);
         this.#syncGeometryForMonitor(monitorId, actor);
