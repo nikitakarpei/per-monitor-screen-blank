@@ -9,6 +9,11 @@ set -eu
 UUID="per-monitor-screen-blank@nikitakarpei.github.io"
 OUT="$GNOME_DIST_DIR/$UUID"
 
+if ! command -v glib-compile-schemas >/dev/null 2>&1; then
+  printf 'ERROR: glib-compile-schemas is unavailable; local extension builds require compiled schemas in %s.\n' "$OUT/schemas" >&2
+  exit 1
+fi
+
 rm -rf "$OUT"
 mkdir -p "$OUT/schemas"
 
@@ -41,8 +46,6 @@ npx esbuild \
   "$REPOSITORY_ROOT/platforms/gnome/packages/gnome-composition/src/extension.ts" \
   "$REPOSITORY_ROOT/platforms/gnome/packages/gnome-composition/src/prefs.ts"
 
-if command -v glib-compile-schemas >/dev/null 2>&1; then
-  glib-compile-schemas "$OUT/schemas"
-fi
+glib-compile-schemas "$OUT/schemas"
 
 printf 'Built: %s\n' "$OUT"
