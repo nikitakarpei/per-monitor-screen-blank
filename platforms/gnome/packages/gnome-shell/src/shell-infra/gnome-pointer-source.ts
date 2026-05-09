@@ -34,7 +34,8 @@ export class GnomePointerSource implements PointerSource, Disposable {
                     this._handlePointerSample(x, y);
                 } catch (error) {
                     this.#logger.error(
-                        `failed to handle pointer sample: ${String(error)}`,
+                        `failed to handle pointer sample`,
+                        error,
                     );
                 }
             },

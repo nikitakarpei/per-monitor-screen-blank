@@ -26,8 +26,8 @@ export class IssueReportingLogger implements LoggerPort {
         }
     }
 
-    error(message: string): void {
-        this.baseLogger.error(message);
+    error(message: string, exception?: object): void {
+        this.baseLogger.error(message, exception);
         if (this.shouldShowIssueNotifications()) {
             const result = buildIssueNotificationText('error', message);
             this.userNotifications.show({

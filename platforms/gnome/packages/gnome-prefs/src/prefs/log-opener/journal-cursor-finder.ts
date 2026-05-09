@@ -33,7 +33,8 @@ export async function findExtensionStartCursor(logger: LoggerPort): Promise<{
         return { cursor: entry.__CURSOR, found: true };
     } catch (error) {
         logger.info(
-            `failed to read extension start cursor from journal: ${String(error)}`,
+            `failed to read extension start cursor from journal`,
+            error,
         );
         return { cursor: undefined, found: false };
     }

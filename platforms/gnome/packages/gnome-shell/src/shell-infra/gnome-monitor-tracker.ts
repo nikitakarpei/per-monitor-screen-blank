@@ -34,9 +34,7 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex, Disposable {
                 try {
                     this.#onMonitorsChanged();
                 } catch (error) {
-                    this.#logger.error(
-                        `error in #onMonitorsChanged: ${String(error)}`,
-                    );
+                    this.#logger.error(`error in #onMonitorsChanged`, error);
                 }
             },
             this,

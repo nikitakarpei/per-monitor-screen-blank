@@ -45,7 +45,8 @@ export class EventBus<TEvent extends { type: string; payload: object }> {
                     listener(event.payload);
                 } catch (error) {
                     this.#logger.error(
-                        `error in listener for event "${event.type}": ${String(error)}`,
+                        `error in listener for event "${event.type}"`,
+                        error,
                     );
                 }
             }
@@ -56,7 +57,8 @@ export class EventBus<TEvent extends { type: string; payload: object }> {
                 anyListener(event);
             } catch (error) {
                 this.#logger.error(
-                    `error in onAny listener for event "${event.type}": ${String(error)}`,
+                    `error in onAny listener for event "${event.type}"`,
+                    error,
                 );
             }
         }

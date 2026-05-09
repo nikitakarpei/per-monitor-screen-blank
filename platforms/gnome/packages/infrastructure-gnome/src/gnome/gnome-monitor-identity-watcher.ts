@@ -22,7 +22,8 @@ export class GnomeMonitorIdentityWatcher implements Disposable {
         this.#eventEmitter = eventEmitter;
         this.#observationStore = createDisposableStore((error) => {
             logger.error(
-                `Failed to dispose resource in GnomeMonitorIdentityWatcher observation store: ${String(error)}`,
+                `Failed to dispose resource in GnomeMonitorIdentityWatcher observation store`,
+                error,
             );
         });
 

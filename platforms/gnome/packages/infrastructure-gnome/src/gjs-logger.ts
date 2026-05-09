@@ -11,7 +11,11 @@ export class GjsLogger implements LoggerPort {
         log(`${this.prefix} WARN: ${message}`);
     }
 
-    error(message: string) {
-        logError(new Error(`${this.prefix} ERROR: ${message}`));
+    error(message: string, exception?: object) {
+        if (exception) {
+            logError(exception, `${this.prefix} ERROR: ${message}`);
+        } else {
+            logError(`${this.prefix} ERROR: ${message}`);
+        }
     }
 }

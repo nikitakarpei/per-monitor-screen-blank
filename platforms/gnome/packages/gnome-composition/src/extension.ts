@@ -46,11 +46,12 @@ export default class PerMonitorScreenBlankExtension extends Extension {
 
         this._rootScope = createDisposableStore((error, resource) => {
             logger.error(
-                `cleanup failure for ${resource.constructor.name}: ${String(error)}`,
+                `cleanup failure for ${resource.constructor.name}`,
+                error,
             );
         });
 
-        const settingsProvider = new GnomeSettingsProvider(this.dir, logger);
+        const settingsProvider = new GnomeSettingsProvider(this.dir);
 
         const gioSettings = settingsProvider.createMainSettings();
 

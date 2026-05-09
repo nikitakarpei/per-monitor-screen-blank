@@ -28,7 +28,8 @@ export class GnomeProfileSettingsWatcher implements Disposable {
         this.#logger = logger;
         this.#observationStore = createDisposableStore((error) => {
             this.#logger.error(
-                `Failed to dispose resource in GnomeProfileSettingsWatcher observation store: ${String(error)}`,
+                `Failed to dispose resource in GnomeProfileSettingsWatcher observation store`,
+                error,
             );
         });
 
@@ -84,7 +85,8 @@ export class GnomeProfileSettingsWatcher implements Disposable {
     #createProfileObserver(profileId: ProfileId): Disposable {
         const scope = createDisposableStore((error) => {
             this.#logger.error(
-                `Failed to dispose resource in profile observer for ${profileId}: ${String(error)}`,
+                `Failed to dispose resource in profile observer for ${profileId}`,
+                error,
             );
         });
 

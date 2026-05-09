@@ -36,14 +36,14 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
 
         const rootScope = createDisposableStore((error, resource) => {
             logger.error(
-                `cleanup failure for ${resource.constructor.name}: ${String(error)}`,
+                `cleanup failure for ${resource.constructor.name}`,
+                error,
             );
         });
 
         try {
             const settingsProvider = new GnomeSettingsProvider(
                 this.path ?? this.dir,
-                logger,
             );
             const settings = settingsProvider.createMainSettings();
 

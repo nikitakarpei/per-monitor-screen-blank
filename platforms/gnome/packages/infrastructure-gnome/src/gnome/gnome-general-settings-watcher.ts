@@ -23,7 +23,8 @@ export class GnomeGeneralSettingsWatcher implements Disposable {
         this.#logger = logger;
         this.#observationStore = createDisposableStore((error) => {
             this.#logger.error(
-                `Failed to dispose resource in GnomeGeneralSettingsWatcher observation store: ${String(error)}`,
+                `Failed to dispose resource in GnomeGeneralSettingsWatcher observation store`,
+                error,
             );
         });
 

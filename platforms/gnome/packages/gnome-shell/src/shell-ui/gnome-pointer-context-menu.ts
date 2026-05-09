@@ -60,7 +60,8 @@ export class GnomePointerContextMenu implements PointerContextMenu, Disposable {
                     item.onActivate();
                 } catch (error) {
                     this.#logger.error(
-                        `Error in context menu item handler for "${item.label}": ${String(error)}`,
+                        `Error in context menu item handler for "${item.label}"`,
+                        error,
                     );
                 } finally {
                     this.#menu.close();
