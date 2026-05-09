@@ -51,6 +51,15 @@ export class GnomeDeadlineScheduler implements DeadlineScheduler, Disposable {
         this.#removeEntry(this.#buildKey(deadlineKey, monitorId));
     }
 
+    tryCancel(deadlineKey: DeadlineKey, monitorId: string): boolean {
+        const key = this.#buildKey(deadlineKey, monitorId);
+        if (!this.#entries.has(key)) {
+            return false;
+        }
+        this.#removeEntry(key);
+        return true;
+    }
+
     cancelMonitor(monitorId: string): void {
         const keys = this.#entries
             .entries()

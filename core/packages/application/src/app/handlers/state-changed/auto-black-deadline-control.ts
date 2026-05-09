@@ -32,7 +32,7 @@ export function autoBlackDeadlineControl(
     }
 
     if (payload.previous === 'AutoAwake') {
-        deps.deadlineScheduler.cancel(
+        void deps.deadlineScheduler.tryCancel(
             DEADLINE_KEYS.autoBlack,
             payload.monitorId,
         );

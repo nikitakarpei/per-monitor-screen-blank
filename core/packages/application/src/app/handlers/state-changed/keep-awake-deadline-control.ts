@@ -27,7 +27,7 @@ export function keepAwakeDeadlineControl(
     }
 
     if (payload.previous === 'KeepAwake') {
-        deps.deadlineScheduler.cancel(
+        void deps.deadlineScheduler.tryCancel(
             DEADLINE_KEYS.keepAwakeExpiry,
             payload.monitorId,
         );
