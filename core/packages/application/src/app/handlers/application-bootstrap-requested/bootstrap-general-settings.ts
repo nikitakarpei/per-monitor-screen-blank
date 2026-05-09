@@ -16,7 +16,7 @@ import {
 } from '../../use-cases/register-pointer-menu-shortcut.js';
 import { type GeneralSettings } from '../../ports/general-settings.js';
 import { type Overlay } from '../../ports/overlay.js';
-import { type QuickSettings } from '../../ports/settings.js';
+import { type QuickSettings } from '../../ports/quick-settings.js';
 
 interface BootstrapGeneralSettingsDeps
     extends

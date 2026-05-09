@@ -25,10 +25,7 @@ export {
 export { type DeadlineScheduler } from './app/ports/scheduler.js';
 export { type GeneralSettings } from './app/ports/general-settings.js';
 export { type ProfileSettings } from './app/ports/profile-settings.js';
-export {
-    type SettingsGateway,
-    type QuickSettings,
-} from './app/ports/settings.js';
+export { type QuickSettings } from './app/ports/quick-settings.js';
 export {
     type PointerSource,
     type MonitorIdentityStore,

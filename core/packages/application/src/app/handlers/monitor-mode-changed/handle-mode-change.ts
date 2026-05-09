@@ -1,5 +1,5 @@
 import { MonitorModeChangedEvent } from '../../../app/ports/platform-events.js';
-import { QuickSettings } from '../../../app/ports/settings.js';
+import { QuickSettings } from '../../ports/quick-settings.js';
 import { ProfileSettings } from '../../../app/ports/profile-settings.js';
 import { LoggerPort } from '../../../util/logger.js';
 import { MonitorRegistry } from '../../services/monitor-registry.js';

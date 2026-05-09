@@ -2,7 +2,7 @@ import { DeadlineScheduler } from './ports/scheduler.js';
 
 import { GeneralSettings } from './ports/general-settings.js';
 import { ProfileSettings } from './ports/profile-settings.js';
-import { QuickSettings } from './ports/settings.js';
+import { QuickSettings } from './ports/quick-settings.js';
 import { Overlay } from './ports/overlay.js';
 import {
     PointerContextMenu,
