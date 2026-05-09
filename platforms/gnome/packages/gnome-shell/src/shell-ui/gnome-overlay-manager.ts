@@ -152,10 +152,9 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             reactive: false,
             can_focus: false,
             track_hover: false,
-            x: 0,
-            y: 0,
-            width: 1,
-            height: 1,
+            layout_manager: new Clutter.BinLayout(),
+            x_expand: true,
+            y_expand: true,
             opacity: 0,
         }) as OverlayActor;
         actor.hide();
