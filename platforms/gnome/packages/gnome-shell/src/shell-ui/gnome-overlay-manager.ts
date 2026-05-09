@@ -147,33 +147,8 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             return existing;
         }
 
-        const actor = new St.Widget({
-            style_class: 'per-monitor-screen-blank-overlay',
-            reactive: false,
-            can_focus: false,
-            track_hover: false,
-            layout_manager: new Clutter.BinLayout(),
-            x_expand: true,
-            y_expand: true,
-            opacity: 0,
-        }) as OverlayActor;
-        actor.hide();
-        // trackFullscreen:false keeps Shell from treating the chrome as
-        // fullscreen-tracking chrome; this manager owns overlay visibility.
-        const chromeParameters: {
-            trackFullscreen: boolean;
-            affectsStruts: boolean;
-            affectsInputRegion?: boolean;
-        } = {
-            trackFullscreen: false,
-            affectsStruts: false,
-        };
-        // affectsInputRegion:false prevents the overlay from absorbing pointer
-        // events. GNOME 50's addTopChrome/shared chromeParameters path removed
-        // this parameter, so only pass it on GNOME 49 where it is still recognized
-        if (Number.parseInt(Config.PACKAGE_VERSION) < 50) {
-            chromeParameters.affectsInputRegion = false;
-        }
+        const actor = this.#createOverlayActor();
+        const chromeParameters = this.#buildChromeParameters();
         Main.layoutManager.addTopChrome(actor, chromeParameters);
 
         const monitorIndex =
@@ -196,20 +171,85 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             monitorConstraint: null,
             monitorIndex,
         };
+        this.#addMonitorConstraint(monitorId, overlayRecord, monitorIndex);
+
+        this.#actors.set(monitorId, overlayRecord);
+        return overlayRecord;
+    }
+
+    #createOverlayActor(): Clutter.Actor {
+        const actor = new St.Widget({
+            style_class: 'per-monitor-screen-blank-overlay',
+            reactive: false,
+            can_focus: false,
+            track_hover: false,
+            layout_manager: new Clutter.BinLayout(),
+            x_expand: true,
+            y_expand: true,
+            opacity: 0,
+        }) as Clutter.Actor;
+        actor.hide();
+        return actor;
+    }
+
+    #buildChromeParameters(): {
+        trackFullscreen: boolean;
+        affectsStruts: boolean;
+        affectsInputRegion?: boolean;
+    } {
+        // trackFullscreen:false keeps Shell from treating the chrome as
+        // fullscreen-tracking chrome; this manager owns overlay visibility.
+        const chromeParameters: {
+            trackFullscreen: boolean;
+            affectsStruts: boolean;
+            affectsInputRegion?: boolean;
+        } = {
+            trackFullscreen: false,
+            affectsStruts: false,
+        };
+        // affectsInputRegion:false prevents the overlay from absorbing pointer
+        // events. GNOME 50's addTopChrome/shared chromeParameters path removed
+        // this parameter, so only pass it on GNOME 49 where it is still recognized
+        if (Number.parseInt(Config.PACKAGE_VERSION) < 50) {
+            chromeParameters.affectsInputRegion = false;
+        }
+        return chromeParameters;
+    }
+
+    #addMonitorConstraint(
+        monitorId: string,
+        overlayRecord: OverlayRecord,
+        monitorIndex: number,
+    ): void {
         try {
             const monitorConstraint = new Layout.MonitorConstraint({
                 index: monitorIndex,
             });
-            actor.add_constraint(monitorConstraint);
+            overlayRecord.actor.add_constraint(monitorConstraint);
             overlayRecord.monitorConstraint = monitorConstraint;
         } catch {
             this.#logger.warn(
                 `failed to assign overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
             );
         }
+    }
 
-        this.#actors.set(monitorId, overlayRecord);
-        return overlayRecord;
+    #removeMonitorConstraint(
+        monitorId: string,
+        overlayRecord: OverlayRecord,
+    ): void {
+        if (!overlayRecord.monitorConstraint) return;
+        try {
+            overlayRecord.actor.remove_constraint(
+                overlayRecord.monitorConstraint,
+            );
+        } catch {
+            this.#logger.warn(
+                `failed to remove overlay constraint: ${monitorId}`,
+            );
+        } finally {
+            overlayRecord.monitorConstraint = null;
+        }
     }
 
     #refreshMonitorConstraint(
@@ -247,51 +287,16 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             return;
         }
 
-        if (overlayRecord.monitorConstraint !== null) {
-            try {
-                overlayRecord.actor.remove_constraint(
-                    overlayRecord.monitorConstraint,
-                );
-            } catch {
-                this.#logger.warn(
-                    `failed to remove stale overlay constraint: ${monitorId}`,
-                );
-            } finally {
-                overlayRecord.monitorConstraint = null;
-            }
-        }
-
-        try {
-            const monitorConstraint = new Layout.MonitorConstraint({
-                index: monitorIndex,
-            });
-            overlayRecord.actor.add_constraint(monitorConstraint);
-            overlayRecord.monitorConstraint = monitorConstraint;
-            overlayRecord.monitorIndex = monitorIndex;
-        } catch {
-            this.#logger.warn(
-                `failed to refresh overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
-            );
-        }
+        this.#removeMonitorConstraint(monitorId, overlayRecord);
+        this.#addMonitorConstraint(monitorId, overlayRecord, monitorIndex);
+        overlayRecord.monitorIndex = monitorIndex;
     }
 
     #destroyOverlayRecord(
         monitorId: string,
         overlayRecord: OverlayRecord,
     ): void {
-        if (overlayRecord.monitorConstraint) {
-            try {
-                overlayRecord.actor.remove_constraint(
-                    overlayRecord.monitorConstraint,
-                );
-            } catch {
-                this.#logger.warn(
-                    `failed to remove overlay constraint: ${monitorId}`,
-                );
-            } finally {
-                overlayRecord.monitorConstraint = null;
-            }
-        }
+        this.#removeMonitorConstraint(monitorId, overlayRecord);
 
         try {
             Main.layoutManager.removeChrome(overlayRecord.actor);
@@ -309,31 +314,8 @@ export class GnomeOverlayManager implements Overlay, Disposable {
     }
 }
 
-/** Ease properties for Clutter animations. */
-type EaseProperties = {
-    opacity: number;
-    duration: number;
-    mode: Clutter.AnimationMode;
-    onComplete?: () => void;
-};
-
-/**
- * Overlay actor type with GNOME Shell animation extensions.
- * In GNOME 49, `ease` and `ease_property` methods are added to Clutter.Actor
- * via GNOME Shell's environment.js monkey-patching. Since the GIR types for
- * clutter-18 don't include these extensions, we explicitly augment the type.
- */
-type OverlayActor = Clutter.Actor & {
-    ease(properties: EaseProperties): void;
-    ease_property<T>(
-        propertyName: string,
-        target: T,
-        properties: EaseProperties,
-    ): void;
-};
-
 type OverlayRecord = {
-    actor: OverlayActor;
+    actor: Clutter.Actor;
     monitorConstraint: Layout.MonitorConstraint | null;
     monitorIndex: number | null;
 };
