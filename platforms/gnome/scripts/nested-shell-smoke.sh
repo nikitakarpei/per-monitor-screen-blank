@@ -2,8 +2,7 @@
 
 set -eu
 
-GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-. "$GNOME_SCRIPTS_DIR/_paths.sh"
+. "$(dirname -- "$0")/_paths.sh"
 
 for cmd in dbus-run-session gnome-shell gsettings rg; do
   if ! command -v "$cmd" >/dev/null 2>&1; then

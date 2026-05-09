@@ -2,8 +2,7 @@
 
 set -eu
 
-GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-. "$GNOME_SCRIPTS_DIR/_paths.sh"
+. "$(dirname -- "$0")/_paths.sh"
 
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
 dest="$HOME/.local/share/gnome-shell/extensions/$uuid"

@@ -1,13 +1,14 @@
 #!/bin/sh
 # Shared GNOME script path helper.
 
-if [ -z "${GNOME_SCRIPTS_DIR:-}" ]; then
-  printf '%s\n' 'ERROR: GNOME_SCRIPTS_DIR must be set before sourcing platforms/gnome/scripts/_paths.sh.' >&2
+GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd) || {
+  printf '%s\n' 'ERROR: unable to resolve the GNOME scripts directory from the script path.' >&2
+  printf '%s\n' "  script=$0" >&2
   return 1
-fi
+}
 
 if [ ! -d "$GNOME_SCRIPTS_DIR" ]; then
-  printf '%s\n' 'ERROR: GNOME_SCRIPTS_DIR must point to an existing directory.' >&2
+  printf '%s\n' 'ERROR: resolved GNOME scripts directory does not exist.' >&2
   printf '%s\n' "  GNOME_SCRIPTS_DIR=$GNOME_SCRIPTS_DIR" >&2
   return 1
 fi

@@ -13,8 +13,7 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-. "$GNOME_SCRIPTS_DIR/_paths.sh"
+. "$(dirname -- "$0")/_paths.sh"
 
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
 out_dir="$GNOME_DIST_DIR"
