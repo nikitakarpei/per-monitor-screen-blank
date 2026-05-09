@@ -1,11 +1,12 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
+import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     type LoggerPort,
-    type PlatformEventSubscriber,
     type Overlay,
+    type PlatformEventSubscriber,
 } from '@pmsb/application';
 import {
     normalizeDimIntensityPercent,
@@ -18,11 +19,11 @@ import { GnomeMonitorIndex } from '../shell-infra/gnome-monitor-index.js';
 export class GnomeOverlayManager implements Overlay, Disposable {
     readonly #logger: LoggerPort;
     readonly #indexResolver: GnomeMonitorIndex;
+    readonly #unsubscribeMonitorRefresh: () => void;
     readonly #actors = new Map<string, OverlayRecord>();
     readonly #visibleMonitors = new Set<string>();
     #fadeDurationMs = 0;
     #targetOpacity = 0;
-    readonly #unsubscribeGeometry: () => void;
 
     constructor(
         logger: LoggerPort,
@@ -31,14 +32,14 @@ export class GnomeOverlayManager implements Overlay, Disposable {
     ) {
         this.#logger = logger;
         this.#indexResolver = indexResolver;
-        this.#unsubscribeGeometry = eventSubscriber.on(
+        this.#unsubscribeMonitorRefresh = eventSubscriber.on(
             'monitors-geometry-changed',
-            () => this.#syncGeometry(),
+            () => this.#refreshVisibleActors(),
         );
     }
 
     dispose(): void {
-        this.#unsubscribeGeometry();
+        this.#unsubscribeMonitorRefresh();
         for (const [monitorId, overlayRecord] of this.#actors) {
             this.#destroyOverlayRecord(monitorId, overlayRecord);
         }
@@ -81,6 +82,20 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         }
     }
 
+    #refreshVisibleActors(): void {
+        for (const monitorId of this.#visibleMonitors) {
+            const overlayRecord = this.#actors.get(monitorId);
+            if (!overlayRecord) {
+                this.#logger.warn(
+                    `visible overlay missing during constraint refresh: ${monitorId}`,
+                );
+                continue;
+            }
+
+            this.#refreshMonitorConstraint(monitorId, overlayRecord);
+        }
+    }
+
     #showMonitor(monitorId: string, overlayRecord: OverlayRecord): void {
         const { actor } = overlayRecord;
         if (this.#visibleMonitors.has(monitorId)) {
@@ -90,7 +105,6 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             return;
         }
         this.#visibleMonitors.add(monitorId);
-        this.#syncGeometryForMonitor(monitorId, actor);
         actor.show();
         actor.ease({
             opacity: this.#targetOpacity,
@@ -126,38 +140,12 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         });
     }
 
-    #syncGeometry(): void {
-        for (const monitorId of this.#visibleMonitors) {
-            const overlayRecord = this.#actors.get(monitorId);
-            if (overlayRecord)
-                this.#syncGeometryForMonitor(monitorId, overlayRecord.actor);
-        }
-    }
-
-    #syncGeometryForMonitor(monitorId: string, actor: OverlayActor): void {
-        const monitorIndex =
-            this.#indexResolver.tryGetIndexByMonitorId(monitorId);
-        if (monitorIndex === undefined) {
-            this.#logger.warn(
-                `geometry sync skipped, monitor id not resolvable: ${monitorId}`,
-            );
-            return;
-        }
-        const monitor = Main.layoutManager.monitors[monitorIndex];
-        if (!monitor) {
-            this.#logger.warn(
-                `geometry sync skipped, monitor index out of range: id=${monitorId}, index=${monitorIndex}`,
-            );
-            return;
-        }
-
-        actor.set_position(monitor.x, monitor.y);
-        actor.set_size(monitor.width, monitor.height);
-    }
-
     #ensureActor(monitorId: string): OverlayRecord {
         const existing = this.#actors.get(monitorId);
-        if (existing) return existing;
+        if (existing) {
+            this.#refreshMonitorConstraint(monitorId, existing);
+            return existing;
+        }
 
         const actor = new St.Widget({
             style_class: 'per-monitor-screen-blank-overlay',
@@ -185,14 +173,97 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         }
         Main.layoutManager.addTopChrome(actor, chromeParameters);
         this.#logger.info(`added overlay chrome: ${monitorId}`);
+
+        const monitorIndex =
+            this.#indexResolver.tryGetIndexByMonitorId(monitorId);
+        if (monitorIndex === undefined) {
+            this.#logger.warn(
+                `overlay constraint skipped, monitor id not resolvable: ${monitorId}`,
+            );
+            const overlayRecord: OverlayRecord = {
+                actor,
+                monitorConstraint: null,
+                monitorIndex: null,
+            };
+            this.#actors.set(monitorId, overlayRecord);
+            return overlayRecord;
+        }
+
+        const monitorConstraint = new Layout.MonitorConstraint({
+            index: monitorIndex,
+        });
+        actor.add_constraint(monitorConstraint);
+        this.#logger.info(
+            `added overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
+        );
+
         const overlayRecord: OverlayRecord = {
             actor,
-            monitorConstraint: null,
+            monitorConstraint,
+            monitorIndex,
         };
         this.#actors.set(monitorId, overlayRecord);
-        this.#syncGeometryForMonitor(monitorId, actor);
-
         return overlayRecord;
+    }
+
+    #refreshMonitorConstraint(
+        monitorId: string,
+        overlayRecord: OverlayRecord,
+    ): void {
+        const monitorIndex =
+            this.#indexResolver.tryGetIndexByMonitorId(monitorId);
+        if (monitorIndex === undefined) {
+            if (overlayRecord.monitorIndex === null) {
+                this.#logger.warn(
+                    `overlay constraint skipped, monitor id not resolvable: ${monitorId}`,
+                );
+            } else {
+                this.#logger.warn(
+                    `overlay constraint stale mapping unresolved: ${monitorId} -> ${overlayRecord.monitorIndex}`,
+                );
+            }
+            return;
+        }
+
+        if (
+            overlayRecord.monitorIndex !== null &&
+            overlayRecord.monitorIndex !== monitorIndex
+        ) {
+            this.#logger.warn(
+                `overlay constraint stale mapping refreshed: ${monitorId} -> ${overlayRecord.monitorIndex}, current=${monitorIndex}`,
+            );
+        }
+
+        if (
+            overlayRecord.monitorConstraint !== null &&
+            overlayRecord.monitorIndex === monitorIndex
+        ) {
+            return;
+        }
+
+        if (overlayRecord.monitorConstraint !== null) {
+            try {
+                overlayRecord.actor.remove_constraint(
+                    overlayRecord.monitorConstraint,
+                );
+            } catch {
+                this.#logger.warn(
+                    `failed to remove stale overlay constraint: ${monitorId}`,
+                );
+            } finally {
+                overlayRecord.monitorConstraint = null;
+            }
+        }
+
+        const monitorConstraint = new Layout.MonitorConstraint({
+            index: monitorIndex,
+        });
+        overlayRecord.actor.add_constraint(monitorConstraint);
+        overlayRecord.monitorConstraint = monitorConstraint;
+        overlayRecord.monitorIndex = monitorIndex;
+        this.#logger.info(
+            `refreshed overlay monitor constraint: ${monitorId} -> ${monitorIndex}`,
+        );
     }
 
     #destroyOverlayRecord(
@@ -254,5 +325,6 @@ type OverlayActor = Clutter.Actor & {
 
 type OverlayRecord = {
     actor: OverlayActor;
-    monitorConstraint: Clutter.Constraint | null;
+    monitorConstraint: Layout.MonitorConstraint | null;
+    monitorIndex: number | null;
 };
