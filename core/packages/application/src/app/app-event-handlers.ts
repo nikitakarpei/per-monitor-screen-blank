@@ -39,6 +39,7 @@ import { applyIdleTimeoutToAutoAwakeMonitors } from './use-cases/apply-idle-time
 import { applyKeepAwakeDurationToKeepAwakeMonitors } from './use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
 import { applyPointerMonitorTimerPolicy } from './use-cases/apply-pointer-monitor-timer-policy.js';
 import { registerPointerMenuShortcut } from './use-cases/register-pointer-menu-shortcut.js';
+import { setupConnectedMonitor } from './use-cases/setup-connected-monitor.js';
 
 interface EventHandlerDeps {
     bus: AppEventBus;
@@ -101,16 +102,13 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
         handleModeChange(deps, payload),
     );
     void deps.bus.on('monitor-connected', (payload) =>
+        setupConnectedMonitor(deps, payload.monitorId),
+    );
+    void deps.bus.on('monitor-connected', (payload) =>
         persistMonitorIdentity(deps, payload),
     );
     void deps.bus.on('monitor-disconnected', (payload) =>
         teardownMonitor(deps, payload),
-    );
-    void deps.bus.on('monitor-disconnected', (payload) =>
-        deps.monitorIdentityStore.remove(payload.monitorId),
-    );
-    void deps.bus.on('monitor-disconnected', (payload) =>
-        deps.overlay.hideForMonitor(payload.monitorId),
     );
 
     // scalar setting handlers
