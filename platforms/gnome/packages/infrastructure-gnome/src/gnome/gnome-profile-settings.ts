@@ -25,6 +25,14 @@ export class GnomeProfileSettings implements ProfileSettings {
         this.#createProfileSettings = createProfileSettings;
     }
 
+    ensureDefaultProfile(): void {
+        const profileIds = this.getProfileIds();
+        if (profileIds.length === 0) {
+            const profileId = this.createProfile('Default');
+            this.setActiveProfile(profileId);
+        }
+    }
+
     getProfileIds(): readonly ProfileId[] {
         return this.#readProfileIds();
     }

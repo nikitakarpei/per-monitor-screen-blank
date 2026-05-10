@@ -1,6 +1,7 @@
 import { type Profile, type ProfileId, type MonitorMode } from '@pmsb/domain';
 
 export interface ProfileSettings {
+    ensureDefaultProfile(): void;
     getProfiles(): Profile[];
     getActiveProfile(): Profile | null;
     setActiveProfile(id: ProfileId): void;

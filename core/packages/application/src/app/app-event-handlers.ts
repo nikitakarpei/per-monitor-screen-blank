@@ -139,6 +139,9 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     );
 
     void deps.bus.on('application-bootstrap-requested', (_payload) =>
+        deps.profileSettings.ensureDefaultProfile(),
+    );
+    void deps.bus.on('application-bootstrap-requested', (_payload) =>
         bootstrapConnectedMonitors(deps, _payload),
     );
     void deps.bus.on('application-bootstrap-requested', (_payload) =>
