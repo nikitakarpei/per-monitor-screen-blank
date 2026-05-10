@@ -80,6 +80,19 @@ export class GnomeGeneralSettings implements GeneralSettings {
         );
     }
 
+    getDisableWindowObstructionPolicy(): boolean {
+        return this.#settings.get_boolean(
+            GSETTINGS_KEYS.disableWindowObstructionPolicy,
+        );
+    }
+
+    setDisableWindowObstructionPolicy(value: boolean): void {
+        void this.#settings.set_boolean(
+            GSETTINGS_KEYS.disableWindowObstructionPolicy,
+            value,
+        );
+    }
+
     getKeepAwakeMinutes(): number {
         return this.#settings.get_int(GSETTINGS_KEYS.keepAwakeMinutes);
     }
@@ -164,6 +177,16 @@ export class GnomeGeneralSettings implements GeneralSettings {
         return this.#observeBooleanSetting(
             GSETTINGS_KEYS.showIssueNotifications,
             () => this.getShowIssueNotifications(),
+            callback,
+        );
+    }
+
+    observeDisableWindowObstructionPolicyChanged(
+        callback: (disabled: boolean) => void,
+    ): Disposable {
+        return this.#observeBooleanSetting(
+            GSETTINGS_KEYS.disableWindowObstructionPolicy,
+            () => this.getDisableWindowObstructionPolicy(),
             callback,
         );
     }

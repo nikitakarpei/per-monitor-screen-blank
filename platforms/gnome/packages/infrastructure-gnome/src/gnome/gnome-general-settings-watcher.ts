@@ -113,5 +113,15 @@ export class GnomeGeneralSettingsWatcher implements Disposable {
                 },
             ),
         );
+        void this.#observationStore.add(
+            this.#settings.observeDisableWindowObstructionPolicyChanged(
+                (disabled) => {
+                    this.#eventEmitter.emit({
+                        type: 'window-obstruction-policy-changed',
+                        payload: { disabled },
+                    });
+                },
+            ),
+        );
     }
 }

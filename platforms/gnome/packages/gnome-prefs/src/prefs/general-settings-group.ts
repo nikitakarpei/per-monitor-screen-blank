@@ -80,6 +80,15 @@ export class GeneralSettingsGroup
         );
         this.add(disableAutoTimerRow);
 
+        // Disable compositor workaround for maximized/fullscreen windows
+        const disableWindowObstructionRow = this._makeSwitchRow(
+            'Disable compositor workaround for maximized/fullscreen windows',
+            () => generalSettings.getDisableWindowObstructionPolicy(),
+            (v) => generalSettings.setDisableWindowObstructionPolicy(v),
+            'May improve performance but can cause overlay flickering.',
+        );
+        this.add(disableWindowObstructionRow);
+
         // Fade time
         const fadeTimeRow = this._makeSpinRow(
             'Fade time',

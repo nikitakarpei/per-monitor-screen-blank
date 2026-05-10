@@ -11,6 +11,7 @@ export const GSETTINGS_KEYS = {
     showQuickSettingsMenu: 'show-quick-settings-menu',
     showIssueNotifications: 'show-issue-notifications',
     disableAutoTimerOnPointerMonitor: 'disable-auto-timer-on-pointer-monitor',
+    disableWindowObstructionPolicy: 'disable-window-obstruction-policy',
     fadeDurationMs: 'fade-duration-ms',
     dimIntensityPercent: 'dim-intensity-percent',
     knownMonitors: 'known-monitors',

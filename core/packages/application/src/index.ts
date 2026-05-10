@@ -17,7 +17,6 @@ export {
     type PointerPositionChangedEvent,
     type DeadlineFiredEvent,
     type ProfileCreatedEvent,
-    type MonitorsGeometryChangedEvent,
     type PlatformEvent,
     type PlatformEventEmitter,
     type PlatformEventSubscriber,

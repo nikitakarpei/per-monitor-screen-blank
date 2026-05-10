@@ -15,4 +15,6 @@ export interface GeneralSettings {
     setDisableAutoTimerOnPointerMonitor(value: boolean): void;
     getKeepAwakeMinutes(): number;
     setKeepAwakeMinutes(value: number): void;
+    getDisableWindowObstructionPolicy(): boolean;
+    setDisableWindowObstructionPolicy(value: boolean): void;
 }

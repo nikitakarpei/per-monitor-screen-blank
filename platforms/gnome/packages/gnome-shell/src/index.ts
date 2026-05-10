@@ -1,6 +1,7 @@
 export { GnomeQuickSettings } from './shell-ui/gnome-quick-settings.js';
 export { GnomePointerContextMenu } from './shell-ui/gnome-pointer-context-menu.js';
 export { GnomeOverlayManager } from './shell-ui/gnome-overlay-manager.js';
+export { GnomeWindowObstructionPolicy } from './shell-ui/gnome-window-obstruction-policy.js';
 export {
     type PreferencesOpener,
     GnomePreferencesOpener,

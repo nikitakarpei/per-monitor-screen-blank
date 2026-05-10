@@ -46,6 +46,11 @@
       <summary>Disable auto timer on pointer monitor</summary>
       <description>Disable the auto timer for the monitor currently under the pointer.</description>
     </key>
+    <key name="disable-window-obstruction-policy" type="b">
+      <default>false</default>
+      <summary>Disable compositor workaround for maximized/fullscreen windows</summary>
+      <description>Disable the GNOME compositor workaround that prevents rendering issues when overlays overlap fullscreen or maximized windows.</description>
+    </key>
     <key name="fade-duration-ms" type="i">
       <default>180</default>
       <summary>Fade duration in milliseconds</summary>

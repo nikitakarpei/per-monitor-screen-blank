@@ -9,7 +9,6 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex, Disposable {
     readonly #logger: LoggerPort;
     readonly #eventEmitter: PlatformEventEmitter;
     readonly #monitorQuery: GnomeMonitorQuery;
-    readonly #knownMonitorIds = new Set<string>();
     readonly #indexById = new Map<string, number>();
 
     constructor(
@@ -23,10 +22,6 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex, Disposable {
 
         const currentMonitors = this.#monitorQuery.listConnectedMonitors();
         this.#rebuildIndexById(currentMonitors);
-
-        for (const monitor of currentMonitors) {
-            this.#knownMonitorIds.add(monitor.monitorId);
-        }
 
         Main.layoutManager.connectObject(
             'monitors-changed',
@@ -51,62 +46,46 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex, Disposable {
     dispose(): void {
         Main.layoutManager.disconnectObject(this);
 
-        this.#knownMonitorIds.clear();
         this.#indexById.clear();
     }
 
     #onMonitorsChanged(): void {
-        const currentMonitors = this.#monitorQuery.listConnectedMonitors();
-        const currentMonitorIds = new Set(
-            currentMonitors.map((m) => m.monitorId),
+        const currentMonitors = new Map(
+            this.#monitorQuery
+                .listConnectedMonitors()
+                .map((m) => [m.monitorId, m]),
         );
 
-        this.#rebuildIndexById(currentMonitors);
-        this.#processNewAndChangedMonitors(currentMonitors);
-        this.#processDisconnectedMonitors(currentMonitorIds);
+        const disconnectedMonitorIds: string[] = [];
+        const connectedMonitors: LogicalMonitorIdentity[] = [];
 
-        this.#eventEmitter.emit({
-            type: 'monitors-geometry-changed',
-            payload: {},
-        });
-    }
+        for (const [monitorId, monitorIndex] of this.#indexById) {
+            const monitor = currentMonitors.get(monitorId);
 
-    #processNewAndChangedMonitors(
-        currentMonitors: readonly LogicalMonitorIdentity[],
-    ): void {
-        for (const monitor of currentMonitors) {
-            this.#handleNewMonitor(monitor);
-        }
-    }
-
-    #emitMonitorConnected(monitor: LogicalMonitorIdentity): void {
-        this.#eventEmitter.emit({
-            type: 'monitor-connected',
-            payload: monitor,
-        });
-    }
-
-    #handleNewMonitor(monitor: LogicalMonitorIdentity): void {
-        if (this.#knownMonitorIds.has(monitor.monitorId)) {
-            return;
-        }
-
-        this.#knownMonitorIds.add(monitor.monitorId);
-        this.#emitMonitorConnected(monitor);
-    }
-
-    #processDisconnectedMonitors(currentIds: ReadonlySet<string>): void {
-        const toRemove: string[] = [];
-        for (const knownId of this.#knownMonitorIds) {
-            if (!currentIds.has(knownId)) {
-                toRemove.push(knownId);
+            if (!monitor || monitor.index !== monitorIndex) {
+                this.#indexById.delete(monitorId);
+                disconnectedMonitorIds.push(monitorId);
             }
         }
-        for (const knownId of toRemove) {
-            this.#knownMonitorIds.delete(knownId);
+
+        for (const monitorId of disconnectedMonitorIds) {
             this.#eventEmitter.emit({
                 type: 'monitor-disconnected',
-                payload: { monitorId: knownId },
+                payload: { monitorId },
+            });
+        }
+
+        for (const [monitorId, monitor] of currentMonitors) {
+            if (!this.#indexById.has(monitorId)) {
+                this.#indexById.set(monitorId, monitor.index);
+                connectedMonitors.push(monitor);
+            }
+        }
+
+        for (const monitor of connectedMonitors) {
+            this.#eventEmitter.emit({
+                type: 'monitor-connected',
+                payload: monitor,
             });
         }
     }

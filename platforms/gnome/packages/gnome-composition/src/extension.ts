@@ -34,6 +34,7 @@ import {
     ShellNotifications,
     GnomePreferencesOpener,
     GnomeMonitorQuery,
+    GnomeWindowObstructionPolicy,
 } from '@pmsb/gnome-shell';
 import { createDisposableStore, type DisposableStore } from '@pmsb/lifecycle';
 
@@ -128,6 +129,13 @@ export default class PerMonitorScreenBlankExtension extends Extension {
 
         const overlay = new GnomeOverlayManager(logger, tracker, platformBus);
         this._rootScope.add(overlay);
+
+        const unredirectPolicy = new GnomeWindowObstructionPolicy(
+            platformBus,
+            logger,
+            generalSettings,
+        );
+        this._rootScope.add(unredirectPolicy);
 
         const pointerMenuShortcutManager = new GnomePointerMenuShortcutManager(
             gioSettings,

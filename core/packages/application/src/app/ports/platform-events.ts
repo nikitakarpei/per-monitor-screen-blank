@@ -55,6 +55,11 @@ export type PointerMonitorTimerPolicyChangedEvent = {
     payload: { shouldMonitorAutoBlackWhenFocused: boolean };
 };
 
+type WindowObstructionPolicyChangedEvent = {
+    type: 'window-obstruction-policy-changed';
+    payload: { disabled: boolean };
+};
+
 export type PointerShortcutChangedEvent = {
     type: 'pointer-shortcut-changed';
     payload: { shortcut: string[] };
@@ -85,6 +90,16 @@ export type PointerPositionChangedEvent = {
     payload: { monitorId: string };
 };
 
+type OverlayShownEvent = {
+    type: 'overlay-shown';
+    payload: { monitorId: string; monitorIndex: number };
+};
+
+type OverlayHiddenEvent = {
+    type: 'overlay-hidden';
+    payload: { monitorId: string };
+};
+
 export type DeadlineFiredEvent = {
     type: 'deadline-fired';
     payload: Deadline;
@@ -93,11 +108,6 @@ export type DeadlineFiredEvent = {
 export type ProfileCreatedEvent = {
     type: 'profile-created';
     payload: { profileId: ProfileId };
-};
-
-export type MonitorsGeometryChangedEvent = {
-    type: 'monitors-geometry-changed';
-    payload: Record<string, never>;
 };
 
 type KnownMonitorsChangedEvent = {
@@ -122,14 +132,16 @@ export type PlatformEvent =
     | DimIntensityChangedEvent
     | IndicatorVisibilityChangedEvent
     | PointerMonitorTimerPolicyChangedEvent
+    | WindowObstructionPolicyChangedEvent
     | PointerShortcutChangedEvent
     | ShowIssueNotificationsChangedEvent
     | MonitorConnectedEvent
     | MonitorDisconnectedEvent
     | PointerMonitorChangedEvent
     | PointerPositionChangedEvent
+    | OverlayShownEvent
+    | OverlayHiddenEvent
     | DeadlineFiredEvent
-    | MonitorsGeometryChangedEvent
     | KnownMonitorsChangedEvent
     | ApplicationBootstrapRequestedEvent;
 
