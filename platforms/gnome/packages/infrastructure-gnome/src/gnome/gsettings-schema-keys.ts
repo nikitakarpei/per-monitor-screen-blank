@@ -5,6 +5,7 @@
 export const GSETTINGS_KEYS = {
     profileIds: 'profile-ids',
     activeProfileId: 'active-profile-id',
+    lastActiveProfileId: 'last-active-profile-id',
     pointerMenuShortcut: 'pointer-menu-shortcut',
     idleTimeoutSeconds: 'idle-timeout-seconds',
     keepAwakeMinutes: 'keep-awake-minutes',

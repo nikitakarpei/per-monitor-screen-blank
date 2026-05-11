@@ -14,6 +14,11 @@
       <summary>Active profile ID</summary>
       <description>The profile currently used by runtime and quick settings.</description>
     </key>
+    <key name="last-active-profile-id" type="s">
+      <default>''</default>
+      <summary>Last active profile ID</summary>
+      <description>The last real profile that was active, remembered for Quick Settings restore. Empty when no profile has been remembered.</description>
+    </key>
     <key name="pointer-menu-shortcut" type="as">
       <default>
         <![CDATA[['<Super><Shift>o']]]>
