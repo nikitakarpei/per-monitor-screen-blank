@@ -2,6 +2,7 @@ export { registerAppEventHandlers } from './app/app-event-handlers.js';
 export {
     type ProfileIdsChangedEvent,
     type ProfileSwitchedEvent,
+    type ProfileInactivatedEvent,
     type ProfileNameChangedEvent,
     type MonitorModeChangedEvent,
     type IdleTimeoutChangedEvent,

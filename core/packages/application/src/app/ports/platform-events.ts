@@ -15,6 +15,11 @@ export type ProfileSwitchedEvent = {
     payload: { profileId: ProfileId };
 };
 
+export type ProfileInactivatedEvent = {
+    type: 'profile-inactivated';
+    payload: Record<string, never>;
+};
+
 export type ProfileNameChangedEvent = {
     type: 'profile-name-changed';
     payload: { profileId: ProfileId; name: string };
@@ -123,6 +128,7 @@ type ApplicationBootstrapRequestedEvent = {
 export type PlatformEvent =
     | ProfileIdsChangedEvent
     | ProfileSwitchedEvent
+    | ProfileInactivatedEvent
     | ProfileNameChangedEvent
     | ProfileCreatedEvent
     | MonitorModeChangedEvent
