@@ -79,8 +79,8 @@ export class MonitorModesGroup
         if (!activeProfile) {
             this.#rowManager.clearRows();
             this.#setPlaceholder(
-                'No profile available',
-                'Create a profile to configure monitor modes.',
+                'Extension is disabled',
+                'Select a profile to re-enable the extension and configure monitor modes.',
             );
             return;
         }
