@@ -1,10 +1,10 @@
-import { type Disposable } from '@pmsb/lifecycle';
-import {
-    EventBus,
-    type PlatformEventSubscriber,
-    type PlatformEvent,
-    type PlatformEventEmitter,
-    type LoggerPort,
+import type { Disposable } from '@pmsb/lifecycle';
+import { EventBus } from '@pmsb/application';
+import type {
+    PlatformEventSubscriber,
+    PlatformEvent,
+    PlatformEventEmitter,
+    LoggerPort,
 } from '@pmsb/application';
 
 export class GnomePlatformEventBus

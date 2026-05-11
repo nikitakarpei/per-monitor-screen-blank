@@ -1,15 +1,15 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import {
-    type QuickSettings as QuickSettingsPort,
-    type ProfileSettings,
-    type LoggerPort,
+import type * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import type {
+    QuickSettings as QuickSettingsPort,
+    ProfileSettings,
+    LoggerPort,
 } from '@pmsb/application';
-import { type Profile, type ProfileId } from '@pmsb/domain';
-import { type Disposable } from '@pmsb/lifecycle';
-import { PreferencesOpener } from '../shell-infra/gnome-preferences-opener.js';
+import type { Profile, ProfileId } from '@pmsb/domain';
+import type { Disposable } from '@pmsb/lifecycle';
+import type { PreferencesOpener } from '../shell-infra/gnome-preferences-opener.js';
 
 export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
     readonly #preferencesOpener: PreferencesOpener;
@@ -33,14 +33,14 @@ export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
             iconName: 'display-symbolic',
             title: 'Screen Blank',
         });
-        this.#indicator.quickSettingsItems?.push(this.#toggle);
+        this.#indicator.quickSettingsItems.push(this.#toggle);
 
         this.#toggle.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         void this.#toggle.menu.addAction('Open Settings', () => {
             Main.panel.closeQuickSettings();
             this.#preferencesOpener.openSafely();
         });
-        Main.panel.statusArea.quickSettings?.addExternalIndicator?.(
+        Main.panel.statusArea.quickSettings.addExternalIndicator(
             this.#indicator as object as PanelMenu.Button,
         );
 
@@ -78,13 +78,6 @@ export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
         profiles: ReadonlyArray<Readonly<Profile>>,
         activeProfileId: ProfileId | undefined,
     ): void {
-        if (!this.#toggle.menu) {
-            this.#logger.warn(
-                'GnomeQuickSettings._syncProfiles called before toggle is initialized',
-            );
-            return;
-        }
-
         this.#profileSection.removeAll();
         this.#profileSection.addMenuItem(
             new PopupMenu.PopupMenuItem('Presets', {

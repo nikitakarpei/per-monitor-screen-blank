@@ -1,10 +1,7 @@
-import { type GeneralSettings } from '../../app/ports/general-settings.js';
-import { FocusedMonitorService } from './focused-monitor-service.js';
-import {
-    modeToInitialState,
-    type MonitorState,
-    type MonitorMode,
-} from '@pmsb/domain';
+import type { GeneralSettings } from '../../app/ports/general-settings.js';
+import type { FocusedMonitorService } from './focused-monitor-service.js';
+import { modeToInitialState } from '@pmsb/domain';
+import type { MonitorState, MonitorMode } from '@pmsb/domain';
 
 export class ModeStateResolver {
     readonly #generalSettings: GeneralSettings;

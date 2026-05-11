@@ -1,8 +1,8 @@
 import type { Disposable } from '@pmsb/lifecycle';
 import { EventBus } from '../../util/event-bus.js';
-import { LoggerPort } from '../../util/logger.js';
-import { AppEvents } from '../app-events.js';
-import {
+import type { LoggerPort } from '../../util/logger.js';
+import type { AppEvents } from '../app-events.js';
+import type {
     PlatformEventSubscriber,
     PlatformEvent,
 } from '../../app/ports/platform-events.js';

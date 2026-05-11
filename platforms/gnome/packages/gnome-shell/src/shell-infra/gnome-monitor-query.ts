@@ -1,10 +1,7 @@
-import Meta from 'gi://Meta';
+import type Meta from 'gi://Meta';
 import type { ConnectedMonitorsQuery } from '@pmsb/application';
-import {
-    type LogicalMonitorIdentity,
-    type PhysicalMonitorInfo,
-    buildLogicalMonitorIdentity,
-} from '@pmsb/domain';
+import { buildLogicalMonitorIdentity } from '@pmsb/domain';
+import type { LogicalMonitorIdentity, PhysicalMonitorInfo } from '@pmsb/domain';
 
 export class GnomeMonitorQuery implements ConnectedMonitorsQuery {
     listConnectedMonitors(): readonly LogicalMonitorIdentity[] {
@@ -48,8 +45,8 @@ export class GnomeMonitorQuery implements ConnectedMonitorsQuery {
             )
             .map((m) => ({
                 connector: m.get_connector(),
-                vendor: m.get_vendor() ?? 'Unknown Vendor',
-                product: m.get_product() ?? 'Unknown Product',
+                vendor: m.get_vendor(),
+                product: m.get_product(),
             }));
     }
 }

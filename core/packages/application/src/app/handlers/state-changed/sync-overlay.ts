@@ -1,7 +1,7 @@
-import { Overlay } from '../../../app/ports/overlay.js';
-import { type LoggerPort } from '../../../util/logger.js';
-import { type MonitorState } from '@pmsb/domain';
-import { StateChangedEvent } from '../../app-events.js';
+import type { Overlay } from '../../../app/ports/overlay.js';
+import type { LoggerPort } from '../../../util/logger.js';
+import type { MonitorState } from '@pmsb/domain';
+import type { StateChangedEvent } from '../../app-events.js';
 
 interface MonitorOverlayDeps {
     overlay: Overlay;

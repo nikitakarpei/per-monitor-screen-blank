@@ -1,10 +1,10 @@
 import GLib from 'gi://GLib';
-import { type Disposable } from '@pmsb/lifecycle';
-import { type DeadlineKey } from '@pmsb/domain';
-import {
-    type DeadlineScheduler,
-    type LoggerPort,
-    type PlatformEventEmitter,
+import type { Disposable } from '@pmsb/lifecycle';
+import type { DeadlineKey } from '@pmsb/domain';
+import type {
+    DeadlineScheduler,
+    LoggerPort,
+    PlatformEventEmitter,
 } from '@pmsb/application';
 
 export class GnomeDeadlineScheduler implements DeadlineScheduler, Disposable {

@@ -1,8 +1,8 @@
-import {
-    type ProfileId,
-    type Deadline,
-    type LogicalMonitorIdentity,
-    type MonitorMode,
+import type {
+    ProfileId,
+    Deadline,
+    LogicalMonitorIdentity,
+    MonitorMode,
 } from '@pmsb/domain';
 
 export type ProfileIdsChangedEvent = {

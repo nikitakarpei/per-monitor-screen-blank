@@ -1,11 +1,8 @@
-import { type LoggerPort, type PlatformEventEmitter } from '@pmsb/application';
-import { type ProfileId } from '@pmsb/domain';
-import {
-    type Disposable,
-    type DisposableStore,
-    createDisposableStore,
-} from '@pmsb/lifecycle';
-import {
+import type { LoggerPort, PlatformEventEmitter } from '@pmsb/application';
+import type { ProfileId } from '@pmsb/domain';
+import { createDisposableStore } from '@pmsb/lifecycle';
+import type { Disposable, DisposableStore } from '@pmsb/lifecycle';
+import type {
     GnomeProfileSettings,
     ProfileIdsChange,
 } from './gnome-profile-settings.js';

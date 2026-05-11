@@ -1,12 +1,8 @@
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
-import {
-    MONITOR_MODES,
-    type KnownMonitorEntry,
-    type MonitorMode,
-    getMonitorModeLabel,
-} from '@pmsb/domain';
-import { type LoggerPort } from '@pmsb/application';
+import { MONITOR_MODES, getMonitorModeLabel } from '@pmsb/domain';
+import type { KnownMonitorEntry, MonitorMode } from '@pmsb/domain';
+import type { LoggerPort } from '@pmsb/application';
 
 interface MonitorModesRowManagerDeps {
     group: Adw.PreferencesGroup;
@@ -90,11 +86,10 @@ export class MonitorModesRowManager {
     }
 
     #indexToMode(index: number): MonitorMode {
-        const mode = MONITOR_MODES[index];
-        if (!mode) {
+        if (index < 0 || index >= MONITOR_MODES.length) {
             throw new Error(`Invalid monitor mode index: ${index}`);
         }
-        return mode;
+        return MONITOR_MODES[index];
     }
 
     #createMonitorRow(monitor: KnownMonitorEntry, selectedIndex: number): void {
@@ -125,7 +120,7 @@ export class MonitorModesRowManager {
             try {
                 entry.row.disconnect(entry.handlerId);
             } catch {
-                this.#logger?.info(
+                this.#logger.info(
                     'monitor row signal disconnect skipped: already detached',
                 );
             }
@@ -133,7 +128,7 @@ export class MonitorModesRowManager {
         try {
             this.#group.remove(entry.row);
         } catch {
-            this.#logger?.info(
+            this.#logger.info(
                 'monitor row removal skipped: row already detached',
             );
         }

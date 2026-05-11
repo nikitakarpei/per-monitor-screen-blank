@@ -1,5 +1,5 @@
-import { DeadlineKey } from './deadline-keys.js';
-import { MonitorMode } from './monitor-mode.js';
+import type { DeadlineKey } from './deadline-keys.js';
+import type { MonitorMode } from './monitor-mode.js';
 
 // ProfileId is a string type alias for type safety in profile-related functions
 // eslint-disable-next-line sonarjs/redundant-type-aliases -- Intentional type alias for domain clarity

@@ -3,18 +3,18 @@ import St from 'gi://St';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import {
-    type LoggerPort,
-    type Overlay,
-    type PlatformEventEmitter,
+import type {
+    LoggerPort,
+    Overlay,
+    PlatformEventEmitter,
 } from '@pmsb/application';
 import {
     normalizeDimIntensityPercent,
     dimIntensityPercentToOpacity,
     normalizeFadeDurationMs,
 } from '@pmsb/domain';
-import { type Disposable } from '@pmsb/lifecycle';
-import { GnomeMonitorIndex } from '../shell-infra/gnome-monitor-index.js';
+import type { Disposable } from '@pmsb/lifecycle';
+import type { GnomeMonitorIndex } from '../shell-infra/gnome-monitor-index.js';
 
 export class GnomeOverlayManager implements Overlay, Disposable {
     readonly #logger: LoggerPort;
@@ -169,7 +169,7 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         } catch (error) {
             this.#logger.error(
                 `failed to remove overlay chrome: ${monitorId}`,
-                error,
+                error as object | undefined,
             );
         }
 
@@ -178,7 +178,7 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         } catch (error) {
             this.#logger.error(
                 `failed to destroy overlay actor: ${monitorId}`,
-                error,
+                error as object | undefined,
             );
         }
     }

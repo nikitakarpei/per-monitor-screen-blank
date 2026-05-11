@@ -1,5 +1,5 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { type UserNotifications } from '@pmsb/application';
+import type { UserNotifications } from '@pmsb/application';
 import type { Disposable } from '@pmsb/lifecycle';
 
 export class ShellNotifications implements UserNotifications, Disposable {

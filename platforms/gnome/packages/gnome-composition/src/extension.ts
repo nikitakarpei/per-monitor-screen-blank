@@ -9,8 +9,8 @@ import {
     MonitorRegistry,
     IssueReportingLogger,
     DeduplicatingUserNotifications,
-    type LoggerPort,
 } from '@pmsb/application';
+import type { LoggerPort } from '@pmsb/application';
 import {
     GjsLogger,
     GnomeDeadlineScheduler,
@@ -22,8 +22,8 @@ import {
     GnomeMonitorIdentityWatcher,
     GnomePlatformEventBus,
     GnomeSettingsProvider,
-    type ProfileGioSettingsFactory,
 } from '@pmsb/infrastructure-gnome';
+import type { ProfileGioSettingsFactory } from '@pmsb/infrastructure-gnome';
 import {
     GnomeOverlayManager,
     GnomePointerSource,
@@ -36,7 +36,8 @@ import {
     GnomeMonitorQuery,
     GnomeWindowObstructionPolicy,
 } from '@pmsb/gnome-shell';
-import { createDisposableStore, type DisposableStore } from '@pmsb/lifecycle';
+import { createDisposableStore } from '@pmsb/lifecycle';
+import type { DisposableStore } from '@pmsb/lifecycle';
 
 export default class PerMonitorScreenBlankExtension extends Extension {
     private _rootScope: DisposableStore | undefined;
@@ -80,11 +81,9 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         );
         this._rootScope.add(generalSettingsWatcher);
 
-        const preferencesOpener = new GnomePreferencesOpener({
-            openPreferences: async () => {
-                this.openPreferences();
-            },
-        });
+        const preferencesOpener = new GnomePreferencesOpener(() =>
+            this.openPreferences(),
+        );
         this._rootScope.add(preferencesOpener);
 
         const createProfileSettings: ProfileGioSettingsFactory =

@@ -1,6 +1,6 @@
-import { MonitorEntity } from '@pmsb/domain';
-import { PointerSource } from '../../app/ports/monitors.js';
-import { MonitorRegistry } from './monitor-registry.js';
+import type { MonitorEntity } from '@pmsb/domain';
+import type { PointerSource } from '../../app/ports/monitors.js';
+import type { MonitorRegistry } from './monitor-registry.js';
 
 export class FocusedMonitorService {
     readonly #pointerSource: PointerSource;

@@ -1,9 +1,9 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Adw from 'gi://Adw';
-import Gtk from 'gi://Gtk';
-import { type LoggerPort } from '@pmsb/application';
-import { type Disposable } from '@pmsb/lifecycle';
+import type Gtk from 'gi://Gtk';
+import type { LoggerPort } from '@pmsb/application';
+import type { Disposable } from '@pmsb/lifecycle';
 import { findExtensionStartCursor } from './journal-cursor-finder.js';
 
 const MANUAL_COMMAND =
@@ -82,7 +82,7 @@ export class LogOpener implements Disposable {
             '--no-pager',
             '-g',
             'per-monitor-screen-blank',
-            ...(cursor ? [`--cursor=${cursor}`] : []),
+            ...(cursor === undefined ? [] : [`--cursor=${cursor}`]),
         ];
     }
 
@@ -102,10 +102,10 @@ export class LogOpener implements Disposable {
         detail = detail?.trim();
         const bodyParts: string[] = [];
 
-        if (reason) {
+        if (reason !== undefined && reason !== '') {
             bodyParts.push(reason);
         }
-        if (detail) {
+        if (detail !== undefined && detail !== '') {
             bodyParts.push(detail);
         }
         bodyParts.push(`Run this command manually:\n\n${manualCommand}`);

@@ -1,8 +1,8 @@
-import Gio from 'gi://Gio';
+import type Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import { type ProfileSettings } from '@pmsb/application';
-import { type Profile, type ProfileId, type MonitorMode } from '@pmsb/domain';
-import { type Disposable } from '@pmsb/lifecycle';
+import type { ProfileSettings } from '@pmsb/application';
+import type { Profile, ProfileId, MonitorMode } from '@pmsb/domain';
+import type { Disposable } from '@pmsb/lifecycle';
 import { GSETTINGS_KEYS } from './gsettings-schema-keys.js';
 import { ProfileSettingsStore } from './profile-settings-store.js';
 
@@ -41,7 +41,7 @@ export class GnomeProfileSettings implements ProfileSettings {
         const activeId = this.#settings.get_string(
             GSETTINGS_KEYS.activeProfileId,
         );
-        if (!activeId) {
+        if (activeId === '') {
             return null;
         }
 
@@ -55,7 +55,7 @@ export class GnomeProfileSettings implements ProfileSettings {
 
     getActiveProfile(): Profile | null {
         const activeId = this.getActiveProfileId();
-        if (!activeId) {
+        if (activeId === null) {
             return null;
         }
 

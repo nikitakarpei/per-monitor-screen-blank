@@ -1,11 +1,11 @@
 import Adw from 'gi://Adw';
-import Gtk from 'gi://Gtk';
+import type Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
-import { type Disposable } from '@pmsb/lifecycle';
-import {
-    type ProfileSettings,
-    type LoggerPort,
-    type PlatformEventSubscriber,
+import type { Disposable } from '@pmsb/lifecycle';
+import type {
+    ProfileSettings,
+    LoggerPort,
+    PlatformEventSubscriber,
 } from '@pmsb/application';
 import { ProfilesRowManager } from './profiles-row-manager.js';
 

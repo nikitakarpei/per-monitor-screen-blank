@@ -1,4 +1,4 @@
-import { MonitorState } from './monitor-state.js';
+import type { MonitorState } from './monitor-state.js';
 
 export class MonitorEntity {
     public readonly id: string;

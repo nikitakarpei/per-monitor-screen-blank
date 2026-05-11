@@ -5,8 +5,8 @@ import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/
 import {
     DeduplicatingUserNotifications,
     IssueReportingLogger,
-    type LoggerPort,
 } from '@pmsb/application';
+import type { LoggerPort } from '@pmsb/application';
 import {
     GjsLogger,
     GnomeGeneralSettings,
@@ -17,8 +17,8 @@ import {
     GnomeMonitorIdentityWatcher,
     GnomePlatformEventBus,
     GnomeSettingsProvider,
-    type ProfileGioSettingsFactory,
 } from '@pmsb/infrastructure-gnome';
+import type { ProfileGioSettingsFactory } from '@pmsb/infrastructure-gnome';
 import {
     GeneralSettingsGroup,
     MonitorModesGroup,
@@ -43,9 +43,7 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
         });
 
         try {
-            const settingsProvider = new GnomeSettingsProvider(
-                this.path ?? this.dir,
-            );
+            const settingsProvider = new GnomeSettingsProvider(this.path);
             const settings = settingsProvider.createMainSettings();
 
             const generalSettings = new GnomeGeneralSettings(settings);

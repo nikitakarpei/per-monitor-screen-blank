@@ -1,12 +1,12 @@
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import {
-    type PointerContextMenu,
-    type ContextMenuItem,
-    type LoggerPort,
+import type {
+    PointerContextMenu,
+    ContextMenuItem,
+    LoggerPort,
 } from '@pmsb/application';
-import { type Disposable } from '@pmsb/lifecycle';
+import type { Disposable } from '@pmsb/lifecycle';
 
 export class GnomePointerContextMenu implements PointerContextMenu, Disposable {
     readonly #logger: LoggerPort;
@@ -61,7 +61,7 @@ export class GnomePointerContextMenu implements PointerContextMenu, Disposable {
                 } catch (error) {
                     this.#logger.error(
                         `Error in context menu item handler for "${item.label}"`,
-                        error,
+                        error as object | undefined,
                     );
                 } finally {
                     this.#menu.close();

@@ -1,6 +1,6 @@
 import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
-import { type LoggerPort } from '@pmsb/application';
+import type { LoggerPort } from '@pmsb/application';
 
 interface ProfileMenuPopoverCallbacks {
     onActivate: () => void;

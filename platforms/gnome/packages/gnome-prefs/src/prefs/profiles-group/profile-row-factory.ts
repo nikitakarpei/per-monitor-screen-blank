@@ -1,8 +1,8 @@
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
-import { type Profile } from '@pmsb/domain';
-import { type LoggerPort } from '@pmsb/application';
+import type { Profile } from '@pmsb/domain';
+import type { LoggerPort } from '@pmsb/application';
 import { ProfileMenuPopover } from './profile-menu-popover.js';
 
 interface ProfileRowCallbacks {

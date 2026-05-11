@@ -1,9 +1,9 @@
 import { DEADLINE_KEYS } from '@pmsb/domain';
-import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
-import { MonitorRegistry } from '../../services/monitor-registry.js';
-import { PointerPositionChangedEvent } from '../../../app/ports/platform-events.js';
-import { GeneralSettings } from '../../../app/ports/general-settings.js';
-import { type LoggerPort } from '../../../util/logger.js';
+import type { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import type { MonitorRegistry } from '../../services/monitor-registry.js';
+import type { PointerPositionChangedEvent } from '../../../app/ports/platform-events.js';
+import type { GeneralSettings } from '../../../app/ports/general-settings.js';
+import type { LoggerPort } from '../../../util/logger.js';
 
 interface RescheduleAutoBlackDeadlineDeps {
     monitorRegistry: MonitorRegistry;

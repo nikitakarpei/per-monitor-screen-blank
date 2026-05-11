@@ -1,12 +1,12 @@
 import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
-import { type Disposable } from '@pmsb/lifecycle';
-import {
-    type PlatformEventEmitter,
-    type PointerSource,
-    type LoggerPort,
+import type { Disposable } from '@pmsb/lifecycle';
+import type {
+    PlatformEventEmitter,
+    PointerSource,
+    LoggerPort,
 } from '@pmsb/application';
-import { GnomeMonitorIndex } from './gnome-monitor-index.js';
-import { type PointerPosition } from '@pmsb/domain';
+import type { GnomeMonitorIndex } from './gnome-monitor-index.js';
+import type { PointerPosition } from '@pmsb/domain';
 
 export class GnomePointerSource implements PointerSource, Disposable {
     readonly #pointerWatcher = PointerWatcher.getPointerWatcher();
@@ -35,7 +35,7 @@ export class GnomePointerSource implements PointerSource, Disposable {
                 } catch (error) {
                     this.#logger.error(
                         `failed to handle pointer sample`,
-                        error,
+                        error as object | undefined,
                     );
                 }
             },
@@ -90,7 +90,9 @@ export class GnomePointerSource implements PointerSource, Disposable {
 
         if (!initialized) return;
 
-        if (!pointerMoved && !monitorChanged) return;
+        if (!pointerMoved) {
+            return;
+        }
 
         const monitorId = this.#indexResolver.getMonitorIdByIndex(monitorIndex);
 
@@ -100,7 +102,7 @@ export class GnomePointerSource implements PointerSource, Disposable {
                     previousMonitorIndex,
                 );
             // This might happen if the monitor was disconnected
-            if (!previousMonitorId) {
+            if (previousMonitorId === undefined) {
                 return;
             }
 
@@ -120,13 +122,11 @@ export class GnomePointerSource implements PointerSource, Disposable {
             });
         }
 
-        if (pointerMoved) {
-            this.#emitter.emit({
-                type: 'pointer-position-changed',
-                payload: {
-                    monitorId,
-                },
-            });
-        }
+        this.#emitter.emit({
+            type: 'pointer-position-changed',
+            payload: {
+                monitorId,
+            },
+        });
     }
 }

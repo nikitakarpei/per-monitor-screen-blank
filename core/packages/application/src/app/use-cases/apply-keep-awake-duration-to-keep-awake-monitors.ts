@@ -1,7 +1,7 @@
 import { DEADLINE_KEYS } from '@pmsb/domain';
-import { type LoggerPort } from '../../util/logger.js';
-import { type MonitorRegistry } from '../services/monitor-registry.js';
-import { type DeadlineScheduler } from '../ports/scheduler.js';
+import type { LoggerPort } from '../../util/logger.js';
+import type { MonitorRegistry } from '../services/monitor-registry.js';
+import type { DeadlineScheduler } from '../ports/scheduler.js';
 
 export interface ApplyKeepAwakeDurationToKeepAwakeMonitorsDeps {
     readonly monitorRegistry: MonitorRegistry;

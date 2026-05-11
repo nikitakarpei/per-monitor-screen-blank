@@ -1,6 +1,7 @@
-import { buildMonitorLabel, type LogicalMonitorIdentity } from '@pmsb/domain';
-import { type LoggerPort } from '../../util/logger.js';
-import { type MonitorIdentityStore } from '../ports/monitors.js';
+import { buildMonitorLabel } from '@pmsb/domain';
+import type { LogicalMonitorIdentity } from '@pmsb/domain';
+import type { LoggerPort } from '../../util/logger.js';
+import type { MonitorIdentityStore } from '../ports/monitors.js';
 
 export interface PersistMonitorIdentityDeps {
     readonly monitorIdentityStore: MonitorIdentityStore;

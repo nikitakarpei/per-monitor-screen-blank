@@ -1,9 +1,9 @@
-import { MonitorRegistry } from '../../services/monitor-registry.js';
-import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
-import { type LoggerPort } from '../../../util/logger.js';
-import { MonitorDisconnectedEvent } from '../../../app/ports/platform-events.js';
-import { MonitorIdentityStore } from '../../ports/monitors.js';
-import { Overlay } from '../../ports/overlay.js';
+import type { MonitorRegistry } from '../../services/monitor-registry.js';
+import type { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import type { LoggerPort } from '../../../util/logger.js';
+import type { MonitorDisconnectedEvent } from '../../../app/ports/platform-events.js';
+import type { MonitorIdentityStore } from '../../ports/monitors.js';
+import type { Overlay } from '../../ports/overlay.js';
 
 interface TeardownMonitorDeps {
     monitorRegistry: MonitorRegistry;

@@ -1,7 +1,7 @@
 import { isAutoMonitorState, resolveAutoMonitorState } from '@pmsb/domain';
-import { type LoggerPort } from '../../util/logger.js';
-import { type MonitorRegistry } from '../services/monitor-registry.js';
-import { type FocusedMonitorService } from '../services/focused-monitor-service.js';
+import type { LoggerPort } from '../../util/logger.js';
+import type { MonitorRegistry } from '../services/monitor-registry.js';
+import type { FocusedMonitorService } from '../services/focused-monitor-service.js';
 
 export interface ApplyPointerMonitorTimerPolicyDeps {
     readonly focusedMonitorService: FocusedMonitorService;

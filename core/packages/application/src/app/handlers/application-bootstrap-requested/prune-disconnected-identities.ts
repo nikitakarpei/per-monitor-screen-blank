@@ -1,6 +1,6 @@
-import {
+import type {
+    ConnectedMonitorsQuery,
     MonitorIdentityStore,
-    type ConnectedMonitorsQuery,
 } from '../../ports/monitors.js';
 
 interface PruneDisconnectedIdentitiesDeps {

@@ -1,6 +1,6 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import { type ProfileId } from '@pmsb/domain';
+import type { ProfileId } from '@pmsb/domain';
 import {
     GSETTINGS_MAIN_ROOT_PATH,
     GSETTINGS_PROFILE_PATH_PREFIX,
@@ -40,7 +40,7 @@ export class GnomeSettingsProvider {
         }
 
         const schemaDirectoryPath = schemaDirectory.get_path();
-        if (!schemaDirectoryPath) {
+        if (schemaDirectoryPath === null || schemaDirectoryPath === '') {
             throw new Error(
                 `per-monitor-screen-blank: schema directory path is unavailable`,
             );

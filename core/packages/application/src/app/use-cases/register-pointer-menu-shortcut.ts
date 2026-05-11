@@ -1,11 +1,11 @@
 import { MONITOR_MODES, getMonitorModeLabel } from '@pmsb/domain';
-import { type LoggerPort } from '../../util/logger.js';
-import {
-    type PointerContextMenu,
-    type PointerMenuShortcutManager,
+import type { LoggerPort } from '../../util/logger.js';
+import type {
+    PointerContextMenu,
+    PointerMenuShortcutManager,
 } from '../ports/pointer-menu.js';
-import { type ProfileSettings } from '../ports/profile-settings.js';
-import { type FocusedMonitorService } from '../services/focused-monitor-service.js';
+import type { ProfileSettings } from '../ports/profile-settings.js';
+import type { FocusedMonitorService } from '../services/focused-monitor-service.js';
 
 export interface RegisterPointerMenuShortcutDeps {
     readonly logger: LoggerPort;
@@ -20,7 +20,7 @@ export function registerPointerMenuShortcut(
     shortcut: ReadonlyArray<string>,
 ): void {
     const firstShortcut = shortcut[0];
-    deps.logger.info(`pointer shortcut changed: ${firstShortcut ?? 'none'}`);
+    deps.logger.info(`pointer shortcut changed: ${firstShortcut}`);
     deps.pointerMenuShortcutManager.unregister();
     if (firstShortcut) {
         deps.pointerMenuShortcutManager.register(() => {

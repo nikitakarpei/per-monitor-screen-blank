@@ -2,7 +2,7 @@
  * Internal GSettings signal helpers for infrastructure-gnome.
  * Not exported from the package - for internal use only.
  */
-import {
+import type {
     GSETTINGS_KEYS,
     PROFILE_GSETTINGS_KEYS,
 } from '../gsettings-schema-keys.js';

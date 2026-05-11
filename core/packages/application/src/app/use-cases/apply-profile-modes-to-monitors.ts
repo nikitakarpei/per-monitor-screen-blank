@@ -1,8 +1,9 @@
-import { type MonitorMode, resolveMode } from '@pmsb/domain';
-import { type LoggerPort } from '../../util/logger.js';
-import { type MonitorRegistry } from '../services/monitor-registry.js';
-import { type ModeStateResolver } from '../services/mode-state-resolver.js';
-import { type ProfileSettings } from '../ports/profile-settings.js';
+import { resolveMode } from '@pmsb/domain';
+import type { MonitorMode } from '@pmsb/domain';
+import type { LoggerPort } from '../../util/logger.js';
+import type { MonitorRegistry } from '../services/monitor-registry.js';
+import type { ModeStateResolver } from '../services/mode-state-resolver.js';
+import type { ProfileSettings } from '../ports/profile-settings.js';
 
 interface ApplyProfileModesToMonitorsDeps {
     readonly profileSettings: ProfileSettings;

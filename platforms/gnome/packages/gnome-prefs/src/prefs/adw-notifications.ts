@@ -1,6 +1,6 @@
 import Adw from 'gi://Adw';
-import { type UserNotifications } from '@pmsb/application';
-import { type Disposable } from '@pmsb/lifecycle';
+import type { UserNotifications } from '@pmsb/application';
+import type { Disposable } from '@pmsb/lifecycle';
 
 export class AdwNotifications implements UserNotifications, Disposable {
     readonly #window: Adw.PreferencesWindow;

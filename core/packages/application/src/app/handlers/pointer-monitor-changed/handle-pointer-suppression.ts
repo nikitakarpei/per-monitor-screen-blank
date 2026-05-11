@@ -1,9 +1,9 @@
-import { MonitorRegistry } from '../../services/monitor-registry.js';
-import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
-import { type LoggerPort } from '../../../util/logger.js';
-import { PointerMonitorChangedEvent } from '../../../app/ports/platform-events.js';
-import { type GeneralSettings } from '../../../app/ports/general-settings.js';
-import { type ProfileSettings } from '../../../app/ports/profile-settings.js';
+import type { MonitorRegistry } from '../../services/monitor-registry.js';
+import type { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import type { LoggerPort } from '../../../util/logger.js';
+import type { PointerMonitorChangedEvent } from '../../../app/ports/platform-events.js';
+import type { GeneralSettings } from '../../../app/ports/general-settings.js';
+import type { ProfileSettings } from '../../../app/ports/profile-settings.js';
 
 interface HandlePointerMonitorChangedDeps {
     monitorRegistry: MonitorRegistry;
@@ -36,7 +36,7 @@ export function handlePointerSuppression(
         );
     }
 
-    if (payload.previousMonitorId) {
+    if (payload.previousMonitorId !== undefined) {
         const previousMonitor = deps.monitorRegistry.get(
             payload.previousMonitorId,
         );

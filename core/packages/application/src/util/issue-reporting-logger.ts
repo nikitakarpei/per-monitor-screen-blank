@@ -1,6 +1,6 @@
 import { buildIssueNotificationText } from '@pmsb/domain';
-import { type LoggerPort } from './logger.js';
-import { type UserNotifications } from './user-notifications.js';
+import type { LoggerPort } from './logger.js';
+import type { UserNotifications } from './user-notifications.js';
 
 type IssueNotificationPolicy = () => boolean;
 

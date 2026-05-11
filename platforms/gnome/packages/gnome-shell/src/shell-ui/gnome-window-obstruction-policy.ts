@@ -1,9 +1,6 @@
-import {
-    type LoggerPort,
-    type PlatformEventSubscriber,
-} from '@pmsb/application';
-import { type Disposable } from '@pmsb/lifecycle';
-import Meta from 'gi://Meta';
+import type { LoggerPort, PlatformEventSubscriber } from '@pmsb/application';
+import type { Disposable } from '@pmsb/lifecycle';
+import type Meta from 'gi://Meta';
 
 interface WindowObstructionPolicyConfig {
     getDisableWindowObstructionPolicy(): boolean;

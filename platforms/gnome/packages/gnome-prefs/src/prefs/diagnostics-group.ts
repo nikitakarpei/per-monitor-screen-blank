@@ -1,9 +1,9 @@
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
-import { LogOpener } from './log-opener/log-opener.js';
-import { type LoggerPort } from '@pmsb/application';
-import { type Disposable } from '@pmsb/lifecycle';
+import type { LogOpener } from './log-opener/log-opener.js';
+import type { LoggerPort } from '@pmsb/application';
+import type { Disposable } from '@pmsb/lifecycle';
 
 export class DiagnosticsGroup
     extends Adw.PreferencesGroup

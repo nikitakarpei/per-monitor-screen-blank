@@ -10,22 +10,13 @@ export interface PreferencesOpener {
  * Defers the open to the next idle iteration to avoid GTK/Clutter loop conflicts.
  */
 export class GnomePreferencesOpener implements Disposable {
-    readonly #openPreferences: () => Promise<void>;
-    #idleSourceId: number | undefined;
+    readonly #openPreferences: () => void;
+    #idleSourceId: number | undefined = undefined;
 
-    constructor({
-        openPreferences,
-    }: {
-        readonly openPreferences: () => Promise<void>;
-    }) {
+    constructor(openPreferences: () => void) {
         this.#openPreferences = openPreferences;
-        this.#idleSourceId = undefined;
     }
 
-    /**
-     * Schedules opening preferences on the next idle iteration.
-     * No-op if already scheduled.
-     */
     openSafely(): void {
         if (this.#idleSourceId !== undefined) {
             return;
@@ -33,14 +24,11 @@ export class GnomePreferencesOpener implements Disposable {
 
         this.#idleSourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             this.#idleSourceId = undefined;
-            void this.#openPreferences();
+            this.#openPreferences();
             return GLib.SOURCE_REMOVE;
         });
     }
 
-    /**
-     * Removes any pending idle source. Called during cleanup/dispose.
-     */
     dispose(): void {
         if (this.#idleSourceId !== undefined) {
             void GLib.Source.remove(this.#idleSourceId);

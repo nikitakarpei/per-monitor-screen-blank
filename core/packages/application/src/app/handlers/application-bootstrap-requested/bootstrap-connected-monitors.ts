@@ -1,9 +1,7 @@
-import {
-    setupConnectedMonitor,
-    type SetupConnectedMonitorDeps,
-} from '../../use-cases/setup-connected-monitor.js';
-import { type ConnectedMonitorsQuery } from '../../ports/monitors.js';
-import { type LoggerPort } from '../../../util/logger.js';
+import { setupConnectedMonitor } from '../../use-cases/setup-connected-monitor.js';
+import type { SetupConnectedMonitorDeps } from '../../use-cases/setup-connected-monitor.js';
+import type { ConnectedMonitorsQuery } from '../../ports/monitors.js';
+import type { LoggerPort } from '../../../util/logger.js';
 
 interface BootstrapConnectedMonitorsDeps extends SetupConnectedMonitorDeps {
     readonly connectedMonitorsQuery: ConnectedMonitorsQuery;

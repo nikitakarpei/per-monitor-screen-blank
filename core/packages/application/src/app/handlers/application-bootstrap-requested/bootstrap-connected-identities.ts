@@ -1,8 +1,6 @@
-import {
-    persistMonitorIdentity,
-    type PersistMonitorIdentityDeps,
-} from '../../use-cases/persist-monitor-identity.js';
-import { type ConnectedMonitorsQuery } from '../../ports/monitors.js';
+import { persistMonitorIdentity } from '../../use-cases/persist-monitor-identity.js';
+import type { PersistMonitorIdentityDeps } from '../../use-cases/persist-monitor-identity.js';
+import type { ConnectedMonitorsQuery } from '../../ports/monitors.js';
 
 interface BootstrapConnectedIdentitiesDeps extends PersistMonitorIdentityDeps {
     readonly connectedMonitorsQuery: ConnectedMonitorsQuery;

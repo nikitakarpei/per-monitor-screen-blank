@@ -1,9 +1,9 @@
-import { MonitorModeChangedEvent } from '../../../app/ports/platform-events.js';
-import { QuickSettings } from '../../ports/quick-settings.js';
-import { ProfileSettings } from '../../../app/ports/profile-settings.js';
-import { LoggerPort } from '../../../util/logger.js';
-import { MonitorRegistry } from '../../services/monitor-registry.js';
-import { ModeStateResolver } from '../../services/mode-state-resolver.js';
+import type { MonitorModeChangedEvent } from '../../../app/ports/platform-events.js';
+import type { QuickSettings } from '../../ports/quick-settings.js';
+import type { ProfileSettings } from '../../../app/ports/profile-settings.js';
+import type { LoggerPort } from '../../../util/logger.js';
+import type { MonitorRegistry } from '../../services/monitor-registry.js';
+import type { ModeStateResolver } from '../../services/mode-state-resolver.js';
 
 interface HandleModeChangeDeps {
     profileSettings: ProfileSettings;

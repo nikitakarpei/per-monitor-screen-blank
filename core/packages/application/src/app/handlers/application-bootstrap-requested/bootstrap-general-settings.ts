@@ -1,22 +1,14 @@
-import {
-    applyIdleTimeoutToAutoAwakeMonitors,
-    type ApplyIdleTimeoutToAutoAwakeMonitorsDeps,
-} from '../../use-cases/apply-idle-timeout-to-auto-awake-monitors.js';
-import {
-    applyKeepAwakeDurationToKeepAwakeMonitors,
-    type ApplyKeepAwakeDurationToKeepAwakeMonitorsDeps,
-} from '../../use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
-import {
-    applyPointerMonitorTimerPolicy,
-    type ApplyPointerMonitorTimerPolicyDeps,
-} from '../../use-cases/apply-pointer-monitor-timer-policy.js';
-import {
-    registerPointerMenuShortcut,
-    type RegisterPointerMenuShortcutDeps,
-} from '../../use-cases/register-pointer-menu-shortcut.js';
-import { type GeneralSettings } from '../../ports/general-settings.js';
-import { type Overlay } from '../../ports/overlay.js';
-import { type QuickSettings } from '../../ports/quick-settings.js';
+import { applyIdleTimeoutToAutoAwakeMonitors } from '../../use-cases/apply-idle-timeout-to-auto-awake-monitors.js';
+import type { ApplyIdleTimeoutToAutoAwakeMonitorsDeps } from '../../use-cases/apply-idle-timeout-to-auto-awake-monitors.js';
+import { applyKeepAwakeDurationToKeepAwakeMonitors } from '../../use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
+import type { ApplyKeepAwakeDurationToKeepAwakeMonitorsDeps } from '../../use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
+import { applyPointerMonitorTimerPolicy } from '../../use-cases/apply-pointer-monitor-timer-policy.js';
+import type { ApplyPointerMonitorTimerPolicyDeps } from '../../use-cases/apply-pointer-monitor-timer-policy.js';
+import { registerPointerMenuShortcut } from '../../use-cases/register-pointer-menu-shortcut.js';
+import type { RegisterPointerMenuShortcutDeps } from '../../use-cases/register-pointer-menu-shortcut.js';
+import type { GeneralSettings } from '../../ports/general-settings.js';
+import type { Overlay } from '../../ports/overlay.js';
+import type { QuickSettings } from '../../ports/quick-settings.js';
 
 interface BootstrapGeneralSettingsDeps
     extends

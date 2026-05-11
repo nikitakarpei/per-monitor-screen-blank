@@ -1,6 +1,6 @@
-import Gio from 'gi://Gio';
-import { type Disposable } from '@pmsb/lifecycle';
-import { type GeneralSettings } from '@pmsb/application';
+import type Gio from 'gi://Gio';
+import type { Disposable } from '@pmsb/lifecycle';
+import type { GeneralSettings } from '@pmsb/application';
 import { GSETTINGS_KEYS } from './gsettings-schema-keys.js';
 import { gsettingsChangedSignal } from './internal/gsettings-signals.js';
 

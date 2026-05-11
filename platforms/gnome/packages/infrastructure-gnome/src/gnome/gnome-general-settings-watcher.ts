@@ -1,10 +1,7 @@
-import {
-    type Disposable,
-    type DisposableStore,
-    createDisposableStore,
-} from '@pmsb/lifecycle';
-import { type LoggerPort, type PlatformEventEmitter } from '@pmsb/application';
-import { GnomeGeneralSettings } from './gnome-general-settings.js';
+import { createDisposableStore } from '@pmsb/lifecycle';
+import type { Disposable, DisposableStore } from '@pmsb/lifecycle';
+import type { LoggerPort, PlatformEventEmitter } from '@pmsb/application';
+import type { GnomeGeneralSettings } from './gnome-general-settings.js';
 
 export class GnomeGeneralSettingsWatcher implements Disposable {
     readonly #settings: GnomeGeneralSettings;

@@ -1,6 +1,7 @@
-import Gio from 'gi://Gio';
-import { type ProfileId, type MonitorMode, resolveMode } from '@pmsb/domain';
-import { type Disposable } from '@pmsb/lifecycle';
+import type Gio from 'gi://Gio';
+import { resolveMode } from '@pmsb/domain';
+import type { ProfileId, MonitorMode } from '@pmsb/domain';
+import type { Disposable } from '@pmsb/lifecycle';
 import { PROFILE_GSETTINGS_KEYS } from './gsettings-schema-keys.js';
 import { gsettingsChangedSignal } from './internal/gsettings-signals.js';
 
@@ -129,10 +130,12 @@ export class ProfileSettingsStore {
             PROFILE_GSETTINGS_KEYS.monitorModes,
         );
         if (!raw) return {};
-        const parsed = JSON.parse(raw);
+        const parsed: unknown = JSON.parse(raw);
         if (typeof parsed !== 'object' || parsed === null) return {};
         const result: Record<string, MonitorMode> = {};
-        for (const [key, value] of Object.entries(parsed)) {
+        for (const [key, value] of Object.entries(
+            parsed as Record<string, unknown>,
+        )) {
             result[key] = resolveMode(value as MonitorMode);
         }
         return result;

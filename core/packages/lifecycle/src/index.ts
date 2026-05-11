@@ -48,7 +48,7 @@ export function createDisposableStore(
                 try {
                     resources[index].dispose();
                 } catch (error) {
-                    reportFailure(error, resources[index]);
+                    reportFailure(error as Error | object, resources[index]);
                 }
             }
             resources.length = 0;

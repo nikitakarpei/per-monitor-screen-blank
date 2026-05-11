@@ -1,13 +1,13 @@
 import Adw from 'gi://Adw';
-import Gtk from 'gi://Gtk';
-import {
-    type ProfileSettings,
-    type LoggerPort,
-    type PlatformEventSubscriber,
+import type Gtk from 'gi://Gtk';
+import type {
+    ProfileSettings,
+    LoggerPort,
+    PlatformEventSubscriber,
 } from '@pmsb/application';
 import { promptForProfileName } from './profile-name-dialog.js';
 import { ProfileRow } from './profile-row-factory.js';
-import { type Profile } from '@pmsb/domain';
+import type { Profile } from '@pmsb/domain';
 
 type RowEntry = ProfileRow | Adw.ActionRow;
 
@@ -91,9 +91,8 @@ export class ProfilesRowManager {
             'Rename Preset',
             profile.name,
         );
-        if (name) {
-            this.#profileSettings.renameProfile(profile.id, name);
-        }
+        if (name === undefined || name === '') return;
+        this.#profileSettings.renameProfile(profile.id, name);
     }
 
     #handleDuplicate(profile: Profile): void {
@@ -128,21 +127,20 @@ export class ProfilesRowManager {
             activatable: true,
         });
 
-        void addRow.connect('activated', async () => {
-            const name = await promptForProfileName(
-                this.#window,
-                'Create Preset',
-                '',
+        void addRow.connect('activated', () => {
+            void promptForProfileName(this.#window, 'Create Preset', '').then(
+                (createdName) => {
+                    this.#handleCreateProfile(createdName);
+                },
             );
-            void this.#handleCreateProfile(name);
         });
 
         this.#group.add(addRow);
         this.#rowEntries.push(addRow);
     }
 
-    #handleCreateProfile(name?: string): void {
-        if (!name) return;
+    #handleCreateProfile(name: string | undefined): void {
+        if (name === undefined || name === '') return;
         void this.#profileSettings.createProfile(name);
     }
 }

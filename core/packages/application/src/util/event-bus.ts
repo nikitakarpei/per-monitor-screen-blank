@@ -1,4 +1,4 @@
-import { LoggerPort } from './logger.js';
+import type { LoggerPort } from './logger.js';
 
 type EventListener<TPayload extends object> = (payload: TPayload) => void;
 
@@ -46,7 +46,7 @@ export class EventBus<TEvent extends { type: string; payload: object }> {
                 } catch (error) {
                     this.#logger.error(
                         `error in listener for event "${event.type}"`,
-                        error,
+                        error as object | undefined,
                     );
                 }
             }
@@ -58,7 +58,7 @@ export class EventBus<TEvent extends { type: string; payload: object }> {
             } catch (error) {
                 this.#logger.error(
                     `error in onAny listener for event "${event.type}"`,
-                    error,
+                    error as object | undefined,
                 );
             }
         }

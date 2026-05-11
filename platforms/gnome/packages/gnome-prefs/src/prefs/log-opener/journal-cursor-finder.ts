@@ -1,5 +1,5 @@
 import Gio from 'gi://Gio';
-import { type LoggerPort } from '@pmsb/application';
+import type { LoggerPort } from '@pmsb/application';
 
 export async function findExtensionStartCursor(logger: LoggerPort): Promise<{
     readonly cursor: string | undefined;
@@ -34,7 +34,7 @@ export async function findExtensionStartCursor(logger: LoggerPort): Promise<{
     } catch (error) {
         logger.error(
             `failed to read extension start cursor from journal`,
-            error,
+            error as object | undefined,
         );
         return { cursor: undefined, found: false };
     }

@@ -14,24 +14,36 @@ import { strict as boundariesStrict } from 'eslint-plugin-boundaries/config';
 // Define element types for each package and enforce dependency rules.
 // =============================================================================
 const boundariesElements = [
-    { type: 'domain', pattern: 'core/packages/domain/src/**' },
-    { type: 'application', pattern: 'core/packages/application/src/**' },
-    { type: 'lifecycle', pattern: 'core/packages/lifecycle/src/**' },
+    { type: 'domain', pattern: 'core/packages/domain/src/**', mode: 'full' },
+    {
+        type: 'application',
+        pattern: 'core/packages/application/src/**',
+        mode: 'full',
+    },
+    {
+        type: 'lifecycle',
+        pattern: 'core/packages/lifecycle/src/**',
+        mode: 'full',
+    },
     {
         type: 'infrastructure-gnome',
         pattern: 'platforms/gnome/packages/infrastructure-gnome/src/**',
+        mode: 'full',
     },
     {
         type: 'gnome-shell',
         pattern: 'platforms/gnome/packages/gnome-shell/src/**',
+        mode: 'full',
     },
     {
         type: 'gnome-prefs',
         pattern: 'platforms/gnome/packages/gnome-prefs/src/**',
+        mode: 'full',
     },
     {
         type: 'gnome-composition',
         pattern: 'platforms/gnome/packages/gnome-composition/src/**',
+        mode: 'full',
     },
 ];
 
@@ -98,6 +110,7 @@ const importResolver = {
     },
     typescript: {
         project: './tsconfig.eslint.json',
+        alwaysTryTypes: true,
     },
 };
 
@@ -109,24 +122,11 @@ const sharedRules = {
     ...sonarjs.configs.recommended.rules,
     ...unicorn.configs.recommended.rules,
     'array-callback-return': 'error',
-    'consistent-return': 'error',
-    curly: ['error', 'multi-line'],
+    curly: ['error', 'all'],
     eqeqeq: ['error', 'always'],
     'no-console': 'error',
     'no-implicit-coercion': 'error',
-    'no-shadow': 'error',
-    'no-undef': 'error',
-    'no-unused-vars': [
-        'error',
-        {
-            args: 'after-used',
-            argsIgnorePattern: '^_',
-            caughtErrors: 'all',
-            caughtErrorsIgnorePattern: '^_',
-            ignoreRestSiblings: true,
-        },
-    ],
-    'no-use-before-define': ['error', { classes: false, functions: false }],
+    'no-undef': 'off',
     'no-var': 'error',
     'object-shorthand': ['error', 'always'],
     'prefer-arrow-callback': ['error', { allowNamedFunctions: true }],
@@ -146,8 +146,9 @@ export default tseslint.config(
         settings: {
             ...boundariesStrict.settings,
             'boundaries/elements': boundariesElements,
-            'import/resolver': importResolver,
             'import-x/resolver': importResolver,
+            'import/resolver': importResolver,
+            'import-x/ignore': ['^gi://', '^resource://'],
         },
         plugins: {
             'import-x': importPlugin,
@@ -171,13 +172,16 @@ export default tseslint.config(
             parser: tseslint.parser,
             parserOptions: {
                 project: './tsconfig.eslint.json',
+                tsconfigRootDir: import.meta.dirname,
             },
         },
         rules: {
             ...boundariesStrict.rules,
             ...sharedRules,
+            ...tseslint.configs.strictTypeChecked.rules,
             'no-unused-vars': 'off',
             'no-redeclare': 'off',
+            'no-shadow': 'off',
             '@typescript-eslint/no-unused-vars': [
                 'error',
                 {
@@ -189,23 +193,43 @@ export default tseslint.config(
                 },
             ],
             '@typescript-eslint/no-redeclare': 'error',
-            '@typescript-eslint/no-restricted-types': [
+            '@typescript-eslint/no-shadow': 'error',
+            '@typescript-eslint/no-use-before-define': [
                 'error',
-                {
-                    types: {
-                        unknown: {
-                            message: 'Use an explicit type instead of unknown',
-                        },
-                    },
-                },
+                { classes: false, functions: false },
             ],
+            '@typescript-eslint/no-explicit-any': 'error',
+            '@typescript-eslint/no-unsafe-assignment': 'error',
+            '@typescript-eslint/no-unsafe-member-access': 'error',
+            '@typescript-eslint/no-unsafe-call': 'error',
+            '@typescript-eslint/no-unsafe-return': 'error',
+            '@typescript-eslint/no-unsafe-argument': 'error',
+            '@typescript-eslint/no-misused-promises': 'error',
+            '@typescript-eslint/await-thenable': 'error',
+            '@typescript-eslint/require-await': 'error',
+            '@typescript-eslint/switch-exhaustiveness-check': 'error',
+            '@typescript-eslint/no-unnecessary-condition': 'error',
+            '@typescript-eslint/strict-boolean-expressions': 'error',
             'must-use/no-ignored-return': 'error',
             '@typescript-eslint/no-floating-promises': 'error',
             '@typescript-eslint/no-meaningless-void-operator': 'off',
+            '@typescript-eslint/consistent-type-imports': [
+                'error',
+                { prefer: 'type-imports' },
+            ],
+            '@typescript-eslint/no-import-type-side-effects': 'error',
             'sonarjs/void-use': 'off',
             'boundaries/dependencies': ['error', boundariesRules],
             'import-x/no-relative-packages': 'error',
-            'import-x/no-duplicates': 'warn',
+            'import-x/no-duplicates': 'error',
+            'import-x/no-unresolved': [
+                'error',
+                { ignore: ['^gi://', '^resource://'] },
+            ],
+            'import-x/consistent-type-specifier-style': [
+                'error',
+                'prefer-top-level',
+            ],
         },
     },
     {
@@ -219,6 +243,25 @@ export default tseslint.config(
     },
     {
         files: [
+            'core/packages/domain/src/**/*.ts',
+            'core/packages/application/src/**/*.ts',
+        ],
+        rules: {
+            '@typescript-eslint/no-restricted-types': [
+                'error',
+                {
+                    types: {
+                        unknown: {
+                            message:
+                                'Validate at boundaries and pass explicit domain/application types instead of unknown',
+                        },
+                    },
+                },
+            ],
+        },
+    },
+    {
+        files: [
             'platforms/gnome/packages/gnome-shell/src/**/*.ts',
             'platforms/gnome/packages/gnome-prefs/src/**/*.ts',
             'platforms/gnome/packages/gnome-composition/src/**/*.ts',
@@ -227,6 +270,58 @@ export default tseslint.config(
         rules: {
             'unicorn/prefer-global-this': 'off',
             'unicorn/no-null': 'off',
+        },
+    },
+    {
+        files: ['platforms/gnome/packages/gnome-shell/src/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        {
+                            name: 'gi://Gdk',
+                            message: 'Shell-side must not import Gdk',
+                        },
+                        {
+                            name: 'gi://Gtk',
+                            message: 'Shell-side must not import Gtk',
+                        },
+                        {
+                            name: 'gi://Adw',
+                            message: 'Shell-side must not import Adw',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
+        files: ['platforms/gnome/packages/gnome-prefs/src/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        {
+                            name: 'gi://Clutter',
+                            message: 'Prefs-side must not import Clutter',
+                        },
+                        {
+                            name: 'gi://Meta',
+                            message: 'Prefs-side must not import Meta',
+                        },
+                        {
+                            name: 'gi://St',
+                            message: 'Prefs-side must not import St',
+                        },
+                        {
+                            name: 'gi://Shell',
+                            message: 'Prefs-side must not import Shell',
+                        },
+                    ],
+                },
+            ],
         },
     },
     eslintConfigPrettier,

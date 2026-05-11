@@ -2,7 +2,7 @@ import Adw from 'gi://Adw';
 import Gdk from 'gi://Gdk';
 import Gtk from 'gi://Gtk';
 import GLib from 'gi://GLib';
-import { type GeneralSettings, type LoggerPort } from '@pmsb/application';
+import type { GeneralSettings, LoggerPort } from '@pmsb/application';
 
 export class ShortcutCaptureDialog {
     readonly #window: Gtk.Window;

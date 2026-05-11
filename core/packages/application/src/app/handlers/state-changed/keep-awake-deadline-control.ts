@@ -1,8 +1,8 @@
 import { DEADLINE_KEYS } from '@pmsb/domain';
-import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
-import { GeneralSettings } from '../../../app/ports/general-settings.js';
-import { LoggerPort } from '../../../util/logger.js';
-import { StateChangedEvent } from '../../app-events.js';
+import type { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import type { GeneralSettings } from '../../../app/ports/general-settings.js';
+import type { LoggerPort } from '../../../util/logger.js';
+import type { StateChangedEvent } from '../../app-events.js';
 
 interface KeepAwakeDeadlineControlDeps {
     deadlineScheduler: DeadlineScheduler;

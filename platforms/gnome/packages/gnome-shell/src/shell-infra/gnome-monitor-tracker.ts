@@ -1,9 +1,9 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { type Disposable } from '@pmsb/lifecycle';
-import { GnomeMonitorQuery } from './gnome-monitor-query.js';
-import { type LoggerPort, type PlatformEventEmitter } from '@pmsb/application';
-import { GnomeMonitorIndex } from './gnome-monitor-index.js';
-import { type LogicalMonitorIdentity } from '@pmsb/domain';
+import type { Disposable } from '@pmsb/lifecycle';
+import type { GnomeMonitorQuery } from './gnome-monitor-query.js';
+import type { LoggerPort, PlatformEventEmitter } from '@pmsb/application';
+import type { GnomeMonitorIndex } from './gnome-monitor-index.js';
+import type { LogicalMonitorIdentity } from '@pmsb/domain';
 
 export class GnomeMonitorTracker implements GnomeMonitorIndex, Disposable {
     readonly #logger: LoggerPort;
@@ -29,7 +29,10 @@ export class GnomeMonitorTracker implements GnomeMonitorIndex, Disposable {
                 try {
                     this.#onMonitorsChanged();
                 } catch (error) {
-                    this.#logger.error(`error in #onMonitorsChanged`, error);
+                    this.#logger.error(
+                        `error in #onMonitorsChanged`,
+                        error as object | undefined,
+                    );
                 }
             },
             this,

@@ -1,4 +1,4 @@
-import { type DeadlineKey } from '@pmsb/domain';
+import type { DeadlineKey } from '@pmsb/domain';
 
 export type DeadlineScheduler = {
     cancel(key: DeadlineKey, monitorId: string): void;

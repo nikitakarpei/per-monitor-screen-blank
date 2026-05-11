@@ -1,9 +1,9 @@
-import Gio from 'gi://Gio';
-import { type Disposable } from '@pmsb/lifecycle';
+import type Gio from 'gi://Gio';
+import type { Disposable } from '@pmsb/lifecycle';
 import { GSETTINGS_KEYS } from '../gsettings-schema-keys.js';
-import { type MonitorIdentityStore } from '@pmsb/application';
+import type { MonitorIdentityStore } from '@pmsb/application';
 import { gsettingsChangedSignal } from '../internal/gsettings-signals.js';
-import { KnownMonitorEntry } from '@pmsb/domain';
+import type { KnownMonitorEntry } from '@pmsb/domain';
 
 type KnownMonitorsChange = readonly KnownMonitorEntry[];
 
@@ -47,7 +47,7 @@ export class GnomeMonitorIdentityStore implements MonitorIdentityStore {
             if (!jsonString || jsonString === '') {
                 return [];
             }
-            const parsed = JSON.parse(jsonString);
+            const parsed: unknown = JSON.parse(jsonString);
             if (!Array.isArray(parsed)) {
                 throw new TypeError('known-monitors value is not an array');
             }

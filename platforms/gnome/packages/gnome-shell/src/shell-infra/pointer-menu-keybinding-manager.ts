@@ -1,9 +1,9 @@
-import Gio from 'gi://Gio';
+import type Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { type Disposable } from '@pmsb/lifecycle';
-import { type PointerMenuShortcutManager } from '@pmsb/application';
+import type { Disposable } from '@pmsb/lifecycle';
+import type { PointerMenuShortcutManager } from '@pmsb/application';
 
 const GSETTINGS_KEY = 'pointer-menu-shortcut';
 

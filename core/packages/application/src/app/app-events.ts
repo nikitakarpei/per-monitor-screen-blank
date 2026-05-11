@@ -1,4 +1,4 @@
-import { type MonitorState } from '@pmsb/domain';
+import type { MonitorState } from '@pmsb/domain';
 
 export type StateChangedEvent = {
     type: 'state-changed';

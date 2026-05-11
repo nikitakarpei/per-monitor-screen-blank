@@ -1,10 +1,7 @@
-import {
-    type Disposable,
-    type DisposableStore,
-    createDisposableStore,
-} from '@pmsb/lifecycle';
-import { type LoggerPort, type PlatformEventEmitter } from '@pmsb/application';
-import { type GnomeMonitorIdentityStore } from './shared/monitor-identity-store.js';
+import { createDisposableStore } from '@pmsb/lifecycle';
+import type { Disposable, DisposableStore } from '@pmsb/lifecycle';
+import type { LoggerPort, PlatformEventEmitter } from '@pmsb/application';
+import type { GnomeMonitorIdentityStore } from './shared/monitor-identity-store.js';
 
 export class GnomeMonitorIdentityWatcher implements Disposable {
     readonly #identityStore: GnomeMonitorIdentityStore;

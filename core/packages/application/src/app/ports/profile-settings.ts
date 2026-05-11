@@ -1,4 +1,4 @@
-import { type Profile, type ProfileId, type MonitorMode } from '@pmsb/domain';
+import type { Profile, ProfileId, MonitorMode } from '@pmsb/domain';
 
 export interface ProfileSettings {
     ensureDefaultProfile(): void;

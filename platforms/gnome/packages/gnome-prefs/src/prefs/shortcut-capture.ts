@@ -1,10 +1,10 @@
 import Adw from 'gi://Adw';
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
-import {
-    type GeneralSettings,
-    type PlatformEventSubscriber,
-    type LoggerPort,
+import type {
+    GeneralSettings,
+    PlatformEventSubscriber,
+    LoggerPort,
 } from '@pmsb/application';
 import { ShortcutCaptureDialog } from './shortcut-capture-dialog.js';
 
@@ -37,8 +37,7 @@ export class ShortcutCaptureRow extends Adw.ActionRow {
         this._window = window;
         this._logger = logger;
 
-        const currentShortcut =
-            generalSettings.getPointerMenuShortcut()?.[0] ?? '';
+        const currentShortcut = generalSettings.getPointerMenuShortcut()[0];
 
         this._shortcutLabel = new Adw.ShortcutLabel({
             accelerator: currentShortcut,
@@ -64,7 +63,7 @@ export class ShortcutCaptureRow extends Adw.ActionRow {
         this._unsubscribeShortcutChanged = this._eventSubscriber.on(
             'pointer-shortcut-changed',
             (payload) => {
-                this._shortcutLabel.accelerator = payload.shortcut?.[0] ?? '';
+                this._shortcutLabel.accelerator = payload.shortcut[0];
             },
         );
 

@@ -1,9 +1,9 @@
-import { DeadlineScheduler } from '../../../app/ports/scheduler';
-import { StateChangedEvent } from '../../app-events';
-import { LoggerPort } from '../../../util/logger';
-import { GeneralSettings } from '../../../app/ports/general-settings.js';
+import type { DeadlineScheduler } from '../../../app/ports/scheduler';
+import type { StateChangedEvent } from '../../app-events';
+import type { LoggerPort } from '../../../util/logger';
+import type { GeneralSettings } from '../../../app/ports/general-settings.js';
 import { DEADLINE_KEYS } from '@pmsb/domain';
-import { FocusedMonitorService } from '../../services/focused-monitor-service';
+import type { FocusedMonitorService } from '../../services/focused-monitor-service';
 
 interface AutoBlackDeadlineControlDeps {
     focusedMonitorService: FocusedMonitorService;

@@ -1,10 +1,10 @@
-import { ProfileSettings } from '../../ports/profile-settings.js';
-import { MonitorRegistry } from '../../services/monitor-registry.js';
-import { DeadlineScheduler } from '../../../app/ports/scheduler.js';
+import type { ProfileSettings } from '../../ports/profile-settings.js';
+import type { MonitorRegistry } from '../../services/monitor-registry.js';
+import type { DeadlineScheduler } from '../../../app/ports/scheduler.js';
 import { DEADLINE_KEYS } from '@pmsb/domain';
-import { type LoggerPort } from '../../../util/logger.js';
-import { AppEventBus } from '../../services/app-event-bus.js';
-import { DeadlineFiredEvent } from '../../ports/platform-events.js';
+import type { LoggerPort } from '../../../util/logger.js';
+import type { AppEventBus } from '../../services/app-event-bus.js';
+import type { DeadlineFiredEvent } from '../../ports/platform-events.js';
 
 interface HandleKeepAwakeExpiryDeps {
     logger: LoggerPort;

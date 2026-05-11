@@ -1,4 +1,4 @@
-import { type LoggerPort } from '@pmsb/application';
+import type { LoggerPort } from '@pmsb/application';
 
 export class GjsLogger implements LoggerPort {
     constructor(private readonly prefix: string) {}

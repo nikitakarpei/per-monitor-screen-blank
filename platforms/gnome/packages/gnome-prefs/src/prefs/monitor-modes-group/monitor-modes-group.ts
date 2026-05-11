@@ -1,11 +1,11 @@
 import Adw from 'gi://Adw';
 import GObject from 'gi://GObject';
-import { type Disposable } from '@pmsb/lifecycle';
-import {
-    type LoggerPort,
-    type PlatformEventSubscriber,
-    type ProfileSettings,
-    type MonitorIdentityStore,
+import type { Disposable } from '@pmsb/lifecycle';
+import type {
+    LoggerPort,
+    PlatformEventSubscriber,
+    ProfileSettings,
+    MonitorIdentityStore,
 } from '@pmsb/application';
 import { MonitorModesRowManager } from './monitor-modes-row-manager.js';
 

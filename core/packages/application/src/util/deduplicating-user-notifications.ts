@@ -1,5 +1,5 @@
 import type { Disposable } from '@pmsb/lifecycle';
-import { type UserNotifications } from './user-notifications.js';
+import type { UserNotifications } from './user-notifications.js';
 
 const MS_PER_SECOND = 1000;
 const DEDUP_WINDOW_MS = Number(MS_PER_SECOND);
@@ -20,7 +20,7 @@ export class DeduplicatingUserNotifications
     }): void {
         const now = Date.now();
         if (
-            this.#lastNotifiedAt &&
+            this.#lastNotifiedAt !== undefined &&
             now - this.#lastNotifiedAt < DEDUP_WINDOW_MS
         ) {
             return;

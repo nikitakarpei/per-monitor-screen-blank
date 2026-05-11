@@ -1,11 +1,11 @@
 import GObject from 'gi://GObject';
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
-import { type Disposable } from '@pmsb/lifecycle';
-import {
-    type GeneralSettings,
-    type PlatformEventSubscriber,
-    type LoggerPort,
+import type { Disposable } from '@pmsb/lifecycle';
+import type {
+    GeneralSettings,
+    PlatformEventSubscriber,
+    LoggerPort,
 } from '@pmsb/application';
 import { ShortcutCaptureRow } from './shortcut-capture.js';
 

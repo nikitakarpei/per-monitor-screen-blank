@@ -1,23 +1,23 @@
-import { DeadlineScheduler } from './ports/scheduler.js';
+import type { DeadlineScheduler } from './ports/scheduler.js';
 
-import { GeneralSettings } from './ports/general-settings.js';
-import { ProfileSettings } from './ports/profile-settings.js';
-import { QuickSettings } from './ports/quick-settings.js';
-import { Overlay } from './ports/overlay.js';
-import {
+import type { GeneralSettings } from './ports/general-settings.js';
+import type { ProfileSettings } from './ports/profile-settings.js';
+import type { QuickSettings } from './ports/quick-settings.js';
+import type { Overlay } from './ports/overlay.js';
+import type {
     PointerContextMenu,
     PointerMenuShortcutManager,
 } from './ports/pointer-menu.js';
-import {
+import type {
     MonitorIdentityStore,
     ConnectedMonitorsQuery,
 } from './ports/monitors.js';
 
-import { AppEventBus } from './services/app-event-bus.js';
-import { MonitorRegistry } from './services/monitor-registry.js';
-import { FocusedMonitorService } from './services/focused-monitor-service.js';
-import { type LoggerPort } from '../util/logger.js';
-import { ModeStateResolver } from './services/mode-state-resolver.js';
+import type { AppEventBus } from './services/app-event-bus.js';
+import type { MonitorRegistry } from './services/monitor-registry.js';
+import type { FocusedMonitorService } from './services/focused-monitor-service.js';
+import type { LoggerPort } from '../util/logger.js';
+import type { ModeStateResolver } from './services/mode-state-resolver.js';
 
 import { handleModeChange } from './handlers/monitor-mode-changed/handle-mode-change.js';
 import { teardownMonitor } from './handlers/monitor-disconnected/teardown-monitor.js';

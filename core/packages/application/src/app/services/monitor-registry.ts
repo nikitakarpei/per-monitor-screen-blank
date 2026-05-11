@@ -1,7 +1,8 @@
-import { MonitorEntity, tryTransition, type MonitorState } from '@pmsb/domain';
+import { MonitorEntity, tryTransition } from '@pmsb/domain';
+import type { MonitorState } from '@pmsb/domain';
 import type { Disposable } from '@pmsb/lifecycle';
-import { LoggerPort } from '../../util/logger.js';
-import { AppEventBus } from './app-event-bus.js';
+import type { LoggerPort } from '../../util/logger.js';
+import type { AppEventBus } from './app-event-bus.js';
 
 export class MonitorRegistry implements Disposable {
     readonly #logger: LoggerPort;
