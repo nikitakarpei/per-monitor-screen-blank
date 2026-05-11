@@ -10,7 +10,7 @@
             "@pmsb/lifecycle": ["../../../../core/packages/lifecycle/dist/index.d.ts"]
         }
     },
-    "include": ["src/**/*.ts", "src/shell-ambient.d.ts"],
+    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/shell-ambient.d.ts"],
     "references": [
         { "path": "../../../../core/packages/domain/tsconfig.json" },
         { "path": "../../../../core/packages/application/tsconfig.json" },

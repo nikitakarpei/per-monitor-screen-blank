@@ -1,7 +1,6 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import type * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import type {
     QuickSettings as QuickSettingsPort,
     ProfileSettings,
@@ -40,7 +39,7 @@ export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
             this.#preferencesOpener.openSafely();
         });
         Main.panel.statusArea.quickSettings.addExternalIndicator(
-            this.#indicator as object as PanelMenu.Button,
+            this.#indicator,
         );
 
         this.#profileSection = new PopupMenu.PopupMenuSection();
