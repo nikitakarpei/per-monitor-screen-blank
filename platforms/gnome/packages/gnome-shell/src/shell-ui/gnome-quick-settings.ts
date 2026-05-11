@@ -7,14 +7,13 @@ import type {
     ProfileSettings,
     LoggerPort,
 } from '@pmsb/application';
-import type { Profile, ProfileId } from '@pmsb/domain';
 import type { Disposable } from '@pmsb/lifecycle';
 import type { PreferencesOpener } from '../shell-infra/gnome-preferences-opener.js';
 
 export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
+    readonly #logger: LoggerPort;
     readonly #preferencesOpener: PreferencesOpener;
     readonly #profileSettings: ProfileSettings;
-    readonly #logger: LoggerPort;
     readonly #indicator: QuickSettings.SystemIndicator;
     readonly #toggle: QuickSettings.QuickMenuToggle;
     readonly #profileSection: PopupMenu.PopupMenuSection;
@@ -46,6 +45,26 @@ export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
 
         this.#profileSection = new PopupMenu.PopupMenuSection();
         this.#toggle.menu.addMenuItem(this.#profileSection, 0);
+
+        void this.#toggle.connect('clicked', () => {
+            try {
+                this.#onToggleClicked();
+            } catch (error) {
+                this.#logger.error(
+                    'GnomeQuickSettings: failed to handle "clicked" signal',
+                    error as object | undefined,
+                );
+            }
+        });
+    }
+
+    #onToggleClicked(): void {
+        const isActive = this.#profileSettings.getActiveProfile() !== null;
+        if (isActive) {
+            this.#profileSettings.deactivateProfile();
+        } else {
+            this.#profileSettings.restoreLastActiveProfile();
+        }
     }
 
     get visible(): boolean {
@@ -66,18 +85,8 @@ export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
     syncProfiles(): void {
         const profiles = this.#profileSettings.getProfiles();
         const activeProfile = this.#profileSettings.getActiveProfile();
-        if (!activeProfile) {
-            this.#logger.warn(
-                'GnomeQuickSettings.syncProfiles: no active profile found; UI will show no selection',
-            );
-        }
-        this.#syncProfiles(profiles, activeProfile?.id);
-    }
+        this.#toggle.checked = activeProfile !== null;
 
-    #syncProfiles(
-        profiles: ReadonlyArray<Readonly<Profile>>,
-        activeProfileId: ProfileId | undefined,
-    ): void {
         this.#profileSection.removeAll();
         this.#profileSection.addMenuItem(
             new PopupMenu.PopupMenuItem('Presets', {
@@ -89,14 +98,12 @@ export class GnomeQuickSettings implements QuickSettingsPort, Disposable {
         for (const profile of profiles) {
             const row = new PopupMenu.PopupMenuItem(profile.name);
             row.setOrnament(
-                profile.id === activeProfileId
+                profile.id === activeProfile?.id
                     ? PopupMenu.Ornament.DOT
                     : PopupMenu.Ornament.NONE,
             );
-            row.connectObject(
-                'activate',
-                () => this.#profileSettings.setActiveProfile(profile.id),
-                this,
+            void row.connect('activate', () =>
+                this.#profileSettings.setActiveProfile(profile.id),
             );
             this.#profileSection.addMenuItem(row);
         }
