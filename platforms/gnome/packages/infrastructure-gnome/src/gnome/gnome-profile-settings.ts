@@ -185,12 +185,7 @@ export class GnomeProfileSettings implements ProfileSettings {
         const connectionId = this.#settings.connect(
             `changed::${GSETTINGS_KEYS.activeProfileId}`,
             () => {
-                const activeId = this.getActiveProfileId();
-                if (activeId === null) {
-                    return;
-                }
-
-                callback(activeId);
+                callback(this.getActiveProfileId());
             },
         );
 

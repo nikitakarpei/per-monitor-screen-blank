@@ -139,6 +139,10 @@ export class GnomeProfileSettingsWatcher implements Disposable {
 
     #handleActiveProfileIdChanged(profileId: ProfileId | null): void {
         if (profileId === null) {
+            this.#eventEmitter.emit({
+                type: 'profile-inactivated',
+                payload: {},
+            });
             return;
         }
 
