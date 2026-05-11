@@ -92,6 +92,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         const profileSettings = new GnomeProfileSettings(
             gioSettings,
             createProfileSettings,
+            logger,
         );
 
         const profileSettingsWatcher = new GnomeProfileSettingsWatcher(

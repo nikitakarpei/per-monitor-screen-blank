@@ -76,6 +76,7 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
             const profileSettings = new GnomeProfileSettings(
                 settings,
                 createProfileSettings,
+                logger,
             );
 
             const profileSettingsWatcher = new GnomeProfileSettingsWatcher(

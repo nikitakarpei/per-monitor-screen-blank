@@ -1,6 +1,6 @@
 import type Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import type { ProfileSettings } from '@pmsb/application';
+import type { LoggerPort, ProfileSettings } from '@pmsb/application';
 import type { Profile, ProfileId, MonitorMode } from '@pmsb/domain';
 import type { Disposable } from '@pmsb/lifecycle';
 import { GSETTINGS_KEYS } from './gsettings-schema-keys.js';
@@ -16,13 +16,16 @@ export type ProfileIdsChange = {
 export class GnomeProfileSettings implements ProfileSettings {
     readonly #settings: Gio.Settings;
     readonly #createProfileSettings: ProfileGioSettingsFactory;
+    readonly #logger: LoggerPort;
 
     constructor(
         settings: Gio.Settings,
         createProfileSettings: ProfileGioSettingsFactory,
+        logger: LoggerPort,
     ) {
         this.#settings = settings;
         this.#createProfileSettings = createProfileSettings;
+        this.#logger = logger;
     }
 
     ensureDefaultProfile(): void {
@@ -77,6 +80,14 @@ export class GnomeProfileSettings implements ProfileSettings {
         if (!saved) {
             throw new Error(`failed to set active profile id to ${id}`);
         }
+
+        const savedLast = this.#settings.set_string(
+            GSETTINGS_KEYS.lastActiveProfileId,
+            id,
+        );
+        if (!savedLast) {
+            throw new Error(`failed to set last active profile id to ${id}`);
+        }
     }
 
     deactivateProfile(): void {
@@ -94,18 +105,24 @@ export class GnomeProfileSettings implements ProfileSettings {
             GSETTINGS_KEYS.lastActiveProfileId,
         );
         if (lastId === '') {
-            return;
+            throw new Error(
+                'restore-last-active-profile: no last active profile recorded',
+            );
         }
 
         const profileIds = this.#readProfileIds();
         if (!profileIds.includes(lastId)) {
-            void GLib.log_structured(
-                'per-monitor-screen-blank',
-                GLib.LogLevelFlags.LEVEL_WARNING,
-                {
-                    MESSAGE: `restore-last-active-profile: remembered profile ${lastId} no longer exists; user must select a profile explicitly`,
-                },
+            const fallbackProfileId = profileIds.at(0);
+            if (fallbackProfileId === undefined) {
+                throw new Error(
+                    'restore-last-active-profile: remembered profile no longer exists and no fallback profile available',
+                );
+            }
+
+            this.#logger.info(
+                `restore-last-active-profile: remembered profile ${lastId} is missing; activating fallback profile ${fallbackProfileId}`,
             );
+            this.setActiveProfile(fallbackProfileId);
             return;
         }
 
