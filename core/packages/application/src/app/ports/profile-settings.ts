@@ -5,6 +5,8 @@ export interface ProfileSettings {
     getProfiles(): Profile[];
     getActiveProfile(): Profile | null;
     setActiveProfile(id: ProfileId): void;
+    deactivateProfile(): void;
+    restoreLastActiveProfile(): void;
     createProfile(name: string): ProfileId;
     deleteProfile(id: ProfileId): void;
     renameProfile(id: ProfileId, name: string): void;

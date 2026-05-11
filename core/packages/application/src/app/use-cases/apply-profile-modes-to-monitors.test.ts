@@ -30,6 +30,8 @@ class FakeProfileSettings implements ProfileSettings {
     ensureDefaultProfile = vi.fn();
     getActiveProfile = vi.fn();
     setActiveProfile = vi.fn();
+    deactivateProfile = vi.fn();
+    restoreLastActiveProfile = vi.fn();
     createProfile = vi.fn();
     deleteProfile = vi.fn();
     renameProfile = vi.fn();

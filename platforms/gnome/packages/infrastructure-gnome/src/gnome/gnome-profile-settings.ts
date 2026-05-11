@@ -79,6 +79,39 @@ export class GnomeProfileSettings implements ProfileSettings {
         }
     }
 
+    deactivateProfile(): void {
+        const saved = this.#settings.set_string(
+            GSETTINGS_KEYS.activeProfileId,
+            '',
+        );
+        if (!saved) {
+            throw new Error('failed to deactivate profile');
+        }
+    }
+
+    restoreLastActiveProfile(): void {
+        const lastId = this.#settings.get_string(
+            GSETTINGS_KEYS.lastActiveProfileId,
+        );
+        if (lastId === '') {
+            return;
+        }
+
+        const profileIds = this.#readProfileIds();
+        if (!profileIds.includes(lastId)) {
+            void GLib.log_structured(
+                'per-monitor-screen-blank',
+                GLib.LogLevelFlags.LEVEL_WARNING,
+                {
+                    MESSAGE: `restore-last-active-profile: remembered profile ${lastId} no longer exists; user must select a profile explicitly`,
+                },
+            );
+            return;
+        }
+
+        this.setActiveProfile(lastId);
+    }
+
     createProfile(name: string): ProfileId {
         const id = this.#generateId();
 
