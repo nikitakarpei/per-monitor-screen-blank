@@ -21,17 +21,10 @@ export function setupConnectedMonitor(
     );
 
     const activeProfile = deps.profileSettings.getActiveProfile();
-    if (!activeProfile) {
-        deps.logger.warn(
-            `setup-connected-monitor: no active profile found, cannot apply mode`,
-        );
-        return;
-    }
 
-    const mode: MonitorMode = deps.profileSettings.getMonitorMode(
-        activeProfile.id,
-        monitorId,
-    );
+    const mode: MonitorMode = activeProfile
+        ? deps.profileSettings.getMonitorMode(activeProfile.id, monitorId)
+        : 'disabled';
     deps.logger.info(
         `setup-connected-monitor: applying mode ${mode} to ${monitorId}`,
     );
