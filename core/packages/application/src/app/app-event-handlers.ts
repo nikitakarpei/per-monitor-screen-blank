@@ -34,6 +34,7 @@ import { bootstrapConnectedIdentities } from './handlers/application-bootstrap-r
 import { pruneDisconnectedIdentities } from './handlers/application-bootstrap-requested/prune-disconnected-identities.js';
 import { bootstrapGeneralSettings } from './handlers/application-bootstrap-requested/bootstrap-general-settings.js';
 import { applyProfileModesToMonitors } from './use-cases/apply-profile-modes-to-monitors.js';
+import { disableMonitorsOnProfileInactivation } from './use-cases/disable-monitors-on-profile-inactivation.js';
 import { persistMonitorIdentity } from './use-cases/persist-monitor-identity.js';
 import { applyIdleTimeoutToAutoAwakeMonitors } from './use-cases/apply-idle-timeout-to-auto-awake-monitors.js';
 import { applyKeepAwakeDurationToKeepAwakeMonitors } from './use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
@@ -88,6 +89,9 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     );
     void deps.bus.on('profile-switched', (_payload) =>
         deps.quickSettings.syncProfiles(),
+    );
+    void deps.bus.on('profile-inactivated', (_payload) =>
+        disableMonitorsOnProfileInactivation(deps),
     );
     void deps.bus.on('profile-ids-changed', (_payload) =>
         deps.quickSettings.syncProfiles(),
