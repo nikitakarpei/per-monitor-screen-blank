@@ -93,6 +93,9 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('profile-inactivated', (_payload) =>
         disableMonitorsOnProfileInactivation(deps),
     );
+    void deps.bus.on('profile-inactivated', (_payload) =>
+        deps.quickSettings.syncProfiles(),
+    );
     void deps.bus.on('profile-ids-changed', (_payload) =>
         deps.quickSettings.syncProfiles(),
     );

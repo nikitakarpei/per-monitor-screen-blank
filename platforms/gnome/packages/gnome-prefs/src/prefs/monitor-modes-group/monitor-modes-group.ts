@@ -64,6 +64,9 @@ export class MonitorModesGroup
             eventSubscriber.on('profile-switched', () => {
                 this.refresh();
             }),
+            eventSubscriber.on('profile-inactivated', () => {
+                this.refresh();
+            }),
         );
 
         this.refresh();
