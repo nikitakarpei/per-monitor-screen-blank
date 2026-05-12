@@ -1,29 +1,7 @@
 {
-    "extends": "../../../../tsconfig.build.json",
-    "compilerOptions": {
-        "composite": true,
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "paths": {
-            "@pmsb/domain": ["../../../../core/packages/domain/src/index.ts"],
-            "@pmsb/application": [
-                "../../../../core/packages/application/src/index.ts"
-            ],
-            "@pmsb/infrastructure-gnome": [
-                "../infrastructure-gnome/src/index.ts"
-            ],
-            "@pmsb/gnome-shell": ["../gnome-shell/src/index.ts"],
-            "@pmsb/gnome-prefs": ["../gnome-prefs/src/index.ts"],
-            "@pmsb/lifecycle": ["../../../../core/packages/lifecycle/src/index.ts"]
-        }
-    },
-    "include": ["src/**/*.ts", "src/**/*.d.ts"],
-    "references": [
-        { "path": "../../../../core/packages/domain/tsconfig.json" },
-        { "path": "../../../../core/packages/application/tsconfig.json" },
-        { "path": "../../../../core/packages/lifecycle/tsconfig.json" },
-        { "path": "../infrastructure-gnome/tsconfig.json" },
-        { "path": "../gnome-shell/tsconfig.json" },
-        { "path": "../gnome-prefs/tsconfig.json" }
-    ]
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"]
 }

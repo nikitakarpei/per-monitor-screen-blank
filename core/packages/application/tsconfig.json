@@ -1,17 +1,7 @@
 {
-    "extends": "../../../tsconfig.build.json",
-    "compilerOptions": {
-        "composite": true,
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "paths": {
-            "@pmsb/domain": ["../domain/src/index.ts"],
-            "@pmsb/lifecycle": ["../lifecycle/src/index.ts"]
-        }
-    },
-    "include": ["src/**/*.ts"],
-    "references": [
-        { "path": "../domain/tsconfig.json" },
-        { "path": "../lifecycle/tsconfig.json" }
-    ]
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"]
 }

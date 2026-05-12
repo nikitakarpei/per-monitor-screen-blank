@@ -8,9 +8,7 @@
             "default": "./src/index.ts"
         }
     },
-    "scripts": {
-        "typecheck": "tsc --build"
-    },
+
     "dependencies": {
         "@pmsb/domain": "*",
         "@pmsb/application": "*",

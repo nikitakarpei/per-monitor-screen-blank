@@ -17,14 +17,5 @@
         "core/packages/*/src/**/*.d.ts",
         "platforms/*/packages/*/src/**/*.ts",
         "platforms/*/packages/*/src/**/*.d.ts"
-    ],
-    "references": [
-        { "path": "./core/packages/domain/tsconfig.json" },
-        { "path": "./core/packages/application/tsconfig.json" },
-        { "path": "./core/packages/lifecycle/tsconfig.json" },
-        { "path": "./platforms/gnome/packages/infrastructure-gnome/tsconfig.json" },
-        { "path": "./platforms/gnome/packages/gnome-shell/tsconfig.json" },
-        { "path": "./platforms/gnome/packages/gnome-prefs/tsconfig.json" },
-        { "path": "./platforms/gnome/packages/gnome-composition/tsconfig.json" }
     ]
 }

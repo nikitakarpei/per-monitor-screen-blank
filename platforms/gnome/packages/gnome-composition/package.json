@@ -8,9 +8,7 @@
             "default": "./src/index.ts"
         }
     },
-    "scripts": {
-        "typecheck": "tsc --build"
-    },
+
     "dependencies": {
         "@pmsb/application": "*",
         "@pmsb/infrastructure-gnome": "*",

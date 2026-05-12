@@ -1,9 +1,7 @@
 {
-    "extends": "../../../tsconfig.build.json",
-    "compilerOptions": {
-        "composite": true,
-        "rootDir": "./src",
-        "outDir": "./dist"
-    },
-    "include": ["src/**/*.ts"]
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"]
 }
