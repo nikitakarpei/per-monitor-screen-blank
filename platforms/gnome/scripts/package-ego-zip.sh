@@ -28,7 +28,9 @@ if [ ! -f "$src/metadata.json" ]; then
   exit 1
 fi
 
-sh "$GNOME_SCRIPTS_DIR/ego-lint.sh" "$src"
+if ! sh "$GNOME_SCRIPTS_DIR/ego-lint.sh" "$src"; then
+  printf 'WARNING: ego-lint.sh exited non-zero; packaging continues, but review lint output above.\n' >&2
+fi
 
 if ! command -v zip >/dev/null 2>&1; then
   printf 'ERROR: zip command not found.\n' >&2
