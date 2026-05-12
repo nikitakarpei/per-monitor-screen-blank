@@ -5,16 +5,16 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "paths": {
-            "@pmsb/domain": ["../../../../core/packages/domain/dist/index.d.ts"],
+            "@pmsb/domain": ["../../../../core/packages/domain/src/index.ts"],
             "@pmsb/application": [
-                "../../../../core/packages/application/dist/index.d.ts"
+                "../../../../core/packages/application/src/index.ts"
             ],
             "@pmsb/infrastructure-gnome": [
-                "../infrastructure-gnome/dist/index.d.ts"
+                "../infrastructure-gnome/src/index.ts"
             ],
-            "@pmsb/gnome-shell": ["../gnome-shell/dist/index.d.ts"],
-            "@pmsb/gnome-prefs": ["../gnome-prefs/dist/index.d.ts"],
-            "@pmsb/lifecycle": ["../../../../core/packages/lifecycle/dist/index.d.ts"]
+            "@pmsb/gnome-shell": ["../gnome-shell/src/index.ts"],
+            "@pmsb/gnome-prefs": ["../gnome-prefs/src/index.ts"],
+            "@pmsb/lifecycle": ["../../../../core/packages/lifecycle/src/index.ts"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts"],

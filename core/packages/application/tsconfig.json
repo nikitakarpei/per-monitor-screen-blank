@@ -5,8 +5,8 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "paths": {
-            "@pmsb/domain": ["../domain/dist/index.d.ts"],
-            "@pmsb/lifecycle": ["../lifecycle/dist/index.d.ts"]
+            "@pmsb/domain": ["../domain/src/index.ts"],
+            "@pmsb/lifecycle": ["../lifecycle/src/index.ts"]
         }
     },
     "include": ["src/**/*.ts"],

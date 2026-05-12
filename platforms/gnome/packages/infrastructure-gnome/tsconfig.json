@@ -5,9 +5,9 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "paths": {
-            "@pmsb/domain": ["../../../../core/packages/domain/dist/index.d.ts"],
-            "@pmsb/application": ["../../../../core/packages/application/dist/index.d.ts"],
-            "@pmsb/lifecycle": ["../../../../core/packages/lifecycle/dist/index.d.ts"]
+            "@pmsb/domain": ["../../../../core/packages/domain/src/index.ts"],
+            "@pmsb/application": ["../../../../core/packages/application/src/index.ts"],
+            "@pmsb/lifecycle": ["../../../../core/packages/lifecycle/src/index.ts"]
         }
     },
     "include": ["src/**/*.ts", "src/ambient.d.ts"],

@@ -109,7 +109,7 @@ const importResolver = {
         extensions: ['.js', '.ts'],
     },
     typescript: {
-        project: './tsconfig.dev.json',
+        project: './tsconfig.eslint.json',
         alwaysTryTypes: true,
     },
 };
@@ -171,7 +171,7 @@ export default tseslint.config(
             },
             parser: tseslint.parser,
             parserOptions: {
-                project: './tsconfig.dev.json',
+                project: './tsconfig.eslint.json',
                 tsconfigRootDir: import.meta.dirname,
             },
         },

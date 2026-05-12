@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const repoRoot = fileURLToPath(new URL('.', import.meta.url));
 
 function readTsconfigPaths(): Record<string, string> {
-    const tsconfigPath = new URL('tsconfig.dev.json', import.meta.url);
+    const tsconfigPath = new URL('tsconfig.json', import.meta.url);
     const raw = readFileSync(tsconfigPath, 'utf-8');
     const parsed = JSON.parse(raw) as {
         compilerOptions?: { paths?: Record<string, string[]> };
