@@ -11,7 +11,7 @@
         "lint": "eslint core/packages/*/src platforms/*/packages/*/src && knip --reporter compact",
         "format": "prettier --write core/packages/*/src platforms/*/packages/*/src",
         "format:check": "prettier --check core/packages/*/src platforms/*/packages/*/src",
-        "typecheck": "tsc --build",
+        "typecheck": "tsc -p tsconfig.dev.json --noEmit",
         "test": "vitest",
         "prepare": "simple-git-hooks"
     },

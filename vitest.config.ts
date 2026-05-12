@@ -1,20 +1,34 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath, URL } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 const repoRoot = fileURLToPath(new URL('.', import.meta.url));
 
+function readTsconfigPaths(): Record<string, string> {
+    const tsconfigPath = new URL('tsconfig.dev.json', import.meta.url);
+    const raw = readFileSync(tsconfigPath, 'utf-8');
+    const parsed = JSON.parse(raw) as {
+        compilerOptions?: { paths?: Record<string, string[]> };
+    };
+    const paths = parsed.compilerOptions?.paths ?? {};
+    const alias: Record<string, string> = {};
+    for (const [key, values] of Object.entries(paths)) {
+        if (values.length > 0) {
+            alias[key] = `${repoRoot}${values[0]}`;
+        }
+    }
+    return alias;
+}
+
 export default defineConfig({
     resolve: {
-        alias: {
-            '@pmsb/domain': `${repoRoot}core/packages/domain/src/index.ts`,
-            '@pmsb/application': `${repoRoot}core/packages/application/src/index.ts`,
-            '@pmsb/infrastructure-gnome': `${repoRoot}platforms/gnome/packages/infrastructure-gnome/src/index.ts`,
-            '@pmsb/gnome-shell': `${repoRoot}platforms/gnome/packages/gnome-shell/src/index.ts`,
-            '@pmsb/gnome-prefs': `${repoRoot}platforms/gnome/packages/gnome-prefs/src/index.ts`,
-        },
+        alias: readTsconfigPaths(),
     },
     test: {
-        include: ['core/packages/*/src/**/*.test.ts', 'platforms/*/packages/*/src/**/*.test.ts'],
+        include: [
+            'core/packages/*/src/**/*.test.ts',
+            'platforms/*/packages/*/src/**/*.test.ts',
+        ],
         passWithNoTests: true,
     },
 });
