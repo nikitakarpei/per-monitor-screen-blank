@@ -8,7 +8,6 @@ import { ProfileMenuPopover } from './profile-menu-popover.js';
 interface ProfileRowCallbacks {
     onActivate: () => void;
     onRename: () => void;
-    onDuplicate: () => void;
     onDelete: () => void;
 }
 

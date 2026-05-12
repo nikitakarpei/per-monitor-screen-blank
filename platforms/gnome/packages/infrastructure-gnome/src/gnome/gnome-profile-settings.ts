@@ -178,31 +178,6 @@ export class GnomeProfileSettings implements ProfileSettings {
         store.setName(name);
     }
 
-    duplicateProfile(id: ProfileId): ProfileId {
-        const store = this.#createProfileStore(id);
-
-        const newName = `${store.getName()} (copy)`;
-        const newId = this.#generateId();
-
-        const profileIds = this.#settings.get_strv(GSETTINGS_KEYS.profileIds);
-        const newIds = [...profileIds, newId];
-        const saved = this.#settings.set_strv(
-            GSETTINGS_KEYS.profileIds,
-            newIds,
-        );
-        if (!saved) {
-            throw new Error(
-                `failed to add duplicated profile ${newId} to profile-ids list`,
-            );
-        }
-
-        const newStore = this.#createProfileStore(newId);
-        newStore.setName(newName);
-        newStore.setMonitorModes(store.getMonitorModes());
-
-        return newId;
-    }
-
     observeProfileIdsChanged(
         callback: (change: ProfileIdsChange) => void,
     ): Disposable {

@@ -5,7 +5,6 @@ import type { LoggerPort } from '@pmsb/application';
 interface ProfileMenuPopoverCallbacks {
     onActivate: () => void;
     onRename: () => void;
-    onDuplicate: () => void;
     onDelete: () => void;
 }
 
@@ -68,18 +67,6 @@ export class ProfileMenuPopover extends Gtk.MenuButton {
             signalId: renameSignalId,
         });
         box.append(renameButton);
-
-        // Duplicate
-        const duplicateButton = new Gtk.Button({ label: 'Duplicate' });
-        const duplicateSignalId = duplicateButton.connect('clicked', () => {
-            popover.popdown();
-            callbacks.onDuplicate();
-        });
-        this._signalConnections.push({
-            widget: duplicateButton,
-            signalId: duplicateSignalId,
-        });
-        box.append(duplicateButton);
 
         // Delete
         const deleteButton = new Gtk.Button({ label: 'Delete' });

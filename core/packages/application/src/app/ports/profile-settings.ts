@@ -10,7 +10,6 @@ export interface ProfileSettings {
     createProfile(name: string): ProfileId;
     deleteProfile(id: ProfileId): void;
     renameProfile(id: ProfileId, name: string): void;
-    duplicateProfile(id: ProfileId): ProfileId;
     getMonitorMode(profileId: ProfileId, monitorId: string): MonitorMode;
     setMonitorMode(
         profileId: ProfileId,

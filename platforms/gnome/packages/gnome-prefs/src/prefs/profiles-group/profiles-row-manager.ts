@@ -68,9 +68,6 @@ export class ProfilesRowManager {
                             );
                         });
                     },
-                    onDuplicate: () => {
-                        this.#handleDuplicate(profile);
-                    },
                     onDelete: () => {
                         this.#profileSettings.deleteProfile(profile.id);
                     },
@@ -93,13 +90,6 @@ export class ProfilesRowManager {
         );
         if (name === undefined || name === '') return;
         this.#profileSettings.renameProfile(profile.id, name);
-    }
-
-    #handleDuplicate(profile: Profile): void {
-        const newId = this.#profileSettings.duplicateProfile(profile.id);
-        if (!newId) {
-            this.#logger.warn(`failed to duplicate profile ${profile.name}`);
-        }
     }
 
     destroy(): void {
