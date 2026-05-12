@@ -6,6 +6,7 @@ set -eu
 
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
 dest="$HOME/.local/share/gnome-shell/extensions/$uuid"
+settings_schema="org.gnome.shell.extensions.per-monitor-screen-blank"
 remove_data=0
 
 usage() {
@@ -31,13 +32,27 @@ while [ "$#" -gt 0 ]; do
 done
 
 reset_settings_data() {
-  if ! command -v dconf >/dev/null 2>&1; then
-    printf '%s\n' "Error: dconf is required to remove settings data but was not found" >&2
-    exit 1
+  if ! command -v gsettings >/dev/null 2>&1; then
+    printf '%s\n' "Skipped settings removal: gsettings not found" >&2
+    return
   fi
 
-  dconf reset -f "/org/gnome/shell/extensions/per-monitor-screen-blank/"
-  printf '%s\n' "Removed settings data: /org/gnome/shell/extensions/per-monitor-screen-blank/"
+  if gsettings writable "$settings_schema" active-profile-id >/dev/null 2>&1; then
+    gsettings reset-recursively "$settings_schema"
+    printf '%s\n' "Removed settings data: $settings_schema"
+    return
+  fi
+
+  for schema_dir in "$GNOME_DIST_DIR/$uuid/schemas" "$GNOME_PLATFORM_ROOT/assets/schemas"; do
+    if [ -f "$schema_dir/gschemas.compiled" ] &&
+      gsettings --schemadir "$schema_dir" writable "$settings_schema" active-profile-id >/dev/null 2>&1; then
+      gsettings --schemadir "$schema_dir" reset-recursively "$settings_schema"
+      printf '%s\n' "Removed settings data: $settings_schema"
+      return
+    fi
+  done
+
+  printf '%s\n' "Skipped settings removal: schema not available for $settings_schema" >&2
 }
 
 if command -v gnome-extensions >/dev/null 2>&1; then
