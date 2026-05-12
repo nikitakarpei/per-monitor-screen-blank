@@ -46,4 +46,12 @@ rm -f "$stage/schemas/gschemas.compiled"
 rm -f "$zip_path"
 ( cd "$stage" && zip -r -q "$zip_path" . )
 
-printf '%s\n' "Wrote: $zip_path" "Check layout: unzip -l \"$zip_path\" | head"
+if ! command -v sha256sum >/dev/null 2>&1; then
+  printf 'ERROR: sha256sum command not found.\n' >&2
+  exit 1
+fi
+
+sha256_path="${zip_path}.sha256"
+sha256sum "$zip_path" > "$sha256_path"
+
+printf '%s\n' "Wrote: $zip_path" "Checksum: $sha256_path" "Check layout: unzip -l \"$zip_path\" | head"

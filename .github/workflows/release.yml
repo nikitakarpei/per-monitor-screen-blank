@@ -27,14 +27,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: extension-zip
-          path: platforms/gnome/dist/*.zip
+          path: |
+            platforms/gnome/dist/*.zip
+            platforms/gnome/dist/*.zip.sha256
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
-          zip_path=$(find dist -maxdepth 1 -name '*.zip' -print -quit)
-          gh release create "$tag" "$zip_path" \
+          zip_path=$(find platforms/gnome/dist -maxdepth 1 -name '*.zip' -print -quit)
+          sha256_path=$(find platforms/gnome/dist -maxdepth 1 -name '*.zip.sha256' -print -quit)
+          gh release create "$tag" "$zip_path" "$sha256_path" \
             --title "${tag}" \
             --notes "Release ${tag}."
