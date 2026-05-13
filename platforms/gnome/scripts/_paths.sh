@@ -1,7 +1,7 @@
 #!/bin/sh
 # Shared GNOME script path helper.
 
-GNOME_SCRIPTS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd) || {
+GNOME_SCRIPTS_DIR=$(CDPATH=; cd -- "$(dirname -- "$0")" && pwd) || {
   printf '%s\n' 'ERROR: unable to resolve the GNOME scripts directory from the script path.' >&2
   printf '%s\n' "  script=$0" >&2
   return 1
@@ -39,7 +39,8 @@ fi
 GNOME_PLATFORM_ROOT=$REPOSITORY_ROOT/platforms/gnome
 GNOME_SCRIPTS_DIR=$GNOME_PLATFORM_ROOT/scripts
 GNOME_DIST_DIR=$GNOME_PLATFORM_ROOT/dist
+GNOME_VENDOR_DIR=$GNOME_PLATFORM_ROOT/vendor
 
-export REPOSITORY_ROOT GNOME_PLATFORM_ROOT GNOME_SCRIPTS_DIR GNOME_DIST_DIR
+export REPOSITORY_ROOT GNOME_PLATFORM_ROOT GNOME_SCRIPTS_DIR GNOME_DIST_DIR GNOME_VENDOR_DIR
 
 return 0

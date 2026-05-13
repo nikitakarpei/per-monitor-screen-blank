@@ -1,0 +1,4 @@
+[submodule "platforms/gnome/vendor/gnome-extension-reviewer"]
+	path = platforms/gnome/vendor/gnome-extension-reviewer
+	url = https://github.com/ZviBaratz/gnome-extension-reviewer.git
+	shallow = true
