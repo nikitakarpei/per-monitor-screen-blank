@@ -13,6 +13,7 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
+# shellcheck source=/dev/null
 . "$(dirname -- "$0")/_paths.sh"
 
 uuid="per-monitor-screen-blank@nikitakarpei.github.io"
@@ -28,9 +29,13 @@ if [ ! -f "$src/metadata.json" ]; then
   exit 1
 fi
 
-if ! sh "$GNOME_SCRIPTS_DIR/ego-lint.sh" "$src"; then
-  printf 'WARNING: ego-lint.sh exited non-zero; packaging continues, but review lint output above.\n' >&2
+reviewer_ego_lint="$GNOME_VENDOR_DIR/gnome-extension-reviewer/ego-lint"
+if [ ! -f "$reviewer_ego_lint" ] || [ ! -r "$reviewer_ego_lint" ]; then
+  printf '%s\n' 'ERROR: ego-lint not found or not readable.' >&2
+  exit 1
 fi
+
+sh "$reviewer_ego_lint" "$src" --no-report
 
 if ! command -v zip >/dev/null 2>&1; then
   printf 'ERROR: zip command not found.\n' >&2
