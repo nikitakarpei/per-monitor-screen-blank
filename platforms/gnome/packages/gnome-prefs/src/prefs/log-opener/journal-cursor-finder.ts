@@ -1,7 +1,11 @@
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import type { LoggerPort } from '@pmsb/application';
 
-export async function findExtensionStartCursor(logger: LoggerPort): Promise<{
+export async function findExtensionStartCursor(
+    logger: LoggerPort,
+    cancellable: Gio.Cancellable,
+): Promise<{
     readonly cursor: string | undefined;
     readonly found: boolean;
 }> {
@@ -20,8 +24,8 @@ export async function findExtensionStartCursor(logger: LoggerPort): Promise<{
             flags: Gio.SubprocessFlags.STDOUT_PIPE,
         });
         // Gio.Subprocess.init() returns boolean; failure caught by exception
-        void proc.init(null);
-        const [stdout] = await proc.communicate_utf8_async(null, null);
+        void proc.init(cancellable);
+        const [stdout] = await proc.communicate_utf8_async(null, cancellable);
 
         if (!stdout.trim()) {
             return { cursor: undefined, found: true };
@@ -32,10 +36,21 @@ export async function findExtensionStartCursor(logger: LoggerPort): Promise<{
         };
         return { cursor: entry.__CURSOR, found: true };
     } catch (error) {
+        if (isCancelledError(error)) {
+            return { cursor: undefined, found: false };
+        }
+
         logger.error(
             `failed to read extension start cursor from journal`,
             error as object | undefined,
         );
         return { cursor: undefined, found: false };
     }
+}
+
+function isCancelledError(error: unknown): boolean {
+    return (
+        error instanceof GLib.Error &&
+        error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)
+    );
 }

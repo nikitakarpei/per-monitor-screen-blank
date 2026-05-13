@@ -95,7 +95,7 @@ export class ShortcutCaptureDialog {
 
     destroy(): void {
         if (this.#idleSourceId !== undefined) {
-            void GLib.source_remove(this.#idleSourceId);
+            void GLib.Source.remove(this.#idleSourceId);
             this.#idleSourceId = undefined;
         }
         if (this.#keyController !== undefined) {

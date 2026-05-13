@@ -2,8 +2,8 @@ import { applyIdleTimeoutToAutoAwakeMonitors } from '../../use-cases/apply-idle-
 import type { ApplyIdleTimeoutToAutoAwakeMonitorsDeps } from '../../use-cases/apply-idle-timeout-to-auto-awake-monitors.js';
 import { applyKeepAwakeDurationToKeepAwakeMonitors } from '../../use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
 import type { ApplyKeepAwakeDurationToKeepAwakeMonitorsDeps } from '../../use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
-import { applyPointerMonitorTimerPolicy } from '../../use-cases/apply-pointer-monitor-timer-policy.js';
-import type { ApplyPointerMonitorTimerPolicyDeps } from '../../use-cases/apply-pointer-monitor-timer-policy.js';
+import { applyPointerTimerPolicy } from '../../use-cases/apply-pointer-timer-policy.js';
+import type { ApplyPointerTimerPolicyDeps } from '../../use-cases/apply-pointer-timer-policy.js';
 import { registerPointerMenuShortcut } from '../../use-cases/register-pointer-menu-shortcut.js';
 import type { RegisterPointerMenuShortcutDeps } from '../../use-cases/register-pointer-menu-shortcut.js';
 import type { GeneralSettings } from '../../ports/general-settings.js';
@@ -14,7 +14,7 @@ interface BootstrapGeneralSettingsDeps
     extends
         ApplyIdleTimeoutToAutoAwakeMonitorsDeps,
         ApplyKeepAwakeDurationToKeepAwakeMonitorsDeps,
-        ApplyPointerMonitorTimerPolicyDeps,
+        ApplyPointerTimerPolicyDeps,
         RegisterPointerMenuShortcutDeps {
     readonly generalSettings: GeneralSettings;
     readonly overlay: Overlay;
@@ -47,7 +47,7 @@ export function bootstrapGeneralSettings(
     deps.quickSettings.visible =
         deps.generalSettings.getShowQuickSettingsMenu();
 
-    applyPointerMonitorTimerPolicy(
+    applyPointerTimerPolicy(
         deps,
         !deps.generalSettings.getDisableAutoTimerOnPointerMonitor(),
     );

@@ -84,10 +84,10 @@ export class GnomeGeneralSettingsWatcher implements Disposable {
         );
         void this.#observationStore.add(
             this.#settings.observePointerMonitorTimerPolicyChanged(
-                (shouldMonitorAutoBlackWhenFocused) => {
+                (autoBlackWhenFocused) => {
                     this.#eventEmitter.emit({
                         type: 'pointer-monitor-timer-policy-changed',
-                        payload: { shouldMonitorAutoBlackWhenFocused },
+                        payload: { autoBlackWhenFocused },
                     });
                 },
             ),

@@ -53,7 +53,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             );
         });
 
-        const settingsProvider = new GnomeSettingsProvider(this.dir);
+        const settingsProvider = new GnomeSettingsProvider(this.path);
 
         const gioSettings = settingsProvider.createMainSettings();
 

@@ -57,7 +57,7 @@ export type IndicatorVisibilityChangedEvent = {
 
 export type PointerMonitorTimerPolicyChangedEvent = {
     type: 'pointer-monitor-timer-policy-changed';
-    payload: { shouldMonitorAutoBlackWhenFocused: boolean };
+    payload: { autoBlackWhenFocused: boolean };
 };
 
 type WindowObstructionPolicyChangedEvent = {

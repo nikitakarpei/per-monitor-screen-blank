@@ -1,7 +1,7 @@
 {
     "uuid": "per-monitor-screen-blank@nikitakarpei.github.io",
     "name": "Per-Monitor Screen Blank",
-    "description": "Blank individual monitors after pointer idle time.",
+    "description": "Blank individual monitors after pointer idle time. Preferences include diagnostics that can open/read extension logs and run journalctl in a terminal.",
     "url": "https://github.com/nikitakarpei/per-monitor-screen-blank",
     "settings-schema": "org.gnome.shell.extensions.per-monitor-screen-blank",
     "shell-version": ["49", "50"]

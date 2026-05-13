@@ -30,15 +30,12 @@ export function tryTransition(
 
 export function modeToInitialState(
     mode: MonitorMode,
-    shouldMonitorAutoBlackWhenFocused: boolean,
+    autoBlackWhenFocused: boolean,
     isFocused: boolean,
 ): MonitorState {
     switch (mode) {
         case 'auto': {
-            return resolveAutoMonitorState(
-                shouldMonitorAutoBlackWhenFocused,
-                isFocused,
-            );
+            return resolveAutoMonitorState(autoBlackWhenFocused, isFocused);
         }
         case 'keep-awake': {
             return 'KeepAwake';
@@ -59,12 +56,10 @@ export function modeToInitialState(
  * Resolve the auto monitor state based on focus and policy.
  */
 export function resolveAutoMonitorState(
-    shouldMonitorAutoBlackWhenFocused: boolean,
+    autoBlackWhenFocused: boolean,
     isFocused: boolean,
 ): MonitorState {
-    return isFocused && !shouldMonitorAutoBlackWhenFocused
-        ? 'AutoPaused'
-        : 'AutoAwake';
+    return isFocused && !autoBlackWhenFocused ? 'AutoPaused' : 'AutoAwake';
 }
 
 /*

@@ -28,7 +28,6 @@ import {
     LogOpener,
 } from '@pmsb/gnome-prefs';
 import { createDisposableStore } from '@pmsb/lifecycle';
-import './gio-promises.js';
 
 export default class PerMonitorScreenBlankPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {

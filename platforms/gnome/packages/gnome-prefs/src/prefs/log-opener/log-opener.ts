@@ -15,6 +15,7 @@ const MANUAL_COMMAND =
  */
 export class LogOpener implements Disposable {
     #window: Gtk.Window | undefined;
+    #cancellable: Gio.Cancellable | undefined;
     readonly #logger: LoggerPort;
 
     constructor(window: Gtk.Window, logger: LoggerPort) {
@@ -23,11 +24,24 @@ export class LogOpener implements Disposable {
     }
 
     dispose(): void {
+        this.#cancellable?.cancel();
+        this.#cancellable = undefined;
         this.#window = undefined;
     }
 
     async open(): Promise<void> {
-        const { cursor } = await findExtensionStartCursor(this.#logger);
+        if (!this.#window) {
+            this.#logger.info(
+                'skipping log open: log opener already destroyed',
+            );
+            return;
+        }
+
+        const cancellable = this.#getCancellable();
+        const { cursor } = await findExtensionStartCursor(
+            this.#logger,
+            cancellable,
+        );
 
         if (!this.#hasTerminalLauncher()) {
             this.#showFailureDialog(
@@ -38,8 +52,12 @@ export class LogOpener implements Disposable {
         }
 
         try {
-            await this.#launchTerminal(cursor);
+            await this.#launchTerminal(cursor, cancellable);
         } catch (error) {
+            if (isCancelledError(error)) {
+                return;
+            }
+
             this.#showFailureDialog(
                 MANUAL_COMMAND,
                 'Could not start the terminal launcher.',
@@ -52,7 +70,15 @@ export class LogOpener implements Disposable {
         return GLib.find_program_in_path('xdg-terminal-exec') !== null;
     }
 
-    async #launchTerminal(cursor: string | undefined): Promise<void> {
+    #getCancellable(): Gio.Cancellable {
+        this.#cancellable ??= new Gio.Cancellable();
+        return this.#cancellable;
+    }
+
+    async #launchTerminal(
+        cursor: string | undefined,
+        cancellable: Gio.Cancellable,
+    ): Promise<void> {
         const argv = this.#buildJournalArgs(cursor);
         const proc = new Gio.Subprocess({
             argv: ['xdg-terminal-exec', '--', ...argv],
@@ -61,8 +87,11 @@ export class LogOpener implements Disposable {
                 Gio.SubprocessFlags.STDERR_PIPE,
         });
         // Gio.Subprocess.init() returns boolean; failure caught by exception
-        void proc.init(null);
-        const [stdout, stderr] = await proc.communicate_utf8_async(null, null);
+        void proc.init(cancellable);
+        const [stdout, stderr] = await proc.communicate_utf8_async(
+            null,
+            cancellable,
+        );
 
         const status = proc.get_exit_status();
         if (status !== 0) {
@@ -121,4 +150,11 @@ export class LogOpener implements Disposable {
         void dialog.connect('response', () => dialog.destroy());
         dialog.present();
     }
+}
+
+function isCancelledError(error: unknown): boolean {
+    return (
+        error instanceof GLib.Error &&
+        error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)
+    );
 }

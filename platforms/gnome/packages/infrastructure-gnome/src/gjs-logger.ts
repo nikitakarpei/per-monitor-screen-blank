@@ -3,19 +3,22 @@ import type { LoggerPort } from '@pmsb/application';
 export class GjsLogger implements LoggerPort {
     constructor(private readonly prefix: string) {}
 
-    info(message: string) {
-        log(`${this.prefix} INFO: ${message}`);
+    info(message: string): void {
+        globalThis.console.debug(`${this.prefix} INFO: ${message}`);
     }
 
-    warn(message: string) {
-        log(`${this.prefix} WARN: ${message}`);
+    warn(message: string): void {
+        globalThis.console.debug(`${this.prefix} WARN: ${message}`);
     }
 
-    error(message: string, exception?: object) {
+    error(message: string, exception?: object): void {
         if (exception) {
-            logError(exception, `${this.prefix} ERROR: ${message}`);
+            globalThis.console.error(
+                `${this.prefix} ERROR: ${message}`,
+                exception,
+            );
         } else {
-            logError(`${this.prefix} ERROR: ${message}`);
+            globalThis.console.error(`${this.prefix} ERROR: ${message}`);
         }
     }
 }

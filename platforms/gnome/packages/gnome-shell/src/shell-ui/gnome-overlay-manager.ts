@@ -173,13 +173,6 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             );
         }
 
-        try {
-            actor.destroy();
-        } catch (error) {
-            this.#logger.error(
-                `failed to destroy overlay actor: ${monitorId}`,
-                error as object | undefined,
-            );
-        }
+        actor.destroy();
     }
 }

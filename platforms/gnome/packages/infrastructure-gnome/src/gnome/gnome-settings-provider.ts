@@ -11,8 +11,8 @@ import {
 export class GnomeSettingsProvider {
     readonly #schemaSource: Gio.SettingsSchemaSource;
 
-    constructor(extensionRoot: string | Gio.File) {
-        this.#schemaSource = this.#loadSchemaSource(extensionRoot);
+    constructor(extensionRootPath: string) {
+        this.#schemaSource = this.#loadSchemaSource(extensionRootPath);
     }
 
     createMainSettings(): Gio.Settings {
@@ -29,20 +29,12 @@ export class GnomeSettingsProvider {
         );
     }
 
-    #loadSchemaSource(
-        extensionRoot: string | Gio.File,
-    ): Gio.SettingsSchemaSource {
-        const schemaDirectory = this.#resolveSchemaDirectory(extensionRoot);
-        if (!schemaDirectory.query_exists(null)) {
+    #loadSchemaSource(extensionRootPath: string): Gio.SettingsSchemaSource {
+        const schemaDirectoryPath =
+            this.#resolveSchemaDirectoryPath(extensionRootPath);
+        if (!GLib.file_test(schemaDirectoryPath, GLib.FileTest.EXISTS)) {
             throw new Error(
                 `per-monitor-screen-blank: schema directory not found under extension root`,
-            );
-        }
-
-        const schemaDirectoryPath = schemaDirectory.get_path();
-        if (schemaDirectoryPath === null || schemaDirectoryPath === '') {
-            throw new Error(
-                `per-monitor-screen-blank: schema directory path is unavailable`,
             );
         }
 
@@ -62,7 +54,7 @@ export class GnomeSettingsProvider {
         }
 
         try {
-            return new Gio.Settings({ settings_schema: schema, path });
+            return Gio.Settings.new_full(schema, null, path);
         } catch (error) {
             throw new Error(
                 `per-monitor-screen-blank: failed to construct settings for schema ${schemaId} at ${path}`,
@@ -71,13 +63,7 @@ export class GnomeSettingsProvider {
         }
     }
 
-    #resolveSchemaDirectory(extensionRoot: string | Gio.File): Gio.File {
-        if (typeof extensionRoot === 'string') {
-            return Gio.File.new_for_path(
-                GLib.build_filenamev([extensionRoot, 'schemas']),
-            );
-        }
-
-        return extensionRoot.get_child('schemas');
+    #resolveSchemaDirectoryPath(extensionRootPath: string): string {
+        return GLib.build_filenamev([extensionRootPath, 'schemas']);
     }
 }

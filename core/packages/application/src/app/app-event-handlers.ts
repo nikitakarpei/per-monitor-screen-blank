@@ -38,7 +38,7 @@ import { disableMonitorsOnProfileInactivation } from './use-cases/disable-monito
 import { persistMonitorIdentity } from './use-cases/persist-monitor-identity.js';
 import { applyIdleTimeoutToAutoAwakeMonitors } from './use-cases/apply-idle-timeout-to-auto-awake-monitors.js';
 import { applyKeepAwakeDurationToKeepAwakeMonitors } from './use-cases/apply-keep-awake-duration-to-keep-awake-monitors.js';
-import { applyPointerMonitorTimerPolicy } from './use-cases/apply-pointer-monitor-timer-policy.js';
+import { applyPointerTimerPolicy } from './use-cases/apply-pointer-timer-policy.js';
 import { registerPointerMenuShortcut } from './use-cases/register-pointer-menu-shortcut.js';
 import { setupConnectedMonitor } from './use-cases/setup-connected-monitor.js';
 
@@ -136,10 +136,7 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
         (payload) => (deps.quickSettings.visible = payload.visible),
     );
     void deps.bus.on('pointer-monitor-timer-policy-changed', (payload) =>
-        applyPointerMonitorTimerPolicy(
-            deps,
-            payload.shouldMonitorAutoBlackWhenFocused,
-        ),
+        applyPointerTimerPolicy(deps, payload.autoBlackWhenFocused),
     );
     void deps.bus.on('pointer-shortcut-changed', (payload) =>
         registerPointerMenuShortcut(deps, payload.shortcut),

@@ -152,7 +152,7 @@ export class GnomeGeneralSettings implements GeneralSettings {
     }
 
     observePointerMonitorTimerPolicyChanged(
-        callback: (shouldMonitorAutoBlackWhenFocused: boolean) => void,
+        callback: (autoBlackWhenFocused: boolean) => void,
     ): Disposable {
         return this.#observeBooleanSetting(
             GSETTINGS_KEYS.disableAutoTimerOnPointerMonitor,
