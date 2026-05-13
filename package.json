@@ -8,6 +8,7 @@
         "platforms/*/packages/*"
     ],
     "scripts": {
+        "build:gnome": "sh platforms/gnome/scripts/build-gnome.sh",
         "lint": "eslint core/packages/*/src platforms/*/packages/*/src && knip --reporter compact",
         "format": "prettier --write core/packages/*/src platforms/*/packages/*/src",
         "format:check": "prettier --check core/packages/*/src platforms/*/packages/*/src",
@@ -51,6 +52,7 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@girs/gnome-shell": "49.1.0",
+        "@rollup/plugin-typescript": "^12.3.0",
         "esbuild": "^0.28.0",
         "eslint": "^10.2.1",
         "eslint-config-prettier": "^10.1.8",
@@ -63,6 +65,8 @@
         "knip": "^6.4.1",
         "lint-staged": "^16.4.0",
         "prettier": "^3.8.3",
+        "rollup": "^4.60.3",
+        "rollup-plugin-tsconfig-paths": "^1.5.2",
         "semver": "^7.7.4",
         "simple-git-hooks": "^2.13.1",
         "ts-api-utils": "^2.5.0",

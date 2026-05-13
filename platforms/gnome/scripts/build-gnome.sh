@@ -24,27 +24,14 @@ cp \
   "$OUT/"
 cp -R "$GNOME_PLATFORM_ROOT/assets/schemas/." "$OUT/schemas/"
 
-# Bundle extension.js and prefs.js with esbuild.
-# gi:// and resource:// are GJS runtime modules — marked external so
-# esbuild leaves them as bare imports for GJS to resolve at runtime.
-# Source maps are generated for easier debugging of runtime errors.
-npx esbuild \
-  --bundle \
-  --format=esm \
-  --platform=neutral \
-  --external:gi://* \
-  --external:resource://* \
-  --sourcemap \
-  --entry-names=[name] \
-  --outdir="$OUT" \
-  --alias:@pmsb/lifecycle="$REPOSITORY_ROOT/core/packages/lifecycle/src/index.ts" \
-  --alias:@pmsb/domain="$REPOSITORY_ROOT/core/packages/domain/src/index.ts" \
-  --alias:@pmsb/application="$REPOSITORY_ROOT/core/packages/application/src/index.ts" \
-  --alias:@pmsb/infrastructure-gnome="$REPOSITORY_ROOT/platforms/gnome/packages/infrastructure-gnome/src/index.ts" \
-  --alias:@pmsb/gnome-shell="$REPOSITORY_ROOT/platforms/gnome/packages/gnome-shell/src/index.ts" \
-  --alias:@pmsb/gnome-prefs="$REPOSITORY_ROOT/platforms/gnome/packages/gnome-prefs/src/index.ts" \
-  "$REPOSITORY_ROOT/platforms/gnome/packages/gnome-composition/src/extension.ts" \
-  "$REPOSITORY_ROOT/platforms/gnome/packages/gnome-composition/src/prefs.ts"
+# Build extension.js and prefs.js with Rollup while preserving modules.
+# gi:// and resource:// externals are handled by the Rollup config.
+# Package aliases come from the root tsconfig.json.
+cd "$REPOSITORY_ROOT"
+GNOME_ROLLUP_OUT_DIR="$OUT" \
+  GNOME_ROLLUP_EXTENSION_ENTRY="$GNOME_PLATFORM_ROOT/packages/gnome-composition/src/extension.ts" \
+  GNOME_ROLLUP_PREFS_ENTRY="$GNOME_PLATFORM_ROOT/packages/gnome-composition/src/prefs.ts" \
+  npx rollup --config "$GNOME_PLATFORM_ROOT/scripts/rollup.config.js"
 
 glib-compile-schemas "$OUT/schemas"
 

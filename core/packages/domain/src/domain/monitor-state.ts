@@ -1,4 +1,4 @@
-import type { MonitorMode } from './monitor-mode';
+import type { MonitorMode } from './monitor-mode.js';
 
 export type MonitorState =
     | 'Disabled'

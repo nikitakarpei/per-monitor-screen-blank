@@ -2,12 +2,14 @@
     "workspaces": {
         ".": {
             "entry": [
+                "platforms/gnome/scripts/rollup.config.js",
                 "platforms/gnome/packages/gnome-shell/src/shell-ambient.d.ts",
                 "platforms/gnome/packages/gnome-prefs/src/prefs-ambient.d.ts"
             ],
             "project": [
                 "core/packages/*/src/**/*.ts",
-                "platforms/*/packages/*/src/**/*.ts"
+                "platforms/*/packages/*/src/**/*.ts",
+                "platforms/gnome/scripts/rollup.config.js"
             ]
         },
         "core/packages/application": {
