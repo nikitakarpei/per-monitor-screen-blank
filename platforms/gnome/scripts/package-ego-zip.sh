@@ -57,6 +57,7 @@ if ! command -v sha256sum >/dev/null 2>&1; then
 fi
 
 sha256_path="${zip_path}.sha256"
-sha256sum "$zip_path" > "$sha256_path"
+zip_name=$(basename "$zip_path")
+( cd "$out_dir" && sha256sum "$zip_name" ) > "$sha256_path"
 
 printf '%s\n' "Wrote: $zip_path" "Checksum: $sha256_path" "Check layout: unzip -l \"$zip_path\" | head"
