@@ -11,6 +11,7 @@ export {
 export { GnomeDeadlineScheduler } from './gnome/shared/gnome-deadline-scheduler.js';
 export { GnomeGeneralSettings } from './gnome/gnome-general-settings.js';
 export { GnomeGeneralSettingsWatcher } from './gnome/gnome-general-settings-watcher.js';
+export { GnomeExtensionLifecycleState } from './gnome/extension-lifecycle-state.js';
 export { GnomeSettingsProvider } from './gnome/gnome-settings-provider.js';
 export {
     GnomeProfileSettings,

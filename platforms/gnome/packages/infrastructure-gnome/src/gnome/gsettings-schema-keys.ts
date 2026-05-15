@@ -11,6 +11,7 @@ export const GSETTINGS_KEYS = {
     keepAwakeMinutes: 'keep-awake-minutes',
     showQuickSettingsMenu: 'show-quick-settings-menu',
     showIssueNotifications: 'show-issue-notifications',
+    lastEnabledAtUsec: 'last-enabled-at-usec',
     disableAutoTimerOnPointerMonitor: 'disable-auto-timer-on-pointer-monitor',
     disableWindowObstructionPolicy: 'disable-window-obstruction-policy',
     fadeDurationMs: 'fade-duration-ms',

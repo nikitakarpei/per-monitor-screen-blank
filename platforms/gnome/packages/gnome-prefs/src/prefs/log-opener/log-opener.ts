@@ -4,10 +4,13 @@ import Adw from 'gi://Adw';
 import type Gtk from 'gi://Gtk';
 import type { LoggerPort } from '@pmsb/application';
 import type { Disposable } from '@pmsb/lifecycle';
-import { findExtensionStartCursor } from './journal-cursor-finder.js';
 
 const MANUAL_COMMAND =
     'journalctl --user -f --no-pager -g per-monitor-screen-blank';
+
+interface ExtensionLifecycleTimestampReader {
+    getLastEnabledAtUsec(): number;
+}
 
 /**
  * Controller for opening extension logs in a terminal.
@@ -17,10 +20,16 @@ export class LogOpener implements Disposable {
     #window: Gtk.Window | undefined;
     #cancellable: Gio.Cancellable | undefined;
     readonly #logger: LoggerPort;
+    readonly #lifecycleState: ExtensionLifecycleTimestampReader;
 
-    constructor(window: Gtk.Window, logger: LoggerPort) {
+    constructor(
+        window: Gtk.Window,
+        logger: LoggerPort,
+        lifecycleState: ExtensionLifecycleTimestampReader,
+    ) {
         this.#window = window;
         this.#logger = logger;
+        this.#lifecycleState = lifecycleState;
     }
 
     dispose(): void {
@@ -37,25 +46,18 @@ export class LogOpener implements Disposable {
             return;
         }
 
-        const cancellable = this.#getCancellable();
-        findExtensionStartCursor(this.#logger, cancellable, ({ cursor }) => {
-            if (!this.#window) {
-                this.#logger.info(
-                    'skipping terminal launch: log opener already destroyed',
-                );
-                return;
-            }
+        if (!this.#hasTerminalLauncher()) {
+            this.#showFailureDialog(
+                MANUAL_COMMAND,
+                'No terminal launcher (xdg-terminal-exec) was found in PATH.',
+            );
+            return;
+        }
 
-            if (!this.#hasTerminalLauncher()) {
-                this.#showFailureDialog(
-                    MANUAL_COMMAND,
-                    'No terminal launcher (xdg-terminal-exec) was found in PATH.',
-                );
-                return;
-            }
-
-            this.#launchTerminal(cursor, cancellable);
-        });
+        this.#launchTerminal(
+            this.#lifecycleState.getLastEnabledAtUsec(),
+            this.#getCancellable(),
+        );
     }
 
     #hasTerminalLauncher(): boolean {
@@ -68,11 +70,11 @@ export class LogOpener implements Disposable {
     }
 
     #launchTerminal(
-        cursor: string | undefined,
+        lastEnabledAtUsec: number,
         cancellable: Gio.Cancellable,
     ): void {
         try {
-            const argv = this.#buildJournalArgs(cursor);
+            const argv = this.#buildJournalArgs(lastEnabledAtUsec);
             const proc = new Gio.Subprocess({
                 argv: ['xdg-terminal-exec', '--', ...argv],
                 flags:
@@ -126,7 +128,7 @@ export class LogOpener implements Disposable {
         );
     }
 
-    #buildJournalArgs(cursor: string | undefined): string[] {
+    #buildJournalArgs(lastEnabledAtUsec: number): string[] {
         return [
             'journalctl',
             '--user',
@@ -134,7 +136,9 @@ export class LogOpener implements Disposable {
             '--no-pager',
             '-g',
             'per-monitor-screen-blank',
-            ...(cursor === undefined ? [] : [`--cursor=${cursor}`]),
+            ...(lastEnabledAtUsec > 0
+                ? [`--since=@${Math.floor(lastEnabledAtUsec / 1_000_000)}`]
+                : []),
         ];
     }
 

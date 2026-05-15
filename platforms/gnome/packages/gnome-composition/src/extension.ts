@@ -14,6 +14,7 @@ import type { LoggerPort } from '@pmsb/application';
 import {
     GjsLogger,
     GnomeDeadlineScheduler,
+    GnomeExtensionLifecycleState,
     GnomeGeneralSettings,
     GnomeGeneralSettingsWatcher,
     GnomeProfileSettings,
@@ -56,6 +57,9 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         const settingsProvider = new GnomeSettingsProvider(this.path);
 
         const gioSettings = settingsProvider.createMainSettings();
+
+        const lifecycleState = new GnomeExtensionLifecycleState(gioSettings);
+        lifecycleState.recordEnabledNow();
 
         const generalSettings = new GnomeGeneralSettings(gioSettings);
 

@@ -9,6 +9,7 @@ import {
 import type { LoggerPort } from '@pmsb/application';
 import {
     GjsLogger,
+    GnomeExtensionLifecycleState,
     GnomeGeneralSettings,
     GnomeGeneralSettingsWatcher,
     GnomeProfileSettings,
@@ -44,6 +45,8 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
         try {
             const settingsProvider = new GnomeSettingsProvider(this.path);
             const settings = settingsProvider.createMainSettings();
+
+            const lifecycleState = new GnomeExtensionLifecycleState(settings);
 
             const generalSettings = new GnomeGeneralSettings(settings);
 
@@ -118,7 +121,7 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
             rootScope.add(generalSettingsGroup);
             page.add(generalSettingsGroup);
 
-            const logOpener = new LogOpener(window, logger);
+            const logOpener = new LogOpener(window, logger, lifecycleState);
             rootScope.add(logOpener);
 
             const diagnosticsGroup = new DiagnosticsGroup(logOpener);

@@ -46,6 +46,11 @@
       <summary>Show issue notifications</summary>
       <description>Show user-facing notifications when the extension logs warnings or errors.</description>
     </key>
+    <key name="last-enabled-at-usec" type="x">
+      <default>0</default>
+      <summary>Last extension enable timestamp</summary>
+      <description>Unix epoch microseconds captured when the extension runtime was last enabled. Used by preferences to show logs from the current extension session without relying on log marker messages.</description>
+    </key>
     <key name="disable-auto-timer-on-pointer-monitor" type="b">
       <default>false</default>
       <summary>Disable auto timer on pointer monitor</summary>
