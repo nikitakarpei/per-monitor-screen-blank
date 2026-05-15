@@ -121,7 +121,7 @@ export default class PerMonitorScreenBlankPreferences extends ExtensionPreferenc
             const logOpener = new LogOpener(window, logger);
             rootScope.add(logOpener);
 
-            const diagnosticsGroup = new DiagnosticsGroup(logger, logOpener);
+            const diagnosticsGroup = new DiagnosticsGroup(logOpener);
             rootScope.add(diagnosticsGroup);
             page.add(diagnosticsGroup);
 

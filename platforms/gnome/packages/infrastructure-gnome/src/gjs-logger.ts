@@ -4,7 +4,7 @@ export class GjsLogger implements LoggerPort {
     constructor(private readonly prefix: string) {}
 
     info(message: string): void {
-        console.log(`${this.prefix} INFO: ${message}`);
+        console.info(`${this.prefix} INFO: ${message}`);
     }
 
     warn(message: string): void {

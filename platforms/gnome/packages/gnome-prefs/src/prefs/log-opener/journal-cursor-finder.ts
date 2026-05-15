@@ -1,15 +1,17 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import type { LoggerPort } from '@pmsb/application';
-import { communicateSubprocessUtf8 } from './subprocess-communicator.js';
 
-export async function findExtensionStartCursor(
-    logger: LoggerPort,
-    cancellable: Gio.Cancellable,
-): Promise<{
+interface ExtensionStartCursorResult {
     readonly cursor: string | undefined;
     readonly found: boolean;
-}> {
+}
+
+export function findExtensionStartCursor(
+    logger: LoggerPort,
+    cancellable: Gio.Cancellable,
+    onComplete: (result: ExtensionStartCursorResult) => void,
+): void {
     try {
         const proc = new Gio.Subprocess({
             argv: [
@@ -26,31 +28,44 @@ export async function findExtensionStartCursor(
         });
         // Gio.Subprocess.init() returns boolean; failure caught by exception
         void proc.init(cancellable);
-        const [stdout] = await communicateSubprocessUtf8(
-            proc,
-            null,
-            cancellable,
-        );
 
-        if (!stdout.trim()) {
-            return { cursor: undefined, found: true };
-        }
+        proc.communicate_utf8_async(null, cancellable, (_source, result) => {
+            try {
+                const [, stdout] = proc.communicate_utf8_finish(result);
 
-        const entry = JSON.parse(stdout.trim()) as {
-            readonly __CURSOR?: string;
-        };
-        return { cursor: entry.__CURSOR, found: true };
+                if (!stdout.trim()) {
+                    onComplete({ cursor: undefined, found: true });
+                    return;
+                }
+
+                const entry = JSON.parse(stdout.trim()) as {
+                    readonly __CURSOR?: string;
+                };
+                onComplete({ cursor: entry.__CURSOR, found: true });
+            } catch (error) {
+                handleCursorLookupError(logger, error, onComplete);
+            }
+        });
     } catch (error) {
-        if (isCancelledError(error)) {
-            return { cursor: undefined, found: false };
-        }
-
-        logger.error(
-            `failed to read extension start cursor from journal`,
-            error as object | undefined,
-        );
-        return { cursor: undefined, found: false };
+        handleCursorLookupError(logger, error, onComplete);
     }
+}
+
+function handleCursorLookupError(
+    logger: LoggerPort,
+    error: unknown,
+    onComplete: (result: ExtensionStartCursorResult) => void,
+): void {
+    if (isCancelledError(error)) {
+        onComplete({ cursor: undefined, found: false });
+        return;
+    }
+
+    logger.error(
+        `failed to read extension start cursor from journal`,
+        error as object | undefined,
+    );
+    onComplete({ cursor: undefined, found: false });
 }
 
 function isCancelledError(error: unknown): boolean {

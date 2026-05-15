@@ -5,7 +5,6 @@ import type Gtk from 'gi://Gtk';
 import type { LoggerPort } from '@pmsb/application';
 import type { Disposable } from '@pmsb/lifecycle';
 import { findExtensionStartCursor } from './journal-cursor-finder.js';
-import { communicateSubprocessUtf8 } from './subprocess-communicator.js';
 
 const MANUAL_COMMAND =
     'journalctl --user -f --no-pager -g per-monitor-screen-blank';
@@ -30,7 +29,7 @@ export class LogOpener implements Disposable {
         this.#window = undefined;
     }
 
-    async open(): Promise<void> {
+    open(): void {
         if (!this.#window) {
             this.#logger.info(
                 'skipping log open: log opener already destroyed',
@@ -39,32 +38,24 @@ export class LogOpener implements Disposable {
         }
 
         const cancellable = this.#getCancellable();
-        const { cursor } = await findExtensionStartCursor(
-            this.#logger,
-            cancellable,
-        );
-
-        if (!this.#hasTerminalLauncher()) {
-            this.#showFailureDialog(
-                MANUAL_COMMAND,
-                'No terminal launcher (xdg-terminal-exec) was found in PATH.',
-            );
-            return;
-        }
-
-        try {
-            await this.#launchTerminal(cursor, cancellable);
-        } catch (error) {
-            if (isCancelledError(error)) {
+        findExtensionStartCursor(this.#logger, cancellable, ({ cursor }) => {
+            if (!this.#window) {
+                this.#logger.info(
+                    'skipping terminal launch: log opener already destroyed',
+                );
                 return;
             }
 
-            this.#showFailureDialog(
-                MANUAL_COMMAND,
-                'Could not start the terminal launcher.',
-                String(error),
-            );
-        }
+            if (!this.#hasTerminalLauncher()) {
+                this.#showFailureDialog(
+                    MANUAL_COMMAND,
+                    'No terminal launcher (xdg-terminal-exec) was found in PATH.',
+                );
+                return;
+            }
+
+            this.#launchTerminal(cursor, cancellable);
+        });
     }
 
     #hasTerminalLauncher(): boolean {
@@ -76,33 +67,63 @@ export class LogOpener implements Disposable {
         return this.#cancellable;
     }
 
-    async #launchTerminal(
+    #launchTerminal(
         cursor: string | undefined,
         cancellable: Gio.Cancellable,
-    ): Promise<void> {
-        const argv = this.#buildJournalArgs(cursor);
-        const proc = new Gio.Subprocess({
-            argv: ['xdg-terminal-exec', '--', ...argv],
-            flags:
-                Gio.SubprocessFlags.STDOUT_PIPE |
-                Gio.SubprocessFlags.STDERR_PIPE,
-        });
-        // Gio.Subprocess.init() returns boolean; failure caught by exception
-        void proc.init(cancellable);
-        const [stdout, stderr] = await communicateSubprocessUtf8(
-            proc,
-            null,
-            cancellable,
-        );
+    ): void {
+        try {
+            const argv = this.#buildJournalArgs(cursor);
+            const proc = new Gio.Subprocess({
+                argv: ['xdg-terminal-exec', '--', ...argv],
+                flags:
+                    Gio.SubprocessFlags.STDOUT_PIPE |
+                    Gio.SubprocessFlags.STDERR_PIPE,
+            });
+            // Gio.Subprocess.init() returns boolean; failure caught by exception
+            void proc.init(cancellable);
 
-        const status = proc.get_exit_status();
-        if (status !== 0) {
-            const stdoutText = stdout.trim();
-            const stderrText = stderr.trim();
-            throw new Error(
-                `Exit code ${status}: ${stderrText || stdoutText || 'Unknown error'}`,
+            proc.communicate_utf8_async(
+                null,
+                cancellable,
+                (_source, result) => {
+                    try {
+                        const [, stdout, stderr] =
+                            proc.communicate_utf8_finish(result);
+                        const status = proc.get_exit_status();
+
+                        if (status !== 0) {
+                            const stdoutText = stdout.trim();
+                            const stderrText = stderr.trim();
+                            this.#handleTerminalLaunchError(
+                                new Error(
+                                    `Exit code ${status}: ${stderrText || stdoutText || 'Unknown error'}`,
+                                ),
+                            );
+                        }
+                    } catch (error) {
+                        this.#handleTerminalLaunchError(error);
+                    }
+                },
             );
+        } catch (error) {
+            this.#handleTerminalLaunchError(error);
         }
+    }
+
+    #handleTerminalLaunchError(error: unknown): void {
+        if (isCancelledError(error)) {
+            return;
+        }
+
+        this.#logger.error(
+            'failed to open extension logs',
+            error as object | undefined,
+        );
+        this.#showFailureDialog(
+            MANUAL_COMMAND,
+            'Could not start the terminal launcher.',
+            String(error),
+        );
     }
 
     #buildJournalArgs(cursor: string | undefined): string[] {

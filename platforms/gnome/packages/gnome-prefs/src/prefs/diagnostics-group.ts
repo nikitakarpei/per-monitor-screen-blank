@@ -2,7 +2,6 @@ import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
 import type { LogOpener } from './log-opener/log-opener.js';
-import type { LoggerPort } from '@pmsb/application';
 import type { Disposable } from '@pmsb/lifecycle';
 
 export class DiagnosticsGroup
@@ -15,7 +14,7 @@ export class DiagnosticsGroup
 
     readonly #logOpener: LogOpener;
 
-    constructor(logger: LoggerPort, logOpener: LogOpener) {
+    constructor(logOpener: LogOpener) {
         super({ title: 'Troubleshooting' });
 
         this.#logOpener = logOpener;
@@ -31,9 +30,7 @@ export class DiagnosticsGroup
         });
 
         void button.connect('clicked', () => {
-            this.#logOpener.open().catch(() => {
-                logger.warn('failed to open extension logs');
-            });
+            this.#logOpener.open();
         });
 
         row.add_suffix(button);
