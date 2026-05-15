@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          submodules: true
+          shallow-submodules: true
 
       - uses: actions/setup-node@v6
         with:
@@ -34,6 +38,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: EGO lint GNOME extension
+        run: sh platforms/gnome/scripts/ego-lint.sh
 
       - name: Test
         run: npm run test -- --run

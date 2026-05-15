@@ -20,22 +20,9 @@ uuid="per-monitor-screen-blank@nikitakarpei.github.io"
 out_dir="$GNOME_DIST_DIR"
 zip_path="$out_dir/${uuid}.zip"
 
-sh "$GNOME_SCRIPTS_DIR/build-gnome.sh"
+sh "$GNOME_SCRIPTS_DIR/ego-lint.sh"
 
 src="$out_dir/$uuid"
-
-if [ ! -f "$src/metadata.json" ]; then
-  printf 'ERROR: built extension missing: %s\n' "$src" >&2
-  exit 1
-fi
-
-reviewer_ego_lint="$GNOME_VENDOR_DIR/gnome-extension-reviewer/ego-lint"
-if [ ! -f "$reviewer_ego_lint" ] || [ ! -r "$reviewer_ego_lint" ]; then
-  printf '%s\n' 'ERROR: ego-lint not found or not readable.' >&2
-  exit 1
-fi
-
-sh "$reviewer_ego_lint" "$src" --no-report
 
 if ! command -v zip >/dev/null 2>&1; then
   printf 'ERROR: zip command not found.\n' >&2
