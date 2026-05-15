@@ -1,6 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import type { LoggerPort } from '@pmsb/application';
+import { communicateSubprocessUtf8 } from './subprocess-communicator.js';
 
 export async function findExtensionStartCursor(
     logger: LoggerPort,
@@ -25,7 +26,11 @@ export async function findExtensionStartCursor(
         });
         // Gio.Subprocess.init() returns boolean; failure caught by exception
         void proc.init(cancellable);
-        const [stdout] = await proc.communicate_utf8_async(null, cancellable);
+        const [stdout] = await communicateSubprocessUtf8(
+            proc,
+            null,
+            cancellable,
+        );
 
         if (!stdout.trim()) {
             return { cursor: undefined, found: true };

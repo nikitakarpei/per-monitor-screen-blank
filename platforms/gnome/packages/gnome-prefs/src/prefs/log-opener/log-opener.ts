@@ -5,6 +5,7 @@ import type Gtk from 'gi://Gtk';
 import type { LoggerPort } from '@pmsb/application';
 import type { Disposable } from '@pmsb/lifecycle';
 import { findExtensionStartCursor } from './journal-cursor-finder.js';
+import { communicateSubprocessUtf8 } from './subprocess-communicator.js';
 
 const MANUAL_COMMAND =
     'journalctl --user -f --no-pager -g per-monitor-screen-blank';
@@ -88,7 +89,8 @@ export class LogOpener implements Disposable {
         });
         // Gio.Subprocess.init() returns boolean; failure caught by exception
         void proc.init(cancellable);
-        const [stdout, stderr] = await proc.communicate_utf8_async(
+        const [stdout, stderr] = await communicateSubprocessUtf8(
+            proc,
             null,
             cancellable,
         );
