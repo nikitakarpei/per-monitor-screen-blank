@@ -40,4 +40,4 @@ jobs:
           sha256_path=$(find platforms/gnome/dist -maxdepth 1 -name '*.zip.sha256' -print -quit)
           gh release create "$tag" "$zip_path" "$sha256_path" \
             --title "${tag}" \
-            --notes "Release ${tag}."
+            --generate-notes
