@@ -38,6 +38,6 @@ jobs:
           tag="${GITHUB_REF#refs/tags/}"
           zip_path=$(find platforms/gnome/dist -maxdepth 1 -name '*.zip' -print -quit)
           sha256_path=$(find platforms/gnome/dist -maxdepth 1 -name '*.zip.sha256' -print -quit)
-          gh release create "$tag" "$zip_path" "$sha256_path" \
-            --title "${tag}" \
-            --generate-notes
+          gh release create "$tag" --draft --title "${tag}" --generate-notes
+          gh release upload "$tag" "$zip_path" "$sha256_path"
+          gh release edit "$tag" --draft=false
