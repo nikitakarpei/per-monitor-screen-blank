@@ -273,6 +273,14 @@ export default tseslint.config(
         },
     },
     {
+        files: [
+            'platforms/gnome/packages/infrastructure-gnome/src/gjs-logger.ts',
+        ],
+        rules: {
+            'no-console': 'off',
+        },
+    },
+    {
         files: ['platforms/gnome/packages/gnome-shell/src/**/*.ts'],
         rules: {
             'no-restricted-imports': [
