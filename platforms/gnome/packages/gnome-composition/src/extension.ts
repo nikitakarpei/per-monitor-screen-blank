@@ -188,6 +188,8 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             quickSettings,
         });
 
+        profileSettings.ensureLastActiveProfileId();
+
         platformBus.emit({
             type: 'application-bootstrap-requested',
             payload: {},

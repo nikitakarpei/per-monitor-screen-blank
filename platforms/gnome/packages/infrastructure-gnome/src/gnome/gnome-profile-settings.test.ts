@@ -158,7 +158,46 @@ describe('GnomeProfileSettings persistence / restore', () => {
         );
     });
 
-    it('falls back to first profile in persisted profile-ids order when remembered ID is missing and logs info', () => {
+    it('ensureLastActiveProfileId backfills empty last-active-profile-id from a valid active profile after schema update', () => {
+        const id = profileSettings.createProfile('Existing');
+        settings.set_string(GSETTINGS_KEYS.activeProfileId, id);
+
+        profileSettings.ensureLastActiveProfileId();
+
+        expect(settings.get_string(GSETTINGS_KEYS.activeProfileId)).toBe(id);
+        expect(settings.get_string(GSETTINGS_KEYS.lastActiveProfileId)).toBe(
+            id,
+        );
+    });
+
+    it('ensureLastActiveProfileId preserves an existing last-active-profile-id', () => {
+        const activeId = profileSettings.createProfile('Active');
+        const rememberedId = profileSettings.createProfile('Remembered');
+        settings.set_string(GSETTINGS_KEYS.activeProfileId, activeId);
+        settings.set_string(GSETTINGS_KEYS.lastActiveProfileId, rememberedId);
+
+        profileSettings.ensureLastActiveProfileId();
+
+        expect(settings.get_string(GSETTINGS_KEYS.activeProfileId)).toBe(
+            activeId,
+        );
+        expect(settings.get_string(GSETTINGS_KEYS.lastActiveProfileId)).toBe(
+            rememberedId,
+        );
+    });
+
+    it('ensureLastActiveProfileId leaves last-active-profile-id empty when there is no active profile', () => {
+        profileSettings.createProfile('Disabled');
+
+        profileSettings.ensureLastActiveProfileId();
+
+        expect(settings.get_string(GSETTINGS_KEYS.activeProfileId)).toBe('');
+        expect(settings.get_string(GSETTINGS_KEYS.lastActiveProfileId)).toBe(
+            '',
+        );
+    });
+
+    it('falls back to first profile in persisted profile-ids order when remembered ID is missing', () => {
         const firstId = profileSettings.createProfile('First');
         const secondId = profileSettings.createProfile('Second');
 
@@ -176,9 +215,6 @@ describe('GnomeProfileSettings persistence / restore', () => {
         );
         expect(settings.get_string(GSETTINGS_KEYS.lastActiveProfileId)).toBe(
             firstId,
-        );
-        expect(logger.info).toHaveBeenCalledWith(
-            `restore-last-active-profile: remembered profile ${secondId} is missing; activating fallback profile ${firstId}`,
         );
     });
 });

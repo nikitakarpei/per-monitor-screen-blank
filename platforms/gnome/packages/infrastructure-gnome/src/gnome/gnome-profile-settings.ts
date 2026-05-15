@@ -36,6 +36,43 @@ export class GnomeProfileSettings implements ProfileSettings {
         }
     }
 
+    ensureLastActiveProfileId(): void {
+        const profileIds = this.getProfileIds();
+        const lastId = this.#settings.get_string(
+            GSETTINGS_KEYS.lastActiveProfileId,
+        );
+        if (lastId !== '') {
+            return;
+        }
+
+        const activeId = this.#settings.get_string(
+            GSETTINGS_KEYS.activeProfileId,
+        );
+        if (activeId === '') {
+            return;
+        }
+
+        if (!profileIds.includes(activeId)) {
+            this.#logger.warn(
+                `ensure-last-active-profile-id: active profile ${activeId} is missing; leaving last active profile unset`,
+            );
+            return;
+        }
+
+        this.#logger.info(
+            `ensure-last-active-profile-id: backfilling last active profile id from active profile ${activeId}`,
+        );
+        const saved = this.#settings.set_string(
+            GSETTINGS_KEYS.lastActiveProfileId,
+            activeId,
+        );
+        if (!saved) {
+            throw new Error(
+                `failed to backfill last active profile id to ${activeId}`,
+            );
+        }
+    }
+
     getProfileIds(): readonly ProfileId[] {
         return this.#readProfileIds();
     }
