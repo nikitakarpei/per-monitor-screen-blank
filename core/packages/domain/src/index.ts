@@ -1,20 +1,20 @@
-export { DEADLINE_KEYS, type DeadlineKey } from './domain/deadline-keys.js';
-export { MonitorEntity } from './domain/monitor-entity.js';
-export { buildMonitorLabel } from './domain/monitor-identity.js';
-export { getMonitorModeLabel } from './domain/monitor-mode-labels.js';
+export { DEADLINE_KEYS, type DeadlineKey } from './deadline-keys.js';
+export { MonitorEntity } from './monitor-entity.js';
+export { buildMonitorLabel } from './monitor-identity.js';
+export { getMonitorModeLabel } from './monitor-mode-labels.js';
 export {
     MONITOR_MODES,
     type MonitorMode,
     DEFAULT_MONITOR_MODE,
     resolveMode,
-} from './domain/monitor-mode.js';
+} from './monitor-mode.js';
 export {
     type MonitorState,
     tryTransition,
     modeToInitialState,
     resolveAutoMonitorState,
     isAutoMonitorState,
-} from './domain/monitor-state.js';
+} from './monitor-state.js';
 export {
     type ProfileId,
     type Profile,
@@ -23,14 +23,14 @@ export {
     type PointerPosition,
     type Deadline,
     type KnownMonitorEntry,
-} from './domain/types.js';
+} from './types.js';
 export {
     normalizeDimIntensityPercent,
     dimIntensityPercentToOpacity,
-} from './domain/dim-intensity.js';
-export { normalizeFadeDurationMs } from './domain/fade-duration.js';
-export { buildLogicalMonitorIdentity } from './domain/monitor-identity-utilities.js';
+} from './dim-intensity.js';
+export { normalizeFadeDurationMs } from './fade-duration.js';
+export { buildLogicalMonitorIdentity } from './monitor-identity-utilities.js';
 export {
     buildIssueNotificationText,
     type IssueNotificationText,
-} from './domain/issue-notification.js';
+} from './issue-notification.js';
