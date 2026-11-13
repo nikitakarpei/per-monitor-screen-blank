@@ -12,3 +12,4 @@ export { type GnomeMonitorIndex } from './shell-infra/gnome-monitor-index.js';
 export { GnomeMonitorTracker } from './shell-infra/gnome-monitor-tracker.js';
 export { GnomePointerMenuShortcutManager } from './shell-infra/pointer-menu-keybinding-manager.js';
 export { ShellNotifications } from './shell-infra/shell-notifications.js';
+export { GnomePointerVisibility } from './shell-ui/gnome-pointer-visibility.js';

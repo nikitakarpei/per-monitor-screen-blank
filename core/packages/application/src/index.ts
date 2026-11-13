@@ -46,3 +46,4 @@ export { type LoggerPort } from './util/logger.js';
 export { type UserNotifications } from './util/user-notifications.js';
 export { DeduplicatingUserNotifications } from './util/deduplicating-user-notifications.js';
 export { IssueReportingLogger } from './util/issue-reporting-logger.js';
+export { type PointerVisibility } from './ports/pointer-visibility.js';
