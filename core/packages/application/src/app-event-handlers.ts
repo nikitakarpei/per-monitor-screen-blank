@@ -1,3 +1,5 @@
+import type { PointerVisibility } from './ports/pointer-visibility.js';
+import { registerPointerVisibilityHandlers } from './handlers/overlay-shown/handle-pointer-visibility.js';
 import type { DeadlineScheduler } from './ports/scheduler.js';
 
 import type { GeneralSettings } from './ports/general-settings.js';
@@ -49,6 +51,7 @@ interface EventHandlerDeps {
     profileSettings: ProfileSettings;
     deadlineScheduler: DeadlineScheduler;
     overlay: Overlay;
+    pointerVisibility: PointerVisibility;
     quickSettings: QuickSettings;
     pointerContextMenu: PointerContextMenu;
     pointerMenuShortcutManager: PointerMenuShortcutManager;
@@ -60,6 +63,7 @@ interface EventHandlerDeps {
 }
 
 export function registerAppEventHandlers(deps: EventHandlerDeps): void {
+    registerPointerVisibilityHandlers(deps);
     void deps.bus.on('state-changed', (payload) =>
         handleOverlaySyncStateChanged(deps, payload),
     );

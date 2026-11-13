@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GnomeOverlayManager } from './gnome-overlay-manager.js';
+import { GnomePointerVisibility } from './gnome-pointer-visibility.js';
 
 const mocks = vi.hoisted(() => ({
     inhibit: vi.fn(),
@@ -8,18 +8,13 @@ const mocks = vi.hoisted(() => ({
     tick: undefined as (() => boolean) | undefined,
     timeoutAdd: vi.fn(),
     sourceRemove: vi.fn(),
+    resolveIndex: vi.fn<(id: string) => number | undefined>(),
     monitors: [
         { x: 0, y: 0, width: 100, height: 100 },
         { x: 100, y: 0, width: 100, height: 100 },
     ],
 }));
 
-vi.mock('gi://Clutter', () => ({
-    default: {
-        BinLayout: class {},
-        AnimationMode: { EASE_IN_QUAD: 1, EASE_OUT_QUAD: 2 },
-    },
-}));
 vi.mock('gi://GLib', () => ({
     default: {
         PRIORITY_DEFAULT: 0,
@@ -28,53 +23,20 @@ vi.mock('gi://GLib', () => ({
         Source: { remove: mocks.sourceRemove },
     },
 }));
-vi.mock('gi://St', () => ({
-    default: {
-        Widget: class {
-            hide = vi.fn();
-            show = vi.fn();
-            add_constraint = vi.fn();
-            destroy = vi.fn();
-            ease(options: { onComplete?: () => void }): void {
-                options.onComplete?.();
-            }
-        },
-    },
-}));
-vi.mock('resource:///org/gnome/shell/misc/config.js', () => ({
-    PACKAGE_VERSION: '49',
-}));
-vi.mock('resource:///org/gnome/shell/ui/layout.js', () => ({
-    MonitorConstraint: class {},
-}));
 vi.mock('resource:///org/gnome/shell/ui/main.js', () => ({
     layoutManager: {
         monitors: mocks.monitors,
-        addChrome: vi.fn(),
-        removeChrome: vi.fn(),
     },
 }));
 
-function createManager(): GnomeOverlayManager {
-    return new GnomeOverlayManager(
-        { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-        {
-            getIndexByMonitorId: Number,
-            tryGetIndexByMonitorId: Number,
-            getMonitorIdByIndex: String,
-            tryGetMonitorIdByIndex: String,
-        },
-        { emit: vi.fn() },
-    );
-}
-
 describe('cursor visibility over monitor overlays', () => {
-    let manager: GnomeOverlayManager;
+    let pointerVisibility: GnomePointerVisibility;
 
     beforeEach(() => {
         vi.clearAllMocks();
         mocks.pointer = [10, 10];
         mocks.tick = undefined;
+        mocks.resolveIndex.mockImplementation(Number);
         mocks.timeoutAdd.mockImplementation(
             (_priority: number, _interval: number, tick: () => boolean) => {
                 mocks.tick = tick;
@@ -90,36 +52,38 @@ describe('cursor visibility over monitor overlays', () => {
             },
             get_pointer: () => mocks.pointer,
         });
-        manager = createManager();
-        manager.setDimIntensityPercent(100);
+        pointerVisibility = new GnomePointerVisibility({
+            getIndexByMonitorId: Number,
+            tryGetIndexByMonitorId: mocks.resolveIndex,
+            getMonitorIdByIndex: String,
+            tryGetMonitorIdByIndex: String,
+        });
     });
 
     afterEach(() => {
-        manager.dispose();
+        pointerVisibility.dispose();
         vi.unstubAllGlobals();
     });
 
-    it('does not poll while no monitor is fully blanked', () => {
-        expect(mocks.timeoutAdd).not.toHaveBeenCalled();
-        manager.setDimIntensityPercent(50);
-        manager.showForMonitor('0');
+    it('does not poll without hidden monitors', () => {
+        pointerVisibility.setHiddenMonitors([]);
         expect(mocks.timeoutAdd).not.toHaveBeenCalled();
     });
 
     it('hides the cursor when its monitor blanks and restores it on wake', () => {
-        manager.showForMonitor('0');
+        pointerVisibility.setHiddenMonitors(['0']);
         expect(mocks.inhibit).toHaveBeenCalledExactlyOnceWith();
-        manager.hideForMonitor('0');
+        pointerVisibility.setHiddenMonitors([]);
         expect(mocks.uninhibit).toHaveBeenCalledExactlyOnceWith();
     });
 
     it('leaves the cursor visible when another monitor blanks', () => {
-        manager.showForMonitor('1');
+        pointerVisibility.setHiddenMonitors(['1']);
         expect(mocks.inhibit).not.toHaveBeenCalled();
     });
 
     it('updates when the pointer enters and leaves a manually blanked monitor', () => {
-        manager.showForMonitor('1');
+        pointerVisibility.setHiddenMonitors(['1']);
         mocks.pointer = [110, 10];
         expect(mocks.tick?.()).toBe(true);
         expect(mocks.inhibit).toHaveBeenCalledOnce();
@@ -129,30 +93,32 @@ describe('cursor visibility over monitor overlays', () => {
     });
 
     it('pairs inhibition once even with multiple overlays and repeated samples', () => {
-        manager.showForMonitor('0');
-        manager.showForMonitor('1');
+        pointerVisibility.setHiddenMonitors(['0']);
+        pointerVisibility.setHiddenMonitors(['0', '1']);
         mocks.tick?.();
         mocks.pointer = [110, 10];
         mocks.tick?.();
-        manager.hideForMonitor('0');
+        pointerVisibility.setHiddenMonitors(['1']);
         expect(mocks.inhibit).toHaveBeenCalledOnce();
         expect(mocks.uninhibit).not.toHaveBeenCalled();
-        manager.hideForMonitor('1');
+        pointerVisibility.setHiddenMonitors([]);
         expect(mocks.uninhibit).toHaveBeenCalledOnce();
     });
 
-    it('does not hide the cursor for dimming and reacts to intensity changes', () => {
-        manager.setDimIntensityPercent(50);
-        manager.showForMonitor('0');
-        expect(mocks.inhibit).not.toHaveBeenCalled();
-        manager.setDimIntensityPercent(100);
-        expect(mocks.inhibit).toHaveBeenCalledOnce();
-        manager.setDimIntensityPercent(50);
+    it('stops and restarts one timer when hidden monitors change', () => {
+        pointerVisibility.setHiddenMonitors(['0']);
+        pointerVisibility.setHiddenMonitors(['0', '1']);
+        expect(mocks.timeoutAdd).toHaveBeenCalledOnce();
+        pointerVisibility.setHiddenMonitors([]);
+        expect(mocks.sourceRemove).toHaveBeenCalledExactlyOnceWith(1);
         expect(mocks.uninhibit).toHaveBeenCalledOnce();
+        pointerVisibility.setHiddenMonitors(['0']);
+        expect(mocks.timeoutAdd).toHaveBeenCalledTimes(2);
+        expect(mocks.inhibit).toHaveBeenCalledTimes(2);
     });
 
     it('uses exclusive right and bottom monitor boundaries', () => {
-        manager.showForMonitor('0');
+        pointerVisibility.setHiddenMonitors(['0']);
         mocks.pointer = [100, 10];
         mocks.tick?.();
         expect(mocks.uninhibit).toHaveBeenCalledOnce();
@@ -162,15 +128,43 @@ describe('cursor visibility over monitor overlays', () => {
     });
 
     it('handles overlays whose monitor geometry is no longer available', () => {
-        manager.showForMonitor('2');
+        pointerVisibility.setHiddenMonitors(['2']);
         expect(() => mocks.tick?.()).not.toThrow();
         expect(mocks.inhibit).not.toHaveBeenCalled();
     });
 
+    it('restores visibility if an inhibited monitor disappears or has no index', () => {
+        pointerVisibility.setHiddenMonitors(['0']);
+        mocks.resolveIndex.mockReset();
+        mocks.tick?.();
+        expect(mocks.uninhibit).toHaveBeenCalledOnce();
+        expect(mocks.inhibit).toHaveBeenCalledOnce();
+    });
+
+    it('includes left and top boundaries for monitors at negative coordinates', () => {
+        const monitor = mocks.monitors[0];
+        const original = { ...monitor };
+        try {
+            monitor.x = -100;
+            monitor.y = -100;
+            mocks.pointer = [-100, -100];
+            pointerVisibility.setHiddenMonitors(['0']);
+            expect(mocks.inhibit).toHaveBeenCalledOnce();
+            mocks.pointer = [-101, -100];
+            mocks.tick?.();
+            expect(mocks.uninhibit).toHaveBeenCalledOnce();
+            mocks.pointer = [-100, -101];
+            mocks.tick?.();
+            expect(mocks.inhibit).toHaveBeenCalledOnce();
+        } finally {
+            Object.assign(monitor, original);
+        }
+    });
+
     it('releases its inhibition and removes the timer on disable only once', () => {
-        manager.showForMonitor('0');
-        manager.dispose();
-        manager.dispose();
+        pointerVisibility.setHiddenMonitors(['0']);
+        pointerVisibility.dispose();
+        pointerVisibility.dispose();
         expect(mocks.uninhibit).toHaveBeenCalledOnce();
         expect(mocks.sourceRemove).toHaveBeenCalledExactlyOnceWith(1);
     });

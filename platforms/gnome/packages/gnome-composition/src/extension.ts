@@ -27,6 +27,7 @@ import {
 import type { ProfileGioSettingsFactory } from '@pmsb/infrastructure-gnome';
 import {
     GnomeOverlayManager,
+    GnomePointerVisibility,
     GnomePointerSource,
     GnomeMonitorTracker,
     GnomePointerMenuShortcutManager,
@@ -131,6 +132,9 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         );
         this._rootScope.add(pointerSource);
 
+        const pointerVisibility = new GnomePointerVisibility(tracker);
+        this._rootScope.add(pointerVisibility);
+
         const overlay = new GnomeOverlayManager(logger, tracker, platformBus);
         this._rootScope.add(overlay);
 
@@ -182,6 +186,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
             profileSettings,
             deadlineScheduler,
             overlay,
+            pointerVisibility,
             pointerContextMenu,
             pointerMenuShortcutManager,
             monitorRegistry,

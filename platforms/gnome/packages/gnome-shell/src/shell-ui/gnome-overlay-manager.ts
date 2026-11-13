@@ -1,6 +1,4 @@
 import Clutter from 'gi://Clutter';
-import GLib from 'gi://GLib';
-import type Meta from 'gi://Meta';
 import St from 'gi://St';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
@@ -27,9 +25,6 @@ export class GnomeOverlayManager implements Overlay, Disposable {
     readonly #hidingActors = new Map<string, Clutter.Actor>();
     #fadeDurationMs = 0;
     #targetOpacity = 0;
-    readonly #cursorTracker: Meta.CursorTracker;
-    #cursorInhibited = false;
-    #cursorWatch?: number;
 
     constructor(
         logger: LoggerPort,
@@ -39,16 +34,9 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         this.#logger = logger;
         this.#indexResolver = indexResolver;
         this.#eventBus = eventBus;
-        this.#cursorTracker = global.backend.get_cursor_tracker();
     }
 
     dispose(): void {
-        if (this.#cursorWatch !== undefined) {
-            void GLib.Source.remove(this.#cursorWatch);
-            this.#cursorWatch = undefined;
-        }
-        this.#setCursorInhibited(false);
-
         for (const [monitorId, actor] of this.#activeActors) {
             this.#tryDestroyOverlayActor(monitorId, actor);
         }
@@ -71,7 +59,6 @@ export class GnomeOverlayManager implements Overlay, Disposable {
 
         const actor = this.#createOverlayActor(monitorId, monitorIndex);
         this.#activeActors.set(monitorId, actor);
-        this.#updateCursorVisibility();
 
         this.#eventBus.emit({
             type: 'overlay-shown',
@@ -86,7 +73,6 @@ export class GnomeOverlayManager implements Overlay, Disposable {
         }
 
         this.#activeActors.delete(monitorId);
-        this.#updateCursorVisibility();
         this.#hidingActors.set(monitorId, actor);
 
         this.#eventBus.emit({
@@ -114,8 +100,6 @@ export class GnomeOverlayManager implements Overlay, Disposable {
             normalizeDimIntensityPercent(percent),
         );
 
-        this.#updateCursorVisibility();
-
         for (const actor of this.#activeActors.values()) {
             actor.ease({
                 opacity: this.#targetOpacity,
@@ -123,61 +107,6 @@ export class GnomeOverlayManager implements Overlay, Disposable {
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             });
         }
-    }
-
-    #updateCursorVisibility(): void {
-        const needsWatch =
-            this.#targetOpacity === 255 && this.#activeActors.size > 0;
-        if (needsWatch && this.#cursorWatch === undefined) {
-            this.#cursorWatch = GLib.timeout_add(
-                GLib.PRIORITY_DEFAULT,
-                100,
-                () => {
-                    this.#syncCursorVisibility();
-                    return GLib.SOURCE_CONTINUE;
-                },
-            );
-        } else if (!needsWatch && this.#cursorWatch !== undefined) {
-            void GLib.Source.remove(this.#cursorWatch);
-            this.#cursorWatch = undefined;
-        }
-        this.#syncCursorVisibility();
-    }
-
-    #syncCursorVisibility(): void {
-        const [x, y] = global.get_pointer();
-        // Cursor visibility is global, so only inhibit it while the pointer
-        // is over a fully blanked monitor. Dimming must leave it visible.
-        const blanked =
-            this.#targetOpacity === 255 &&
-            [...this.#activeActors.keys()].some((monitorId) => {
-                const index =
-                    this.#indexResolver.tryGetIndexByMonitorId(monitorId);
-                const monitor =
-                    index === undefined
-                        ? undefined
-                        : Main.layoutManager.monitors[index];
-                return (
-                    monitor !== undefined &&
-                    x >= monitor.x &&
-                    y >= monitor.y &&
-                    x < monitor.x + monitor.width &&
-                    y < monitor.y + monitor.height
-                );
-            });
-        this.#setCursorInhibited(blanked);
-    }
-
-    #setCursorInhibited(inhibited: boolean): void {
-        if (inhibited === this.#cursorInhibited) {
-            return;
-        }
-        if (inhibited) {
-            this.#cursorTracker.inhibit_cursor_visibility();
-        } else {
-            this.#cursorTracker.uninhibit_cursor_visibility();
-        }
-        this.#cursorInhibited = inhibited;
     }
 
     #createOverlayActor(
