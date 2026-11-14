@@ -1,4 +1,4 @@
-import { isBlackMonitorState, isFullyBlackDimIntensity } from '@pmsb/domain';
+import { shouldHidePointerOverMonitor } from '@pmsb/domain';
 import type { GeneralSettings } from '../ports/general-settings.js';
 import type { PointerVisibility } from '../ports/pointer-visibility.js';
 import type { FocusedMonitorService } from '../services/focused-monitor-service.js';
@@ -12,8 +12,9 @@ export interface SyncPointerVisibilityDeps {
 }
 
 /**
- * Hides the pointer while it rests on a fully blacked-out monitor and
- * restores it otherwise. Dimmed (not fully black) monitors keep it visible.
+ * Applies the resting-pointer rule: hides the pointer while it rests on a
+ * fully black monitor and restores it otherwise. Dimmed (not fully black)
+ * monitors keep it visible.
  */
 export function syncPointerVisibility(deps: SyncPointerVisibilityDeps): void {
     const focused = deps.focusedMonitorService.getFocusedMonitor();
@@ -25,10 +26,10 @@ export function syncPointerVisibility(deps: SyncPointerVisibilityDeps): void {
         return;
     }
 
-    const hidden =
-        focused.state !== undefined &&
-        isBlackMonitorState(focused.state) &&
-        isFullyBlackDimIntensity(deps.generalSettings.getDimIntensity());
-
-    deps.pointerVisibility.setHidden(hidden);
+    deps.pointerVisibility.setHidden(
+        shouldHidePointerOverMonitor(
+            focused.state,
+            deps.generalSettings.getDimIntensity(),
+        ),
+    );
 }

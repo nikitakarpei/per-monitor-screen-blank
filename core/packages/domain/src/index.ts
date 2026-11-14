@@ -28,8 +28,11 @@ export {
 export {
     normalizeDimIntensityPercent,
     dimIntensityPercentToOpacity,
-    isFullyBlackDimIntensity,
 } from './dim-intensity.js';
+export {
+    POINTER_HIDE_DELAY_MS,
+    shouldHidePointerOverMonitor,
+} from './pointer-visibility.js';
 export { normalizeFadeDurationMs } from './fade-duration.js';
 export { buildLogicalMonitorIdentity } from './monitor-identity-utilities.js';
 export {

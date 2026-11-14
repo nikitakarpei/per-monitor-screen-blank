@@ -30,6 +30,9 @@ import { wakeFromAutoBlackOnPointer } from './handlers/pointer-position-changed/
 import { rescheduleAutoBlackDeadline } from './handlers/pointer-position-changed/reschedule-auto-black-deadline.js';
 import { autoBlackDeadlineControl } from './handlers/state-changed/auto-black-deadline-control.js';
 import { keepAwakeDeadlineControl } from './handlers/state-changed/keep-awake-deadline-control.js';
+import { pointerVisibilityControl } from './handlers/state-changed/pointer-visibility-control.js';
+import { revealPointerOnMove } from './handlers/pointer-position-changed/reveal-pointer-on-move.js';
+import { handlePointerHideDeadline } from './handlers/deadline-fired/handle-pointer-hide-deadline.js';
 import { bootstrapConnectedMonitors } from './handlers/application-bootstrap-requested/bootstrap-connected-monitors.js';
 import { bootstrapConnectedIdentities } from './handlers/application-bootstrap-requested/bootstrap-connected-identities.js';
 import { pruneDisconnectedIdentities } from './handlers/application-bootstrap-requested/prune-disconnected-identities.js';
@@ -72,8 +75,8 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('state-changed', (payload) =>
         keepAwakeDeadlineControl(deps, payload),
     );
-    void deps.bus.on('state-changed', (_payload) =>
-        syncPointerVisibility(deps),
+    void deps.bus.on('state-changed', (payload) =>
+        pointerVisibilityControl(deps, payload),
     );
     void deps.bus.on('pointer-monitor-changed', (payload) =>
         handlePointerSuppression(deps, payload),
@@ -84,17 +87,17 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('pointer-position-changed', (payload) =>
         rescheduleAutoBlackDeadline(deps, payload),
     );
-    // Also covers monitor changes: the pointer source always reports the
-    // current monitor here, even when it cannot resolve the previous one
-    // (e.g. after a disconnect), unlike 'pointer-monitor-changed'.
     void deps.bus.on('pointer-position-changed', (_payload) =>
-        syncPointerVisibility(deps),
+        revealPointerOnMove(deps),
     );
     void deps.bus.on('deadline-fired', (payload) =>
         handleKeepAwakeExpiry(deps, payload),
     );
     void deps.bus.on('deadline-fired', (payload) =>
         handleAutoBlackDeadline(deps, payload),
+    );
+    void deps.bus.on('deadline-fired', (payload) =>
+        handlePointerHideDeadline(deps, payload),
     );
     void deps.bus.on('profile-switched', (payload) =>
         applyProfileModesToMonitors(deps, payload.profileId),
