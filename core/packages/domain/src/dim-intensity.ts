@@ -11,3 +11,10 @@ export function normalizeDimIntensityPercent(percent: number): number {
 export function dimIntensityPercentToOpacity(percent: number): number {
     return Math.round(((percent as number) * 255) / 100);
 }
+
+/*
+ * Check if the dim intensity fully blacks out the monitor (as opposed to dimming it).
+ */
+export function isFullyBlackDimIntensity(percent: number): boolean {
+    return normalizeDimIntensityPercent(percent) === 100;
+}

@@ -37,6 +37,7 @@ export {
     type PointerMenuShortcutManager,
 } from './ports/pointer-menu.js';
 export { type Overlay } from './ports/overlay.js';
+export { type PointerVisibility } from './ports/pointer-visibility.js';
 export { ModeStateResolver } from './services/mode-state-resolver.js';
 export { FocusedMonitorService } from './services/focused-monitor-service.js';
 export { MonitorRegistry } from './services/monitor-registry.js';

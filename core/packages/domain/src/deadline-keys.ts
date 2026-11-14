@@ -5,6 +5,7 @@
 export const DEADLINE_KEYS = {
     autoBlack: 'auto-black',
     keepAwakeExpiry: 'keep-awake-expiry',
+    pointerHide: 'pointer-hide',
 } as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[keyof typeof DEADLINE_KEYS];

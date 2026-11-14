@@ -4,6 +4,7 @@ import type { GeneralSettings } from './ports/general-settings.js';
 import type { ProfileSettings } from './ports/profile-settings.js';
 import type { QuickSettings } from './ports/quick-settings.js';
 import type { Overlay } from './ports/overlay.js';
+import type { PointerVisibility } from './ports/pointer-visibility.js';
 import type {
     PointerContextMenu,
     PointerMenuShortcutManager,
@@ -29,6 +30,9 @@ import { wakeFromAutoBlackOnPointer } from './handlers/pointer-position-changed/
 import { rescheduleAutoBlackDeadline } from './handlers/pointer-position-changed/reschedule-auto-black-deadline.js';
 import { autoBlackDeadlineControl } from './handlers/state-changed/auto-black-deadline-control.js';
 import { keepAwakeDeadlineControl } from './handlers/state-changed/keep-awake-deadline-control.js';
+import { pointerVisibilityControl } from './handlers/state-changed/pointer-visibility-control.js';
+import { revealPointerOnMove } from './handlers/pointer-position-changed/reveal-pointer-on-move.js';
+import { handlePointerHideDeadline } from './handlers/deadline-fired/handle-pointer-hide-deadline.js';
 import { bootstrapConnectedMonitors } from './handlers/application-bootstrap-requested/bootstrap-connected-monitors.js';
 import { bootstrapConnectedIdentities } from './handlers/application-bootstrap-requested/bootstrap-connected-identities.js';
 import { pruneDisconnectedIdentities } from './handlers/application-bootstrap-requested/prune-disconnected-identities.js';
@@ -41,6 +45,7 @@ import { applyKeepAwakeDurationToKeepAwakeMonitors } from './use-cases/apply-kee
 import { applyPointerTimerPolicy } from './use-cases/apply-pointer-timer-policy.js';
 import { registerPointerMenuShortcut } from './use-cases/register-pointer-menu-shortcut.js';
 import { setupConnectedMonitor } from './use-cases/setup-connected-monitor.js';
+import { syncPointerVisibility } from './use-cases/sync-pointer-visibility.js';
 
 interface EventHandlerDeps {
     bus: AppEventBus;
@@ -49,6 +54,7 @@ interface EventHandlerDeps {
     profileSettings: ProfileSettings;
     deadlineScheduler: DeadlineScheduler;
     overlay: Overlay;
+    pointerVisibility: PointerVisibility;
     quickSettings: QuickSettings;
     pointerContextMenu: PointerContextMenu;
     pointerMenuShortcutManager: PointerMenuShortcutManager;
@@ -69,6 +75,9 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('state-changed', (payload) =>
         keepAwakeDeadlineControl(deps, payload),
     );
+    void deps.bus.on('state-changed', (payload) =>
+        pointerVisibilityControl(deps, payload),
+    );
     void deps.bus.on('pointer-monitor-changed', (payload) =>
         handlePointerSuppression(deps, payload),
     );
@@ -78,11 +87,17 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('pointer-position-changed', (payload) =>
         rescheduleAutoBlackDeadline(deps, payload),
     );
+    void deps.bus.on('pointer-position-changed', (_payload) =>
+        revealPointerOnMove(deps),
+    );
     void deps.bus.on('deadline-fired', (payload) =>
         handleKeepAwakeExpiry(deps, payload),
     );
     void deps.bus.on('deadline-fired', (payload) =>
         handleAutoBlackDeadline(deps, payload),
+    );
+    void deps.bus.on('deadline-fired', (payload) =>
+        handlePointerHideDeadline(deps, payload),
     );
     void deps.bus.on('profile-switched', (payload) =>
         applyProfileModesToMonitors(deps, payload.profileId),
@@ -130,6 +145,9 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     );
     void deps.bus.on('dim-intensity-changed', (payload) =>
         deps.overlay.setDimIntensityPercent(payload.percent),
+    );
+    void deps.bus.on('dim-intensity-changed', (_payload) =>
+        syncPointerVisibility(deps),
     );
     void deps.bus.on(
         'quick-settings-menu-visibility-changed',

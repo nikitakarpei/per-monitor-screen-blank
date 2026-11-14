@@ -68,3 +68,10 @@ export function resolveAutoMonitorState(
 export function isAutoMonitorState(state: MonitorState): boolean {
     return ['AutoAwake', 'AutoPaused', 'AutoBlack'].includes(state);
 }
+
+/*
+ * Check if the monitor state is one in which the monitor is blanked by an overlay.
+ */
+export function isBlackMonitorState(state: MonitorState): boolean {
+    return state === 'AutoBlack' || state === 'ManualBlack';
+}
