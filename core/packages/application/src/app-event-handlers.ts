@@ -1,11 +1,10 @@
-import type { PointerVisibility } from './ports/pointer-visibility.js';
-import { registerPointerVisibilityHandlers } from './handlers/overlay-shown/handle-pointer-visibility.js';
 import type { DeadlineScheduler } from './ports/scheduler.js';
 
 import type { GeneralSettings } from './ports/general-settings.js';
 import type { ProfileSettings } from './ports/profile-settings.js';
 import type { QuickSettings } from './ports/quick-settings.js';
 import type { Overlay } from './ports/overlay.js';
+import type { PointerVisibility } from './ports/pointer-visibility.js';
 import type {
     PointerContextMenu,
     PointerMenuShortcutManager,
@@ -43,6 +42,7 @@ import { applyKeepAwakeDurationToKeepAwakeMonitors } from './use-cases/apply-kee
 import { applyPointerTimerPolicy } from './use-cases/apply-pointer-timer-policy.js';
 import { registerPointerMenuShortcut } from './use-cases/register-pointer-menu-shortcut.js';
 import { setupConnectedMonitor } from './use-cases/setup-connected-monitor.js';
+import { syncPointerVisibility } from './use-cases/sync-pointer-visibility.js';
 
 interface EventHandlerDeps {
     bus: AppEventBus;
@@ -63,7 +63,6 @@ interface EventHandlerDeps {
 }
 
 export function registerAppEventHandlers(deps: EventHandlerDeps): void {
-    registerPointerVisibilityHandlers(deps);
     void deps.bus.on('state-changed', (payload) =>
         handleOverlaySyncStateChanged(deps, payload),
     );
@@ -73,6 +72,9 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     void deps.bus.on('state-changed', (payload) =>
         keepAwakeDeadlineControl(deps, payload),
     );
+    void deps.bus.on('state-changed', (_payload) =>
+        syncPointerVisibility(deps),
+    );
     void deps.bus.on('pointer-monitor-changed', (payload) =>
         handlePointerSuppression(deps, payload),
     );
@@ -81,6 +83,12 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     );
     void deps.bus.on('pointer-position-changed', (payload) =>
         rescheduleAutoBlackDeadline(deps, payload),
+    );
+    // Also covers monitor changes: the pointer source always reports the
+    // current monitor here, even when it cannot resolve the previous one
+    // (e.g. after a disconnect), unlike 'pointer-monitor-changed'.
+    void deps.bus.on('pointer-position-changed', (_payload) =>
+        syncPointerVisibility(deps),
     );
     void deps.bus.on('deadline-fired', (payload) =>
         handleKeepAwakeExpiry(deps, payload),
@@ -134,6 +142,9 @@ export function registerAppEventHandlers(deps: EventHandlerDeps): void {
     );
     void deps.bus.on('dim-intensity-changed', (payload) =>
         deps.overlay.setDimIntensityPercent(payload.percent),
+    );
+    void deps.bus.on('dim-intensity-changed', (_payload) =>
+        syncPointerVisibility(deps),
     );
     void deps.bus.on(
         'quick-settings-menu-visibility-changed',

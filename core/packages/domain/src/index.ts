@@ -14,6 +14,7 @@ export {
     modeToInitialState,
     resolveAutoMonitorState,
     isAutoMonitorState,
+    isBlackMonitorState,
 } from './monitor-state.js';
 export {
     type ProfileId,
@@ -27,6 +28,7 @@ export {
 export {
     normalizeDimIntensityPercent,
     dimIntensityPercentToOpacity,
+    isFullyBlackDimIntensity,
 } from './dim-intensity.js';
 export { normalizeFadeDurationMs } from './fade-duration.js';
 export { buildLogicalMonitorIdentity } from './monitor-identity-utilities.js';

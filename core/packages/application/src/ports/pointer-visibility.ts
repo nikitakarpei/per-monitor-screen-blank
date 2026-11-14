@@ -1,4 +1,4 @@
 export interface PointerVisibility {
-    /** Hide only while the pointer is within one of these monitors. */
-    setHiddenMonitors(monitorIds: readonly string[]): void;
+    /** Hides or restores the pointer. Repeated calls with the same value are no-ops. */
+    setHidden(hidden: boolean): void;
 }

@@ -132,7 +132,7 @@ export default class PerMonitorScreenBlankExtension extends Extension {
         );
         this._rootScope.add(pointerSource);
 
-        const pointerVisibility = new GnomePointerVisibility(tracker);
+        const pointerVisibility = new GnomePointerVisibility();
         this._rootScope.add(pointerVisibility);
 
         const overlay = new GnomeOverlayManager(logger, tracker, platformBus);
